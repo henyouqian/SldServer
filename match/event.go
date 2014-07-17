@@ -151,8 +151,11 @@ func eventPublishTask() {
 			for i := 0; i < pubInfo.EventNum; i++ {
 				//get front event
 				resp, err := ssdbc.Do("zkeys", Z_EVENT_BUFF, "", "", "", 1)
-				if err != nil || resp[0] != ssdb.OK || len(resp) <= 1 {
+				if err != nil || resp[0] != ssdb.OK {
 					glog.Errorln(err, resp)
+					return
+				}
+				if len(resp) <= 1 {
 					return
 				}
 				eventId, err := strconv.ParseInt(resp[1], 10, 64)
@@ -580,8 +583,8 @@ func apiListEvent(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 	if len(resp) == 0 {
-		glog.Errorf("startId=%d", startId)
-		lwutil.SendError("err_not_found", fmt.Sprintf("startId=%d", startId))
+		glog.Errorf("startId=%d", in.StartId)
+		lwutil.SendError("err_not_found", fmt.Sprintf("startId=%d", in.StartId))
 	}
 
 	//multi_hget

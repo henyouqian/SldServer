@@ -1,0 +1,555 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"int64",
+				"redisUint64	uint64, error ƒ"
+			],
+			[
+				"be",
+				"BetReward	int64 ν"
+			],
+			[
+				"saveevent",
+				"saveEventPlayerRecord	 ƒ"
+			],
+			[
+				"getplay",
+				"getEventPlayerRecord	*EventPlayerRecord ƒ"
+			],
+			[
+				"st",
+				"StringVar	 ƒ"
+			],
+			[
+				"admin",
+				"ADMIN_NAME	 Ɩ"
+			],
+			[
+				"TE",
+				"TEAM_NAMES	[]string ν"
+			],
+			[
+				"Inf",
+				"Infoln	 ƒ"
+			],
+			[
+				"tim",
+				"TimeUnix	int64 ν"
+			],
+			[
+				"z_ev",
+				"Z_EVENT	 ν"
+			],
+			[
+				"getevent",
+				"getEvent	*Event ƒ"
+			],
+			[
+				"lo",
+				"Local	*time.Location ν"
+			],
+			[
+				"err",
+				"Errorln	 ƒ"
+			],
+			[
+				"prin",
+				"Printf	n int, err error ƒ"
+			],
+			[
+				"p",
+				"Println	n int, err error ƒ"
+			],
+			[
+				"Z_EV",
+				"Z_EVENT_WAIT	 Ɩ"
+			],
+			[
+				"Even",
+				"Event	struct ʈ"
+			],
+			[
+				"In",
+				"Infof	 ƒ"
+			],
+			[
+				"va",
+				"ValueOf	reflect.Value ƒ"
+			],
+			[
+				"is",
+				"IsValid	bool ƒ"
+			],
+			[
+				"par",
+				"ParseFloat	f float64, err error ƒ"
+			],
+			[
+				"set",
+				"SetPointer	 ƒ"
+			],
+			[
+				"sets",
+				"SetBytes	 ƒ"
+			],
+			[
+				"fi",
+				"FieldByName	reflect.Value ƒ"
+			],
+			[
+				"obj",
+				"objVal	reflect.Value ν"
+			],
+			[
+				"fiel",
+				"FieldByIndex	reflect.StructField ƒ"
+			],
+			[
+				"rew",
+				"totalReward	int64 ν"
+			],
+			[
+				"b",
+				"Bet	map[string]int64 ν"
+			],
+			[
+				"bet",
+				"BetMoneySum	int64 ν"
+			],
+			[
+				"check",
+				"CheckError	 ƒ"
+			],
+			[
+				"che",
+				"CheckError	 ƒ"
+			],
+			[
+				"I",
+				"Int64	int64, error ƒ"
+			],
+			[
+				"i",
+				"Int64	int64, error ƒ"
+			],
+			[
+				"Event",
+				"EventPlayerRecord	struct ʈ"
+			],
+			[
+				"z_event",
+				"Z_EVENT_PLAYER_RECORD	 Ɩ"
+			],
+			[
+				"maxint",
+				"MaxInt32	 Ɩ"
+			],
+			[
+				"parse",
+				"ParseInt	i int64, err error ƒ"
+			],
+			[
+				"INI",
+				"INIT_GAME_COIN_NUM	 Ɩ"
+			],
+			[
+				"rank",
+				"rankNum	 ν"
+			],
+			[
+				"Prin",
+				"Printf	n int, err error ƒ"
+			],
+			[
+				"rewa",
+				"challageRewards	[]int ν"
+			],
+			[
+				"min",
+				"MinInt32	 Ɩ"
+			],
+			[
+				"game",
+				"gameCoinPack	GameCoinPack ν"
+			],
+			[
+				"getreds",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
+				"enco",
+				"EncodeToString	string ƒ"
+			],
+			[
+				"sprin",
+				"Sprintf	string ƒ"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "match/admin.go",
+			"settings":
+			{
+				"buffer_size": 3447,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 47.0,
+		"selected_items":
+		[
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 449.0
+	},
+	"console":
+	{
+		"height": 146.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/liwei/Documents/projects/2014/delight/server/robot/main.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/tools/packUploader/main.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/conf.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/ssdb/ssdb.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/admin.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/main.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/conf.json",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/util.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/conf.js",
+		"/Users/liwei/Desktop/sld.html",
+		"/Users/liwei/Documents/projects/2014/delight/Sld/Sld/Base.lproj/Main_ipad.storyboard",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/smtp.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/booker/main.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/scorekeeper.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/db.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/match/collection.go",
+		"/Users/liwei/Documents/projects/2014/delight/server/tools/packUploader/packs/宫泽理惠/1/pack.js",
+		"/Users/liwei/Documents/projects/2014/delight/server/tools/packUploader/account.json",
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Users/liwei/Documents/projects/2014/delight/server/ssdb/ssdb.conf"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"CLIENT_VERSION",
+			"checkVersion",
+			"apiListEvent",
+			"getEventPlayerRecord",
+			"BetReward",
+			"event",
+			"calcEventTimes",
+			"apiModEvent",
+			"scoreMap",
+			"recaculateTeamScore",
+			"playerIapSecret",
+			"addPlayerMoney",
+			"apiRate",
+			"addPlayerMoney",
+			"apiGetPlayerInfo",
+			"getInfo",
+			"BET_CLOSE_BEFORE_END_SEC",
+			"TEAM_NAMES",
+			"post(",
+			"postWithCookie",
+			"login",
+			"login(",
+			"login",
+			"setInfo",
+			"TEAM_IDS",
+			"playend",
+			"saveEventPlayerRecord",
+			"getEventPlayerRecord",
+			"H_EVENT_PLAYER_RECORD",
+			"makeEventPlayerRecordSubkey",
+			"setInfo",
+			"getEvent",
+			"apiPassMissingChallenge",
+			"rand",
+			"makePlayerInfoKey",
+			"HGet",
+			"apiSubmitChallengeScore",
+			"login",
+			"上海",
+			"event.Endtime =",
+			"event.Endtime",
+			"BET_CLOSE_BEFORE_END_SEC",
+			"api bet",
+			"newEventBuff",
+			"newEvent",
+			"addtobuff",
+			"postReq",
+			"ChallengeSecs",
+			"Pack",
+			"loadPack",
+			"title",
+			"pack.js",
+			"newevent",
+			"addtobuff",
+			"PERSONAL_RANK",
+			"EVENT_TYPES",
+			"newevent",
+			"postReq",
+			"apiBet",
+			"bet",
+			"apiGetBettingPool",
+			"apiPlayEnd",
+			"glog.info",
+			"EventIds",
+			"apiListPack",
+			"Error",
+			"getevent",
+			"saveevent",
+			"getEvent",
+			"pack.EventIds",
+			"EventIds\n",
+			"apimod",
+			"api mod",
+			".Thumb",
+			"PackThumbKey",
+			".PackThumbKey",
+			"record.PackThumbKey",
+			".PackId",
+			".Time",
+			"Time",
+			"apiListEvent",
+			"add pack succeed",
+			"pack.js",
+			"EVENT_SERIAL",
+			"H_EVENT_BUFF",
+			"EVENT_SERIAL",
+			"apiRevListEvent",
+			"re v li s t",
+			"apiNewEvent",
+			"apiAddEventToBuff",
+			"addtobuff",
+			"getEvent",
+			"in :=",
+			"apiNewEvent",
+			"addeventto",
+			"addtobuff",
+			"addtobuf",
+			"EVENT_INIT_BETTING_POOL",
+			"newevent",
+			"EVENT_INIT_BETTING_POOL",
+			"TEAM_MAP",
+			"TEAM_IDS",
+			"INIT_BET_MONEY",
+			"makeEventTeamPlayerBetKey",
+			"H_EVENT_BETTING_POOL",
+			"H_EVENT_BETTING_POOL\nH_EVENT_BETTING_POOL",
+			"lwutil",
+			"Z_EVENT_BET_PLAYER",
+			"key",
+			"HGetMapAll",
+			"int32",
+			"HGetMap",
+			"makeEventBettingPoolKey",
+			"H_EVENT_BETTING_POOL",
+			"pool",
+			"100",
+			"rc",
+			" *redis.Conn, eventId int64) {\nrc",
+			"H_EVENT_TEAM_SCORE",
+			"makeEventBettingPoolKey",
+			"H_EVENT_BETTING_POOL",
+			"betting pool",
+			"fixme",
+			"apiGetBettingPool",
+			"pool",
+			"fixme",
+			"mode",
+			"apiListEvent"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			""
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "match/admin.go",
+					"settings":
+					{
+						"buffer_size": 3447,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.9o:///Users/liwei/Documents/go/src/github.com/henyouqian/lwutil":
+	{
+		"height": 124.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/match":
+	{
+		"height": 150.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/match/ssdb":
+	{
+		"height": 136.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/robot":
+	{
+		"height": 136.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/tools/packUploader":
+	{
+		"height": 118.0
+	},
+	"replace":
+	{
+		"height": 68.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"admin",
+				"server/match/admin.go"
+			],
+			[
+				"ssdb",
+				"server/match/ssdb/ssdb.go"
+			],
+			[
+				"conf",
+				"server/match/conf.go"
+			],
+			[
+				"json",
+				"server/match/conf.json"
+			],
+			[
+				"event",
+				"server/match/event.go"
+			],
+			[
+				"player",
+				"server/match/player.go"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 209.0,
+	"status_bar_visible": true
+}

@@ -22,3 +22,10 @@ _testmain.go
 *.exe
 *.test
 .DS_Store
+redis/
+match/match
+match/sld1.2.json
+ssdb/auth/log.txt
+ssdb/auth/var/
+ssdb/match/log.txt
+ssdb/match/var/

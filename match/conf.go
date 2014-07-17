@@ -7,6 +7,7 @@ import (
 )
 
 type Conf struct {
+	Port               int
 	AppName            string
 	EventPublishInfoes []EventPublishInfo
 	ChallengeRewards   []int

@@ -26,11 +26,14 @@ func html5(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var port int
 	var confFile string
-	flag.IntVar(&port, "port", 9999, "server port")
-	flag.StringVar(&confFile, "conf", "conf.json", "config file")
+	flag.StringVar(&confFile, "conf", "", "config file")
 	flag.Parse()
+
+	if len(confFile) == 0 {
+		glog.Errorln("need -conf")
+		return
+	}
 
 	initConf(confFile)
 
@@ -48,6 +51,6 @@ func main() {
 
 	go scoreKeeperMain()
 
-	glog.Infof("Server running: cpu=%d, port=%d", runtime.NumCPU(), port)
-	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	glog.Infof("Server running: cpu=%d, port=%d", runtime.NumCPU(), _conf.Port)
+	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", _conf.Port), nil))
 }
