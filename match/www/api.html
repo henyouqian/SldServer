@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" ng-app>
+  <head>
+    <meta charset="utf-8">
+    <title>API</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="js/jquery-2.0.3.min.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="api.js"></script>
+
+    <style type="text/css">
+
+      /*.CodeMirror {
+        border: 1px solid black;
+        font-size: 13px;
+      }*/
+
+    </style>
+  </head>
+
+  <body>
+    <div class="container" id="top" ng-controller="Controller">
+
+      <h1 style="font-family: Georgia;font-weight:bolder;">API</h1>
+      
+      <ul class="nav nav-tabs">
+        <!-- tabs -->
+        <li ng-repeat="apilist in apilists"><a href={{"#tab_"+apilist.tab}} data-toggle="tab">{{apilist.tab}}</a><li>
+      </ul>
+
+      <div class="tab-content">
+        <div style="height:10px"></div>
+
+        <!-- tabs content -->
+        <div class="tab-pane" ng-repeat="apilist in apilists" id={{"tab_"+apilist.tab}} style="word-wrap:break-word">
+          <a href="" ng-repeat="api in apilist.apis" style="margin-right:20px" ng-click="onApiClick(api, apilist.path)">{{api.name}}</a>
+        </div>
+      </div>
+
+      <div style="height:20px"></div>
+
+      <button id="btn-send" class="btn btn-primary" ng-click="send()" disabled="disabled">Send</button>
+      <span class="label label-danger" style="font-size: 100%;">{{currUrl}}</span>
+      <span class="label label-default" style="font-size: 100%;">{{queryTick}}ms</span>
+      <div style="height:5px"></div>
+      <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <td><textarea id="sendTextArea"></textarea></td>
+            <td><textarea id="recvTextArea"></textarea></td>
+          </tr>
+        </tbody>
+      </table>
+
+
+      
+    </div> <!-- /container -->
+
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/codemirror.js"></script>
+    <link rel="stylesheet" href="css/codemirror.css">
+    <link rel="stylesheet" href="codemirror/theme/elegant.css">
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+
+  </body>
+</html>

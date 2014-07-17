@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" ng-app>
+  <head>
+    <meta charset="utf-8">
+    <title>Packs</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="js/jquery-2.0.3.min.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="packs.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/codemirror.js"></script>
+    <link rel="stylesheet" href="css/codemirror.css">
+    <link rel="stylesheet" href="codemirror/theme/elegant.css">
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+
+    <style type="text/css">
+
+      /*.CodeMirror {
+        border: 1px solid black;
+        font-size: 13px;
+      }*/
+
+    </style>
+  </head>
+
+  <body>
+    <div class="container" id="top" ng-controller="Controller">
+
+      <h1 style="font-family: Georgia;font-weight:bolder;">Packs</h1>
+
+      <button id="btn-send" class="btn btn-primary" ng-click="addPackDlg()">+</button>
+      <br><br>
+
+      <div class="row">
+        <div class="col-xs-6 col-md-2" ng-repeat="pack in packs">
+          <a href="#" class="thumbnail" ng-click="editPackDlg(pack)">
+            <img src={{pack.icon}} alt="...">
+          </a>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="addModalLabel">Add pack</h4>
+            </div>
+            <div class="modal-body">
+              <textarea id="addPackTextArea"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" ng-click="addPack()">Add</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.modal -->
+
+      <!-- Modal -->
+      <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="editModalLabel">Edit pack</h4>
+            </div>
+            <div class="modal-body">
+              <textarea id="editPackTextArea"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary">Edit</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.modal -->
+      
+    </div> <!-- /container -->
+
+  </body>
+</html>
