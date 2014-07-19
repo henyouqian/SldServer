@@ -1,0 +1,10 @@
+{
+	"Port": 9998,
+	"AppName": "national",
+	"EventPublishInfoes": [
+		{"PublishTime":[4, 0], "BeginTime":[6, 0], "EndTime":[13, 0], "EventNum":1},
+		{"PublishTime":[12, 0], "BeginTime":[14, 0], "EndTime":[19, 0], "EventNum":1},
+		{"PublishTime":[22,4], "BeginTime":[20, 0], "EndTime":[24, 0], "EventNum":1}
+	],
+	"ChallengeRewards" : [100, 50, 50]
+}

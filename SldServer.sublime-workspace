@@ -192,11 +192,52 @@
 	"buffers":
 	[
 		{
-			"file": "match/admin.go",
+			"file": "match/event.go",
 			"settings":
 			{
-				"buffer_size": 3447,
+				"buffer_size": 47092,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/auth.go",
+			"settings":
+			{
+				"buffer_size": 13784,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/main.go",
+			"settings":
+			{
+				"buffer_size": 1139,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/conf.go",
+			"settings":
+			{
+				"buffer_size": 717,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/conf.json",
+			"settings":
+			{
+				"buffer_size": 347,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "ssh henyouqian@173.255.215.104",
+			"settings":
+			{
+				"buffer_size": 30,
+				"line_ending": "Unix",
+				"name": "ssh henyouqian@173.255.215.104"
 			}
 		}
 	],
@@ -232,6 +273,7 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/robot/main.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/tools/packUploader/main.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/match/conf.go",
@@ -417,29 +459,162 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 4,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "match/admin.go",
+					"file": "match/event.go",
 					"settings":
 					{
-						"buffer_size": 3447,
+						"buffer_size": 47092,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								4570,
+								4570
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 3.0,
+						"translation.y": 102.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "match/auth.go",
+					"settings":
+					{
+						"buffer_size": 13784,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								249,
+								249
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 72.0,
+						"translation.y": 354.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "match/main.go",
+					"settings":
+					{
+						"buffer_size": 1139,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								676,
+								676
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 445.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "match/conf.go",
+					"settings":
+					{
+						"buffer_size": 717,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								76,
+								80
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 96.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "match/conf.json",
+					"settings":
+					{
+						"buffer_size": 347,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								347,
+								347
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"settings":
+					{
+						"buffer_size": 30,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								30,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_name": "ssh henyouqian@173.255.215.104",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -484,6 +659,10 @@
 	"output.9o:///Users/liwei/Documents/go/src/github.com/henyouqian/lwutil":
 	{
 		"height": 124.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/match":
+	{
+		"height": 136.0
 	},
 	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/match":
 	{

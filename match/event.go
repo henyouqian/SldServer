@@ -151,39 +151,26 @@ func eventPublishTask() {
 			for i := 0; i < pubInfo.EventNum; i++ {
 				//get front event
 				resp, err := ssdbc.Do("zkeys", Z_EVENT_BUFF, "", "", "", 1)
-				if err != nil || resp[0] != ssdb.OK {
-					glog.Errorln(err, resp)
-					return
-				}
+				checkSsdbError(resp, err)
 				if len(resp) <= 1 {
+					glog.Error("Z_EVENT_BUFF empty!!!!")
 					return
 				}
 				eventId, err := strconv.ParseInt(resp[1], 10, 64)
-				if err != nil {
-					glog.Errorln(err)
-					return
-				}
+				checkError(err)
 
 				//del front event
 				resp, err = ssdbc.Do("zdel", Z_EVENT_BUFF, eventId)
-				if err != nil || resp[0] != ssdb.OK {
-					glog.Errorln(err, resp[0])
-					return
-				}
+				checkSsdbError(resp, err)
 
 				//get event
 				resp, err = ssdbc.Do("hget", H_EVENT_BUFF, eventId)
-				if err != nil || resp[0] != ssdb.OK {
-					glog.Errorln(err, resp[0])
-					return
-				}
+				glog.Infof("evnetId=%d", eventId)
+				checkSsdbError(resp, err)
 
 				var event Event
 				err = json.Unmarshal([]byte(resp[1]), &event)
-				if err != nil {
-					glog.Errorln(err)
-					return
-				}
+				checkError(err)
 
 				//fill event's begin and end time
 				hour := pubInfo.BeginTime[0]
@@ -213,14 +200,16 @@ func eventPublishTask() {
 
 				//change event id
 				resp, err = ssdbc.Do("zrscan", Z_EVENT, "", "", "", 1)
-				lwutil.CheckError(err, "")
-				if resp[0] == "not_found" {
+				checkSsdbError(resp, err)
+				if resp[0] == "not_found" || len(resp) == 1 {
 					event.Id = 1
 				} else {
 					maxId, err := strconv.ParseInt(resp[1], 10, 64)
-					lwutil.CheckError(err, "")
+					checkError(err)
 					event.Id = maxId + 1
 				}
+
+				eventId = event.Id
 
 				//get pack
 				pack := getPack(ssdbc, event.PackId)
@@ -229,29 +218,22 @@ func eventPublishTask() {
 				event.PackTimeUnix = pack.TimeUnix
 
 				//add event id to pack
-				pack.EventIds[fmt.Sprintf("%d", event.Id)] = true
+				pack.EventIds[fmt.Sprintf("%d", eventId)] = true
 
 				//save pack
 				savePack(ssdbc, pack)
 
 				//save event
 				bts, err := json.Marshal(event)
-				if err != nil {
-					glog.Errorln(err)
-					return
-				}
+				checkError(err)
 				resp, err = ssdbc.Do("hset", H_EVENT, eventId, bts)
-				if err != nil || resp[0] != ssdb.OK {
-					glog.Errorln(err, resp[0])
-					return
-				}
+				checkSsdbError(resp, err)
 
 				//push to Z_EVENT
 				resp, err = ssdbc.Do("zset", Z_EVENT, eventId, eventId)
-				if err != nil || resp[0] != ssdb.OK {
-					glog.Errorln(err)
-					return
-				}
+				checkSsdbError(resp, err)
+
+				glog.Infof("Add event ok:id=%d", eventId)
 			}
 		}
 	}
