@@ -4,9 +4,9 @@
 	"SsdbAuthPort" :	9875,
 	"SsdbMatchPort" :	9876,
 	"AppName": "national",
-	"EventPublishInfoes_": [
-	],
 	"EventPublishInfoes": [
+	],
+	"EventPublishInfoes_": [
 		{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":2},
 		{"PublishTime":[5, 0], "BeginTime":[13, 0], "EndTime":[19, 0], "EventNum":2},
 		{"PublishTime":[5, 0], "BeginTime":[19, 0], "EndTime":[24, 0], "EventNum":2}
