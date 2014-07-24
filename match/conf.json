@@ -1,5 +1,8 @@
 {
-	"Port": 9998,
+	"Port": 			9998,
+	"RedisHost": 		"localhost:6379",
+	"SsdbAuthPort" :	9875,
+	"SsdbMatchPort" :	9876,
 	"AppName": "national",
 	"EventPublishInfoes": [
 		{"PublishTime":[16, 43], "BeginTime":[16, 43], "EndTime":[16, 46], "EventNum":1},
@@ -7,4 +10,5 @@
 		{"PublishTime":[3, 45], "BeginTime":[4, 11], "EndTime":[23, 12], "EventNum":1}
 	],
 	"ChallengeRewards" : [100, 50, 50]
+
 }

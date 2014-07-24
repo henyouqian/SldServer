@@ -36,6 +36,7 @@ func main() {
 	}
 
 	initConf(confFile)
+	initDb()
 
 	http.HandleFunc("/www/", staticFile)
 	http.HandleFunc("/html5/", html5)

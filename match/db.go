@@ -23,13 +23,13 @@ var (
 	ssdbAuthPool *ssdb.Pool
 )
 
-func init() {
+func initDb() {
 	redisPool = &redis.Pool{
 		MaxIdle:     20,
 		MaxActive:   0,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", "localhost:6379")
+			c, err := redis.Dial("tcp", _conf.RedisHost)
 			if err != nil {
 				return nil, err
 			}
@@ -53,8 +53,8 @@ func init() {
 	// authDB = opendb("auth_db")
 	// authDB.SetMaxIdleConns(10)
 
-	ssdbPool = ssdb.NewPool("localhost", 9876, 10, 60)
-	ssdbAuthPool = ssdb.NewPool("localhost", 9875, 10, 60)
+	ssdbAuthPool = ssdb.NewPool("localhost", _conf.SsdbAuthPort, 10, 60)
+	ssdbPool = ssdb.NewPool("localhost", _conf.SsdbMatchPort, 10, 60)
 }
 
 func opendb(dbname string) *sql.DB {

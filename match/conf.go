@@ -7,7 +7,11 @@ import (
 )
 
 type Conf struct {
-	Port               int
+	Port          int
+	RedisHost     string
+	SsdbAuthPort  int
+	SsdbMatchPort int
+
 	AppName            string
 	EventPublishInfoes []EventPublishInfo
 	ChallengeRewards   []int
