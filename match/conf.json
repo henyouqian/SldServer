@@ -5,6 +5,8 @@
 	"SsdbMatchPort" :	9876,
 	"AppName": "national",
 	"EventPublishInfoes": [
+	],
+	"EventPublishInfoes_": [
 		{"PublishTime":[16, 43], "BeginTime":[16, 43], "EndTime":[16, 46], "EventNum":1},
 		{"PublishTime":[3, 45], "BeginTime":[4, 10], "EndTime":[23, 11], "EventNum":1},
 		{"PublishTime":[3, 45], "BeginTime":[4, 11], "EndTime":[23, 12], "EventNum":1}
