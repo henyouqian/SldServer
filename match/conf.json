@@ -4,12 +4,12 @@
 	"SsdbAuthPort" :	9875,
 	"SsdbMatchPort" :	9876,
 	"AppName": "national",
-	"EventPublishInfoes": [
-	],
 	"EventPublishInfoes_": [
-		{"PublishTime":[16, 43], "BeginTime":[16, 43], "EndTime":[16, 46], "EventNum":1},
-		{"PublishTime":[3, 45], "BeginTime":[4, 10], "EndTime":[23, 11], "EventNum":1},
-		{"PublishTime":[3, 45], "BeginTime":[4, 11], "EndTime":[23, 12], "EventNum":1}
+	],
+	"EventPublishInfoes": [
+		{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":2},
+		{"PublishTime":[5, 0], "BeginTime":[13, 0], "EndTime":[19, 0], "EventNum":2},
+		{"PublishTime":[5, 0], "BeginTime":[19, 0], "EndTime":[24, 0], "EventNum":2}
 	],
 	"ChallengeRewards" : [100, 50, 50]
 
