@@ -34,11 +34,11 @@ const (
 	H_EVENT_TEAM_SCORE          = "H_EVENT_TEAM_SCORE"   //subkey:eventId value:map[(string)teamName](int)score
 	H_EVENT_BETTING_POOL        = "H_EVENT_BETTING_POOL" //key:H_EVENT_BETTING_POOL/eventId subkey:(string)teamName value:(int64)money
 	INIT_GAME_COIN_NUM          = 3
-	// BET_CLOSE_BEFORE_END_SEC    = 60 * 60
-	BET_CLOSE_BEFORE_END_SEC = 0
-	H_EVENT_TEAM_PLAYER_BET  = "H_EVENT_TEAM_PLAYER_BET" //key:H_EVENT_TEAM_PLAYER_BET/eventId/teamName subKey:playerId value:betMoney
-	TIME_FORMAT              = "2006-01-02T15:04"
-	TEAM_SCORE_RANK_MAX      = 100
+	BET_CLOSE_BEFORE_END_SEC    = 60 * 60
+	// BET_CLOSE_BEFORE_END_SEC = 0
+	H_EVENT_TEAM_PLAYER_BET = "H_EVENT_TEAM_PLAYER_BET" //key:H_EVENT_TEAM_PLAYER_BET/eventId/teamName subKey:playerId value:betMoney
+	TIME_FORMAT             = "2006-01-02T15:04"
+	TEAM_SCORE_RANK_MAX     = 100
 )
 
 var (
@@ -1442,7 +1442,7 @@ func apiBet(w http.ResponseWriter, r *http.Request) {
 	money -= in.Money
 
 	// add to H_EVENT_TEAM_PLAYER_BET
-	key := makeEventTeamPlayerBetKey(in.EventId, playerInfo.TeamName)
+	key := makeEventTeamPlayerBetKey(in.EventId, in.TeamName)
 	resp, err = ssdb.Do("hincr", key, userId, in.Money)
 	lwutil.CheckSsdbError(resp, err)
 

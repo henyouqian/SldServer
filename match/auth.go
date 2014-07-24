@@ -28,6 +28,7 @@ const (
 	RESET_PASSWORD_TTL = 60 * 60
 	CLIENT_VERSION     = "1.2"
 	APP_STORE_URL      = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=873521060"
+	NOTIFICATION       = ""
 )
 
 var (
@@ -467,9 +468,11 @@ func apiCheckVersion(w http.ResponseWriter, r *http.Request) {
 		url = APP_STORE_URL
 	}
 	out := struct {
-		UpdateUrl string
+		UpdateUrl    string
+		Notification string
 	}{
 		url,
+		NOTIFICATION,
 	}
 	lwutil.WriteResponse(w, out)
 }

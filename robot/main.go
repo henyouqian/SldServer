@@ -210,11 +210,11 @@ func setInfo(userName string) {
 	glog.Info(string(resp))
 }
 
-func bet(userName string, eventId int, teamName string, money int) {
+func bet(userName string, eventId int64, teamName string, money int) {
 	url := HOST + "/event/bet"
 
 	body := struct {
-		EventId  int
+		EventId  int64
 		TeamName string
 		Money    int
 	}{
@@ -257,22 +257,24 @@ func main() {
 	glog.Infof("Robot running: cpu=%d", runtime.NumCPU())
 
 	rand.Seed(time.Now().UnixNano())
-	//adminCookie := login(ADMIN_NAME, ADMIN_PASSWORD)
+	// adminCookie := login(ADMIN_NAME, ADMIN_PASSWORD)
 	for i := 0; i < 1000; i++ {
-		eventId := int64(14)
-
+		eventId := int64(26)
 		username := fmt.Sprintf("test%d@pt.com", i)
+
 		// register(username)
 		// setInfo(username)
 
 		//play(userName string, eventId uint64, minScore int32, maxScore int32)
 		play(username, eventId, -1000*50, -1000*30)
 
-		//addMoney(adminCookie, username, 10000)
+		//
+		// addMoney(adminCookie, username, 10000)
 
-		// teamName := TEAM_NAMES[rand.Int()%len(TEAM_NAMES)]
-		// money := 20 + rand.Int()%200
-		// bet(username, eventId, teamName, money)
+		//bet
+		teamName := TEAM_NAMES[rand.Int()%len(TEAM_NAMES)]
+		money := 20 + rand.Int()%200
+		bet(username, eventId, teamName, money)
 	}
 
 	// var w sync.WaitGroup

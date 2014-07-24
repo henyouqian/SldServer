@@ -187,7 +187,7 @@ func scoreKeeper() {
 				if score > maxScore {
 					winTeams = winTeams[:1]
 					winTeams[0] = teamName
-					score = maxScore
+					maxScore = score
 				} else if score == maxScore {
 					winTeams = append(winTeams, teamName)
 				}
@@ -231,16 +231,16 @@ func scoreKeeper() {
 					glog.Errorln(err, resp[0])
 					break
 				}
-				resp = resp[1:]
-				num := len(resp) / 2
+				respHscan := resp[1:]
+				num := len(respHscan) / 2
 
 				if num == 0 {
 					break
 				}
 
 				for i := 0; i < num; i++ {
-					playerIdStr := resp[2*i]
-					playerBetStr := resp[2*i+1]
+					playerIdStr := respHscan[2*i]
+					playerBetStr := respHscan[2*i+1]
 					playerId, err := strconv.ParseInt(playerIdStr, 10, 64)
 					checkError(err)
 					playerBet, err := strconv.ParseInt(playerBetStr, 10, 64)
@@ -263,6 +263,11 @@ func scoreKeeper() {
 					js, err := json.Marshal(record)
 					checkError(err)
 					resp, err = ssdb.Do("hset", H_EVENT_PLAYER_RECORD, key, js)
+					checkSsdbError(resp, err)
+
+					//add to Z_EVENT_PLAYER_RECORD
+					key = fmt.Sprintf("Z_EVENT_PLAYER_RECORD/%d", playerId)
+					resp, err = ssdb.Do("zset", key, event.Id, event.Id)
 					checkSsdbError(resp, err)
 
 					//
