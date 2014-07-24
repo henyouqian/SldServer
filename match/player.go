@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	H_PLAYER_INFO      = "H_PLAYER_INFO"     //subkey:(int64)userId value:(PlayerInfo)playerInfo
+	H_PLAYER_INFO      = "H_PLAYER_INFO"     //key:H_PLAYER_INFO/<userId> subkey:property
 	H_APP_PLAYER_RATE  = "H_APP_PLAYER_RATE" //subkey:appName/userId value:1
 	USER_UPLOAD_BUCKET = "pintugame"
 	INIT_MONEY         = 500
@@ -25,27 +25,27 @@ const (
 )
 
 type PlayerInfo struct {
-	NickName         string
-	TeamName         string
-	Gender           int
-	CustomAvatarKey  string
-	GravatarKey      string
-	Money            int64
-	BetMax           int
-	RewardCache      int64
-	TotalReward      int64
-	Secret           string
-	ChallengeEventId int
-	AllowSave        bool
+	NickName        string
+	TeamName        string
+	Gender          int
+	CustomAvatarKey string
+	GravatarKey     string
+	Money           int64
+	BetMax          int
+	RewardCache     int64
+	TotalReward     int64
+	Secret          string
+	CurrChallengeId int
+	AllowSave       bool
 }
 
 //player property
 const (
-	playerMoney            = "Money"
-	playerRewardCache      = "RewardCache"
-	playerTotalReward      = "TotalReward"
-	playerIapSecret        = "IapSecret"
-	playerChallengeEventId = "ChallengeEventId"
+	playerMoney           = "Money"
+	playerRewardCache     = "RewardCache"
+	playerTotalReward     = "TotalReward"
+	playerIapSecret       = "IapSecret"
+	playerCurrChallengeId = "CurrChallengeId"
 )
 
 func init() {
@@ -66,9 +66,9 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	var playerInfo PlayerInfo
 	err := ssdb.HGetStruct(key, &playerInfo)
 
-	if playerInfo.ChallengeEventId == 0 {
-		playerInfo.ChallengeEventId = 1
-		ssdb.HSet(key, playerChallengeEventId, 1)
+	if playerInfo.CurrChallengeId == 0 {
+		playerInfo.CurrChallengeId = 1
+		ssdb.HSet(key, playerCurrChallengeId, 1)
 	}
 
 	return &playerInfo, err
@@ -163,11 +163,13 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		*PlayerInfo
+		UserId               int64
 		BetCloseBeforeEndSec int
 		AdsPercent           float32
 		RateReward           int
 	}{
 		playerInfo,
+		session.Userid,
 		BET_CLOSE_BEFORE_END_SEC,
 		ap,
 		rateReward,
@@ -214,7 +216,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		playerInfo = in
 		playerInfo.BetMax = 100
 		playerInfo.Money = INIT_MONEY
-		playerInfo.ChallengeEventId = 1
+		playerInfo.CurrChallengeId = 1
 	} else {
 		err = json.Unmarshal([]byte(resp[1]), &playerInfo)
 		lwutil.CheckError(err, "")
@@ -270,23 +272,16 @@ func apiAddRewardFromCache(w http.ResponseWriter, r *http.Request) {
 	if rewardCache > 0 {
 		ssdb.Do("hincr", key, playerRewardCache, -rewardCache)
 		ssdb.Do("hincr", key, playerMoney, rewardCache)
+		ssdb.Do("hincr", key, playerTotalReward, rewardCache)
 	}
 
-	var money int64
-	err = ssdb.HGet(key, playerMoney, &money)
-
-	// //
-	// playerInfo, err := getPlayerInfo(ssdb, session.Userid)
-	// lwutil.CheckError(err, "")
-	// if playerInfo.RewardCache > 0 {
-	// 	playerInfo.Money += playerInfo.RewardCache
-	// 	playerInfo.RewardCache = 0
-	// 	savePlayerInfo(ssdb, session.Userid, playerInfo)
-	// }
+	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	lwutil.CheckError(err, "")
 
 	//out
 	out := map[string]interface{}{
-		"Money": money,
+		"Money":       playerInfo.Money,
+		"TotalReward": playerInfo.TotalReward,
 	}
 	lwutil.WriteResponse(w, out)
 }

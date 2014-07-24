@@ -19,7 +19,7 @@ import (
 
 const (
 	PASSWORD       = "aaa"
-	HOST           = "http://localhost:9999"
+	HOST           = "http://localhost:9998"
 	ADMIN_NAME     = "henyouqian@gmail.com"
 	ADMIN_PASSWORD = "Nmmgb808313"
 )
@@ -129,11 +129,11 @@ func freePlay(userName string, matchId uint32, minScore int32, maxScore int32) {
 	glog.Info(string(resp))
 }
 
-func play(userName string, eventId uint64, minScore int32, maxScore int32) {
+func play(userName string, eventId int64, minScore int32, maxScore int32) {
 	//playBegin
 	url := HOST + "/event/playBegin"
 	body := struct {
-		EventId uint64
+		EventId int64
 	}{
 		eventId,
 	}
@@ -166,7 +166,7 @@ func play(userName string, eventId uint64, minScore int32, maxScore int32) {
 	//playEnd
 	url = HOST + "/event/playEnd"
 	playEndBody := struct {
-		EventId  uint64
+		EventId  int64
 		Secret   string
 		Score    int32
 		CheckSum string
@@ -259,19 +259,20 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//adminCookie := login(ADMIN_NAME, ADMIN_PASSWORD)
 	for i := 0; i < 1000; i++ {
+		eventId := int64(14)
+
 		username := fmt.Sprintf("test%d@pt.com", i)
 		// register(username)
 		// setInfo(username)
 
 		//play(userName string, eventId uint64, minScore int32, maxScore int32)
-		//play(username, 25, -1000*50, -1000*30)
+		play(username, eventId, -1000*50, -1000*30)
 
 		//addMoney(adminCookie, username, 10000)
 
-		eventId := 25
-		teamName := TEAM_NAMES[rand.Int()%len(TEAM_NAMES)]
-		money := 20 + rand.Int()%200
-		bet(username, eventId, teamName, money)
+		// teamName := TEAM_NAMES[rand.Int()%len(TEAM_NAMES)]
+		// money := 20 + rand.Int()%200
+		// bet(username, eventId, teamName, money)
 	}
 
 	// var w sync.WaitGroup

@@ -149,8 +149,6 @@ func scoreKeeper() {
 				playerKey := makePlayerInfoKey(userId)
 				resp, err = ssdb.Do("hincr", playerKey, playerRewardCache, record.MatchReward)
 				checkSsdbError(resp, err)
-				resp, err = ssdb.Do("hincr", playerKey, playerTotalReward, record.MatchReward)
-				checkSsdbError(resp, err)
 
 				//add to Z_EVENT_PLAYER_RECORD
 				key = fmt.Sprintf("Z_EVENT_PLAYER_RECORD/%d", userId)
@@ -159,11 +157,25 @@ func scoreKeeper() {
 			}
 		}
 
+		endEvent := func() {
+			//event finished
+			event.HasResult = true
+			jsEvent, err := json.Marshal(event)
+			checkError(err)
+			resp, err = ssdb.Do("hset", H_EVENT, event.Id, jsEvent)
+			checkSsdbError(resp, err)
+
+			//del redis leaderboard
+			_, err = rc.Do("del", eventLbLey)
+			checkError(err)
+		}
+
 		//bet
 		//recalc team score
 		scoreMap := recaculateTeamScore(ssdb, rc, event.Id)
 		if scoreMap == nil {
-			glog.Errorln("scoreMap == nil. eventId=%d", event.Id)
+			glog.Errorf("scoreMap == nil. eventId=%d", event.Id)
+			endEvent()
 			continue
 		}
 
@@ -238,6 +250,7 @@ func scoreKeeper() {
 					playerKey := makePlayerInfoKey(playerId)
 					addMoney := int64(float32(playerBet) * winMult)
 					resp, err = ssdb.Do("hincr", playerKey, playerRewardCache, addMoney)
+					checkSsdbError(resp, err)
 
 					key := makeEventPlayerRecordSubkey(event.Id, playerId)
 					resp, err := ssdb.Do("hget", H_EVENT_PLAYER_RECORD, key)
@@ -259,16 +272,7 @@ func scoreKeeper() {
 			}
 		}
 
-		//event finished
-		event.HasResult = true
-		jsEvent, err := json.Marshal(event)
-		checkError(err)
-		resp, err = ssdb.Do("hset", H_EVENT, event.Id, jsEvent)
-		checkSsdbError(resp, err)
-
-		//del redis leaderboard
-		_, err = rc.Do("del", eventLbLey)
-		checkError(err)
+		endEvent()
 
 		glog.Infof("event end")
 	}

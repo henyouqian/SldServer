@@ -33,10 +33,6 @@ func initConf(confFile string) {
 		panic(err)
 	}
 
-	//init Z_EVENT AND Q_EVENT_BUFF
-	Z_EVENT = fmt.Sprintf("Z_EVENT/%s", _conf.AppName)
-	Z_EVENT_BUFF = fmt.Sprintf("Z_EVENT_BUFF/%s", _conf.AppName)
-
 	//
 	EventPublishInfoes = _conf.EventPublishInfoes
 }

@@ -173,7 +173,6 @@ function Controller($scope, $http) {
 					"name": "new",
 					"method": "POST",
 					"data": {
-						"Type": "PERSONAL_RANK", 
 						"PackId": 1, 
 						"SliderNum": 6,
 						"BeginTimeString": "2014-04-01T00:00",				
@@ -193,30 +192,29 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"StartId": 0, "Limit": 20}
 				},{
-					"name": "revList",
-					"method": "POST",
-					"data": {"StartId": 0, "Limit": 20}
-				},{
 					"name": "get",
 					"method": "POST",
 					"data": {"EventId": 0}
 				},{
-					"name": "addToBuff",
+					"name": "buffAdd",
 					"method": "POST",
 					"data": {
-						"Type": "PERSONAL_RANK", 
 						"PackId": 0,
 						"SliderNum": 5,
 						"ChallengeSecs": [32, 35, 40]
 						}
 				},{
-					"name": "listBuff",
+					"name": "buffList",
 					"method": "POST",
 					"data": ""
 				},{
-					"name": "delFromBuff",
+					"name": "buffDel",
 					"method": "POST",
 					"data": {"EventId": 0}
+				},{
+					"name": "buffMod",
+					"method": "POST",
+					"data": ""
 				},{
 					"name": "getUserPlay",
 					"method": "POST",
@@ -234,10 +232,6 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"EventId": 0, "Offset": 0, "Limit": 20}
 				},{
-					"name": "submitChallengeScore",
-					"method": "POST",
-					"data": {"EventId": 0, "Score": 100, "Checksum":"cks"}
-				},{
 					"name": "getBettingPool",
 					"method": "POST",
 					"data": {"EventId": 0}
@@ -249,6 +243,32 @@ function Controller($scope, $http) {
 					"name": "listPlayResult",
 					"method": "POST",
 					"data": {"StartEventId": 0, "Limit":20}
+				}
+			]
+		},{
+			"tab":"challenge",
+			"path":"challenge",
+			"apis":[
+				{
+					"name": "count",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "list",
+					"method": "POST",
+					"data": {"Offset": 0, "Limit": 20}
+				},{
+					"name": "mod",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "getPlay",
+					"method": "POST",
+					"data": {"ChallengeId": 0}
+				},{
+					"name": "submitScore",
+					"method": "POST",
+					"data": {"ChallengeId": 0, "Score": 100, "Checksum":"cks"}
 				}
 			]
 		},{
@@ -264,9 +284,9 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"AdsPercent": 0.5}
 				},{
-					"name": "setChallengeEventId",
+					"name": "setCurrChallengeId",
 					"method": "POST",
-					"data": {"UserName": "", "ChallengeEventId": 0}
+					"data": {"UserName": "", "ChallengeId": 0}
 				}
 			]
 		},{
@@ -293,6 +313,16 @@ function Controller($scope, $http) {
 					"name": "buyIap",
 					"method": "POST",
 					"data": {"ProductId":"", "Checksum":""}
+				}
+			]
+		},{
+			"tab":"etc",
+			"path":"etc",
+			"apis":[
+				{
+					"name": "betHelp",
+					"method": "POST",
+					"data": ""
 				}
 			]
 		}

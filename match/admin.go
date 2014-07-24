@@ -108,7 +108,7 @@ func apiSetAdsPercent(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
-func apiSetChallengeEventId(w http.ResponseWriter, r *http.Request) {
+func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -129,13 +129,13 @@ func apiSetChallengeEventId(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		UserName         string
-		ChallengeEventId int64
+		UserName    string
+		ChallengeId int64
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	if in.ChallengeEventId <= 0 {
+	if in.ChallengeId <= 0 {
 		lwutil.SendError("err_invalid_input", "")
 	}
 
@@ -151,7 +151,7 @@ func apiSetChallengeEventId(w http.ResponseWriter, r *http.Request) {
 	//save
 	playerKey := makePlayerInfoKey(userId)
 
-	resp, err = ssdb.Do("hset", playerKey, playerChallengeEventId, in.ChallengeEventId)
+	resp, err = ssdb.Do("hset", playerKey, playerCurrChallengeId, in.ChallengeId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
@@ -161,5 +161,5 @@ func apiSetChallengeEventId(w http.ResponseWriter, r *http.Request) {
 func regAdmin() {
 	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
 	http.Handle("/admin/setAdsPercent", lwutil.ReqHandler(apiSetAdsPercent))
-	http.Handle("/admin/setChallengeEventId", lwutil.ReqHandler(apiSetChallengeEventId))
+	http.Handle("/admin/setCurrChallengeId", lwutil.ReqHandler(apiSetCurrChallengeId))
 }

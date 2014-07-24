@@ -15,7 +15,7 @@ import (
 
 const (
 	ADMIN_USERID    = uint64(0)
-	H_PACK          = "H_PACK"          //key:packId, value:packData
+	H_PACK          = "H_PACK"          //subkey:packId value:packJson
 	Z_USER_PACK_PRE = "Z_USER_PACK_PRE" //name:Z_USER_PACK_PRE/userId, key:packid, score:packid
 	Z_TAG_PRE       = "Z_TAG_PRE"       //name:Z_TAG_PRE/tag, key:packid, score:packid
 	Z_COMMENT       = "Z_COMMENT"       //name:Z_COMMENT/packid, key:commentId, score:commentId
@@ -45,24 +45,56 @@ type Pack struct {
 	CoverBlur string
 	Images    []Image
 	Tags      []string
-	EventIds  map[string]bool
 }
 
-func getPack(ssdb *ssdb.Client, packId int64) *Pack {
-	resp, err := ssdb.Do("hget", H_PACK, packId)
-	lwutil.CheckSsdbError(resp, err)
+const (
+	PACK_THUMB    = "Thumb"
+	PACK_TIMEUNIX = "TimeUnix"
+)
 
-	pack := Pack{}
+// func getPack(ssdb *ssdb.Client, packId int64) *Pack {
+// 	resp, err := ssdb.Do("hget", H_PACK, packId)
+// 	lwutil.CheckSsdbError(resp, err)
+
+// 	pack := Pack{}
+// 	err = json.Unmarshal([]byte(resp[1]), &pack)
+// 	lwutil.CheckError(err, "")
+// 	return &pack
+// }
+
+// func savePack(ssdb *ssdb.Client, pack *Pack) {
+// 	js, err := json.Marshal(pack)
+// 	lwutil.CheckError(err, "")
+// 	resp, err := ssdb.Do("hset", H_PACK, pack.Id, js)
+// 	lwutil.CheckSsdbError(resp, err)
+// }
+
+func getPack(ssdbc *ssdb.Client, packId int64) (*Pack, error) {
+	var pack Pack
+	resp, err := ssdbc.Do("hget", H_PACK, packId)
+	if err != nil {
+		return &pack, err
+	}
+	if len(resp) < 2 {
+		return &pack, fmt.Errorf("not_found:packId=%d", packId)
+	}
+
 	err = json.Unmarshal([]byte(resp[1]), &pack)
 	lwutil.CheckError(err, "")
-	return &pack
+	if pack.Tags == nil {
+		pack.Tags = make([]string, 0)
+	}
+
+	return &pack, err
 }
 
-func savePack(ssdb *ssdb.Client, pack *Pack) {
+func savePack(ssdbc *ssdb.Client, pack *Pack) error {
 	js, err := json.Marshal(pack)
-	lwutil.CheckError(err, "")
-	resp, err := ssdb.Do("hset", H_PACK, pack.Id, js)
-	lwutil.CheckSsdbError(resp, err)
+	if err != nil {
+		return err
+	}
+	_, err = ssdbc.Do("hset", H_PACK, pack.Id, js)
+	return err
 }
 
 func init() {
@@ -91,7 +123,6 @@ func apiNewPack(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pack.AuthorId = session.Userid
 	}
-	pack.EventIds = make(map[string]bool)
 
 	now := time.Now()
 	pack.Time = now.Format(time.RFC3339)
@@ -219,17 +250,6 @@ func apiModPack(w http.ResponseWriter, r *http.Request) {
 	//add to user pack zset
 	resp, err = ssdb.Do("zset", name, pack.Id, pack.Id)
 	lwutil.CheckSsdbError(resp, err)
-
-	//update event which use this pack
-	pack.EventIds = oldPack.EventIds
-	for eventIdStr, _ := range pack.EventIds {
-		eventId, err := strconv.ParseInt(eventIdStr, 10, 64)
-		lwutil.CheckError(err, "")
-		event := getEvent(ssdb, eventId)
-		event.Thumb = pack.Thumb
-		event.PackTimeUnix = pack.TimeUnix
-		saveEvent(ssdb, event)
-	}
 
 	//out
 	lwutil.WriteResponse(w, pack)
