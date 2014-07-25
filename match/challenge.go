@@ -205,10 +205,6 @@ func apiChallengeDel(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
-	//redis
-	rc := redisPool.Get()
-	defer rc.Close()
-
 	//session
 	session, err := findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
@@ -232,8 +228,42 @@ func apiChallengeDel(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdb.Do("hdel", H_CHALLENGE, in.ChallengeId)
 	lwutil.CheckSsdbError(resp, err)
 
-	_, err = rc.Do("ZREM", Z_CHALLENGE, in.ChallengeId)
+	resp, err = ssdb.Do("zdel", Z_CHALLENGE, in.ChallengeId)
+	lwutil.CheckSsdbError(resp, err)
+
+	lwutil.WriteResponse(w, in)
+}
+
+func apiChallengeMod(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+	checkAdmin(session)
+
+	//in
+	var in Challenge
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get challange
+	resp, err := ssdb.Do("hexists", H_CHALLENGE, in.Id)
+	lwutil.CheckError(err, "")
+	if resp[1] != "1" {
+		lwutil.SendError("err_exist", fmt.Sprintf("challenge not exist:id=", in.Id))
+	}
+
+	//set
+	js, err := json.Marshal(in)
+	lwutil.CheckError(err, "")
+	resp, err = ssdb.Do("hset", H_CHALLENGE, in.Id, js)
+	lwutil.CheckSsdbError(resp, err)
 
 	lwutil.WriteResponse(w, in)
 }
@@ -463,7 +493,8 @@ func apiPassMissingChallenge(w http.ResponseWriter, r *http.Request) {
 func regChallenge() {
 	http.Handle("/challenge/count", lwutil.ReqHandler(apiChallengeCount))
 	http.Handle("/challenge/list", lwutil.ReqHandler(apiChallengeList))
-	http.Handle("/challenge/del", lwutil.ReqHandler(apiChallengeDel))
+	//http.Handle("/challenge/del", lwutil.ReqHandler(apiChallengeDel))
+	http.Handle("/challenge/mod", lwutil.ReqHandler(apiChallengeMod))
 	http.Handle("/challenge/getPlay", lwutil.ReqHandler(apiChallengeGetPlay))
 	http.Handle("/challenge/submitScore", lwutil.ReqHandler(apiChallengeSubmitScore))
 	http.Handle("/challenge/passMissingChallenge", lwutil.ReqHandler(apiPassMissingChallenge))
