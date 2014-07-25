@@ -287,6 +287,14 @@ function Controller($scope, $http) {
 					"name": "setCurrChallengeId",
 					"method": "POST",
 					"data": {"UserName": "", "ChallengeId": 0}
+				},{
+					"name": "setEventPublish",
+					"method": "POST",
+					"data": [{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":1}]
+				},{
+					"name": "getEventPublish",
+					"method": "POST",
+					"data": ""
 				}
 			]
 		},{

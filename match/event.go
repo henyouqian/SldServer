@@ -39,10 +39,11 @@ const (
 	H_EVENT_TEAM_PLAYER_BET = "H_EVENT_TEAM_PLAYER_BET" //key:H_EVENT_TEAM_PLAYER_BET/eventId/teamName subKey:playerId value:betMoney
 	TIME_FORMAT             = "2006-01-02T15:04"
 	TEAM_SCORE_RANK_MAX     = 100
+	K_EVENT_PUBLISH         = "K_EVENT_PUBLISH"
 )
 
 var (
-	EventPublishInfoes []EventPublishInfo
+	_eventPublishInfoes []EventPublishInfo
 
 	TEAM_NAMES              = []string{"安徽", "澳门", "北京", "重庆", "福建", "甘肃", "广东", "广西", "贵州", "海南", "河北", "黑龙江", "河南", "湖北", "湖南", "江苏", "江西", "吉林", "辽宁", "内蒙古", "宁夏", "青海", "陕西", "山东", "上海", "山西", "四川", "台湾", "天津", "香港", "新疆", "西藏", "云南", "浙江"}
 	EVENT_INIT_BETTING_POOL = map[string]interface{}{}
@@ -124,8 +125,13 @@ func makeEventTeamPlayerBetKey(eventId int64, teamName string) string {
 	return fmt.Sprintf("%s/%d/%s", H_EVENT_TEAM_PLAYER_BET, eventId, teamName)
 }
 
-func init() {
-	glog.Info("match init")
+func initEvent() {
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	checkError(err)
+	defer ssdbc.Close()
+
+	//
 	for _, teamName := range TEAM_NAMES {
 		EVENT_INIT_BETTING_POOL[teamName] = INIT_BET_MONEY
 	}
@@ -133,6 +139,15 @@ func init() {
 	//cron
 	_cron.AddFunc("0 * * * * *", eventPublishTask)
 	_cron.Start()
+
+	//eventPublishInfoes
+	resp, err := ssdbc.Do("get", K_EVENT_PUBLISH)
+	if err != nil || len(resp) <= 1 {
+		_eventPublishInfoes = _conf.EventPublishInfoes
+	} else {
+		err = json.Unmarshal([]byte(resp[1]), &_eventPublishInfoes)
+		checkError(err)
+	}
 }
 
 func eventPublishTask() {
@@ -149,7 +164,7 @@ func eventPublishTask() {
 
 	//
 	now := time.Now()
-	for _, pubInfo := range EventPublishInfoes {
+	for _, pubInfo := range _eventPublishInfoes {
 		if pubInfo.PublishTime[0] == now.Hour() && pubInfo.PublishTime[1] == now.Minute() {
 			//pop from Z_EVENT_BUFF and push to Z_EVENT
 			for i := 0; i < pubInfo.EventNum; i++ {

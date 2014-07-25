@@ -2,6 +2,7 @@ package main
 
 import (
 	// "encoding/json"
+	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
@@ -158,8 +159,71 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
+func apiGetEventPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//out
+	lwutil.WriteResponse(w, _eventPublishInfoes)
+}
+
+func apiSetEventPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in []EventPublishInfo
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if len(in) == 0 {
+		lwutil.SendError("err_input", "len(in) == 0")
+	}
+
+	for _, v := range in {
+		if v.EventNum < 1 || v.EventNum > 3 {
+			lwutil.SendError("err_input", "EventNum must between [1, 3]")
+		}
+	}
+
+	_eventPublishInfoes = in
+
+	//save
+	js, err := json.Marshal(_eventPublishInfoes)
+	lwutil.CheckError(err, "")
+	resp, err := ssdb.Do("set", K_EVENT_PUBLISH, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
 func regAdmin() {
 	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
 	http.Handle("/admin/setAdsPercent", lwutil.ReqHandler(apiSetAdsPercent))
 	http.Handle("/admin/setCurrChallengeId", lwutil.ReqHandler(apiSetCurrChallengeId))
+	http.Handle("/admin/getEventPublish", lwutil.ReqHandler(apiGetEventPublish))
+	http.Handle("/admin/setEventPublish", lwutil.ReqHandler(apiSetEventPublish))
 }

@@ -36,7 +36,4 @@ func initConf(confFile string) {
 	if err != nil {
 		panic(err)
 	}
-
-	//
-	EventPublishInfoes = _conf.EventPublishInfoes
 }
