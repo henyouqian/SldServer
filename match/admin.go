@@ -198,10 +198,6 @@ func apiSetEventPublish(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	if len(in) == 0 {
-		lwutil.SendError("err_input", "len(in) == 0")
-	}
-
 	for _, v := range in {
 		if v.EventNum < 1 || v.EventNum > 3 {
 			lwutil.SendError("err_input", "EventNum must between [1, 3]")
