@@ -333,6 +333,20 @@ function Controller($scope, $http) {
 					"data": ""
 				}
 			]
+		},{
+			"tab":"userPack",
+			"path":"userPack",
+			"apis":[
+				{
+					"name": "new",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "list",
+					"method": "POST",
+					"data": ""
+				}
+			]
 		}
 	]
 

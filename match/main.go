@@ -50,6 +50,7 @@ func main() {
 	regStore()
 	regChallenge()
 	regEtc()
+	regUserPack()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
