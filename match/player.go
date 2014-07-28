@@ -212,7 +212,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	var playerInfo PlayerInfo
 
 	playerKey := makePlayerInfoKey(session.Userid)
-	resp, err := ssdb.Do("hget", playerKey, session.Userid)
+	resp, err := ssdb.Do("get", playerKey)
 
 	if resp[0] == "not_found" {
 		//set default value
