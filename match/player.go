@@ -2,12 +2,9 @@ package main
 
 import (
 	"./ssdb"
-	"encoding/json"
-	// "errors"
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
-	// . "github.com/qiniu/api/conf"
-	"fmt"
 	"github.com/qiniu/api/rs"
 	"net/http"
 	"strconv"
@@ -65,6 +62,9 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 
 	var playerInfo PlayerInfo
 	err := ssdb.HGetStruct(key, &playerInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	if playerInfo.CurrChallengeId == 0 {
 		playerInfo.CurrChallengeId = 1
@@ -72,33 +72,7 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	}
 
 	return &playerInfo, err
-	// resp, err := ssdb.Do("hget", H_PLAYER_INFO, userId)
-	// lwutil.CheckSsdbError(resp, err)
-
-	// var playerInfo PlayerInfo
-	// if resp[0] == "not_found" {
-	// 	return nil, errors.New("not_found")
-	// } else {
-	// 	err = json.Unmarshal([]byte(resp[1]), &playerInfo)
-	// 	lwutil.CheckError(err, "")
-	// }
-	// playerInfo.AllowSave = true
-	// return &playerInfo, nil
 }
-
-// func savePlayerInfo(ssdb *ssdb.Client, userId int64, playerInfo *PlayerInfo) {
-// 	key := makePlayerInfoKey(userId)
-// 	ssdb.HSetStruct(key, playerInfo)
-
-// 	// if !playerInfo.AllowSave {
-// 	// 	lwutil.SendError("err_player_save_locked", "")
-// 	// }
-// 	// js, err := json.Marshal(playerInfo)
-// 	// lwutil.CheckError(err, "")
-
-// 	// resp, err := ssdb.Do("hset", H_PLAYER_INFO, userId, js)
-// 	// lwutil.CheckSsdbError(resp, err)
-// }
 
 func addPlayerMoney(ssc *ssdb.Client, userId int64, addMoney int64) (rMoney int64) {
 	playerKey := makePlayerInfoKey(userId)
@@ -209,20 +183,14 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	defer ssdb.Close()
 
 	//check player info exist
-	var playerInfo PlayerInfo
-
-	playerKey := makePlayerInfoKey(session.Userid)
-	resp, err := ssdb.Do("get", playerKey)
-
-	if resp[0] == "not_found" {
+	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	if playerInfo == nil {
 		//set default value
-		playerInfo = in
+		playerInfo = &in
 		playerInfo.BetMax = 100
 		playerInfo.Money = INIT_MONEY
 		playerInfo.CurrChallengeId = 1
 	} else {
-		err = json.Unmarshal([]byte(resp[1]), &playerInfo)
-		lwutil.CheckError(err, "")
 		if len(in.NickName) > 0 {
 			playerInfo.NickName = in.NickName
 		}
@@ -234,11 +202,10 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		playerInfo.Gender = in.Gender
 	}
 
-	//set
-	playerInfo.AllowSave = true
-
 	//save
-	ssdb.HSetStruct(playerKey, playerInfo)
+	playerKey := makePlayerInfoKey(session.Userid)
+	err = ssdb.HSetStruct(playerKey, *playerInfo)
+	lwutil.CheckError(err, "")
 
 	//out
 	out := struct {
@@ -246,7 +213,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		BetCloseBeforeEndSec int
 		AdsPercent           float32
 	}{
-		playerInfo,
+		*playerInfo,
 		BET_CLOSE_BEFORE_END_SEC,
 		ADS_PERCENT_DEFAUT,
 	}
