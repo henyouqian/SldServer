@@ -210,7 +210,10 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 
 	//check player info exist
 	var playerInfo PlayerInfo
-	resp, err := ssdb.Do("hget", H_PLAYER_INFO, session.Userid)
+
+	playerKey := makePlayerInfoKey(session.Userid)
+	resp, err := ssdb.Do("hget", playerKey, session.Userid)
+
 	if resp[0] == "not_found" {
 		//set default value
 		playerInfo = in
@@ -235,8 +238,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	playerInfo.AllowSave = true
 
 	//save
-	key := makePlayerInfoKey(session.Userid)
-	ssdb.HSetStruct(key, playerInfo)
+	ssdb.HSetStruct(playerKey, playerInfo)
 
 	//out
 	out := struct {
