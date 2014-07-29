@@ -630,10 +630,6 @@ func apiEventGet(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
-	//session
-	_, err = findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
 	//in
 	var in struct {
 		EventId uint32
@@ -646,9 +642,18 @@ func apiEventGet(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
-	out := Event{}
-	err = json.Unmarshal([]byte(resp[1]), &out)
+	out := struct {
+		Event
+		Pack *Pack
+	}{}
+	err = json.Unmarshal([]byte(resp[1]), &out.Event)
 	lwutil.CheckError(err, "")
+
+	//pack
+	pack, err := getPack(ssdb, out.Event.Id)
+	lwutil.CheckError(err, "")
+
+	out.Pack = pack
 
 	lwutil.WriteResponse(w, out)
 }

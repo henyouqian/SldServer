@@ -20,7 +20,9 @@ func staticFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func html5(w http.ResponseWriter, r *http.Request) {
-	url := fmt.Sprintf("%s%s", "..", r.URL.Path)
+	url := fmt.Sprintf("%s%s", "../../delight/html5/slider/", r.URL.Path[7:])
+	glog.Info(url)
+	glog.Info(r.URL.Path[1:])
 	http.ServeFile(w, r, url)
 	//lwutil.WriteResponse(w, url)
 }
@@ -51,6 +53,7 @@ func main() {
 	regChallenge()
 	regEtc()
 	regUserPack()
+	regSocial()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 

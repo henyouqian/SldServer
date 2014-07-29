@@ -19,7 +19,6 @@ type UserPack struct {
 	PackId    int64
 	SliderNum int
 	PlayTimes int
-	Earnings  int64
 }
 
 func makeZUserPackKey(userId int64) string {

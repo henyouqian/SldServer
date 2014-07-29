@@ -344,11 +344,25 @@ function Controller($scope, $http) {
 				},{
 					"name": "list",
 					"method": "POST",
-					{"UserId": 0, "StartId": 0, "Limit":12}
+					"data": {"UserId": 0, "StartId": 0, "Limit":12}
 				},{
 					"name": "get",
 					"method": "POST",
-					{"UserPackId": 0}
+					"data": {"UserPackId": 0}
+				}
+			]
+		},{
+			"tab":"social",
+			"path":"social",
+			"apis":[
+				{
+					"name": "newPack",
+					"method": "POST",
+					"data": {"PackId": 0, "SliderNum":5}
+				},{
+					"name": "getPack",
+					"method": "POST",
+					"data":{"Key": "aaabbb"}
 				}
 			]
 		}
