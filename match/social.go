@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
+	"sort"
 )
 
 const (
@@ -14,12 +15,24 @@ const (
 	SERIAL_SOCIAL_PACK = "SERIAL_SOCIAL_PACK"
 )
 
+type SocialRank struct {
+	Name string
+	Msec int
+}
+
+type ByRank []SocialRank
+
+func (a ByRank) Len() int           { return len(a) }
+func (a ByRank) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByRank) Less(i, j int) bool { return a[i].Msec < a[j].Msec }
+
 type SocialPack struct {
 	UserId    int64
 	PackId    int64
 	SliderNum int
 	PlayTimes int
 	IsOwner   bool
+	Ranks     []SocialRank
 }
 
 func _glogSocial() {
@@ -54,6 +67,7 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		PackId    int64
 		SliderNum int
+		Msec      int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -61,6 +75,10 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	if in.SliderNum < 3 || in.SliderNum > 8 {
 		lwutil.SendError("err_slider_num", "in.SliderNum < 3 || SliderNum > 8")
 	}
+
+	//get player
+	player, err := getPlayerInfo(ssdbc, session.Userid)
+	lwutil.CheckError(err, "")
 
 	//out
 	out := struct {
@@ -78,6 +96,36 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 		err = json.Unmarshal([]byte(resp[1]), &socialPack)
 		lwutil.CheckError(err, "")
 
+		if in.Msec > 0 {
+			if socialPack.Ranks == nil {
+				socialPack.Ranks = []SocialRank{
+					{Name: player.NickName, Msec: in.Msec},
+				}
+			} else {
+				found := false
+				for i, v := range socialPack.Ranks {
+					if v.Name == player.NickName {
+						found = true
+						if in.Msec < v.Msec {
+							socialPack.Ranks[i].Msec = in.Msec
+						}
+						break
+					}
+				}
+				if !found {
+					socialPack.Ranks = append(socialPack.Ranks, SocialRank{player.NickName, in.Msec})
+				}
+
+				//sort
+				sort.Sort(ByRank(socialPack.Ranks))
+
+				//
+				if len(socialPack.Ranks) > 10 {
+					socialPack.Ranks = socialPack.Ranks[:10]
+				}
+			}
+		}
+
 		out.Key = subkey
 		lwutil.WriteResponse(w, out)
 		return
@@ -92,12 +140,20 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 		isOwner = true
 	}
 
+	ranks := []SocialRank{
+		{Name: player.NickName, Msec: in.Msec},
+	}
+	if in.Msec <= 0 {
+		ranks = []SocialRank{}
+	}
+
 	socialPack := SocialPack{
 		UserId:    session.Userid,
 		PackId:    in.PackId,
 		SliderNum: in.SliderNum,
 		PlayTimes: 0,
 		IsOwner:   isOwner,
+		Ranks:     ranks,
 	}
 
 	//json
@@ -158,7 +214,70 @@ func apiSocialGetPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	checkError(err)
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		Key      string
+		Checksum string
+		UserName string
+		Msec     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
+	lwutil.CheckSsdbError(resp, err)
+
+	socialPack := SocialPack{}
+	err = json.Unmarshal([]byte(resp[1]), &socialPack)
+	lwutil.CheckError(err, "")
+
+	//update score
+	found := false
+	for i, v := range socialPack.Ranks {
+		if v.Name == in.UserName {
+			found = true
+			if in.Msec < v.Msec {
+				socialPack.Ranks[i].Msec = in.Msec
+			}
+			break
+		}
+	}
+	if !found {
+		socialPack.Ranks = append(socialPack.Ranks, SocialRank{in.UserName, in.Msec})
+	}
+
+	//sort
+	sort.Sort(ByRank(socialPack.Ranks))
+
+	//
+	if len(socialPack.Ranks) > 10 {
+		socialPack.Ranks = socialPack.Ranks[:10]
+	}
+
+	//json
+	js, err := json.Marshal(socialPack)
+	lwutil.CheckError(err, "")
+
+	//add to hash
+	resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, in.Key, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, socialPack)
+}
+
 func regSocial() {
 	http.Handle("/social/newPack", lwutil.ReqHandler(apiSocialNewPack))
 	http.Handle("/social/getPack", lwutil.ReqHandler(apiSocialGetPack))
+	http.Handle("/social/play", lwutil.ReqHandler(apiSocialPlay))
 }

@@ -358,11 +358,15 @@ function Controller($scope, $http) {
 				{
 					"name": "newPack",
 					"method": "POST",
-					"data": {"PackId": 0, "SliderNum":5}
+					"data": {"PackId": 0, "SliderNum":5, "Msec":50000}
 				},{
 					"name": "getPack",
 					"method": "POST",
 					"data":{"Key": "aaabbb"}
+				},{
+					"name": "play",
+					"method": "POST",
+					"data":{"Key": "aaabbb", "CheckSum": "xxxx", "UserName":"liwei", "Msec":50000}
 				}
 			]
 		}
