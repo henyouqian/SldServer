@@ -26,8 +26,6 @@ const (
 	H_USER_TOKEN       = "H_USER_TOKEN"     //key:appid/userid, value:token
 	K_RESET_PASSWORD   = "K_RESET_PASSWORD" //key:K_RESET_PASSWORD/<resetKey> value:accountEmail
 	RESET_PASSWORD_TTL = 60 * 60
-	CLIENT_VERSION     = "1.2"
-	APP_STORE_URL      = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=873521060"
 	NOTIFICATION       = ""
 )
 

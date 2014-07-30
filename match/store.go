@@ -25,12 +25,12 @@ var (
 	}
 
 	iapProducts = map[string]int{
-		"com.lw.pintu.coin6":   600,
-		"com.lw.pintu.coin30":  3000 + 300,
-		"com.lw.pintu.coin68":  6800 + 1000,
-		"com.lw.pintu.coin128": 12800 + 2500,
-		"com.lw.pintu.coin328": 32800 + 10000,
-		"com.lw.pintu.coin588": 58800 + 25000,
+		"com.liwei.pin.coin6":   600,
+		"com.liwei.pin.coin30":  3000 + 300,
+		"com.liwei.pin.coin68":  6800 + 1000,
+		"com.liwei.pin.coin128": 12800 + 2500,
+		"com.liwei.pin.coin328": 32800 + 10000,
+		"com.liwei.pin.coin588": 58800 + 25000,
 	}
 )
 

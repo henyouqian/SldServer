@@ -36,4 +36,5 @@ func apiBetHelp(w http.ResponseWriter, r *http.Request) {
 
 func regEtc() {
 	http.Handle("/etc/betHelp", lwutil.ReqHandler(apiBetHelp))
+	// http.Handle("/etc/getAppConf", lwutil.ReqHandler(apiGetAppConf))
 }

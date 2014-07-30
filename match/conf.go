@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+const (
+	CLIENT_VERSION = "1.0"
+	APP_STORE_URL  = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=904649492"
+)
+
 type Conf struct {
 	Port          int
 	RedisHost     string
