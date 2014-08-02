@@ -331,6 +331,14 @@ function Controller($scope, $http) {
 					"name": "betHelp",
 					"method": "POST",
 					"data": ""
+				},{
+					"name": "addAdvice",
+					"method": "POST",
+					"data": {"Text":"this is advice"}
+				},{
+					"name": "listAdvice",
+					"method": "POST",
+					"data": {"StartId": 0, "Limit":20}
 				}
 			]
 		},{

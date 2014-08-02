@@ -4,6 +4,50 @@
 		"selected_items":
 		[
 			[
+				"makez",
+				"makeZSocialPackKey	string ƒ"
+			],
+			[
+				"ssdb",
+				"SsdbMatchPort	int ν"
+			],
+			[
+				"H_cha",
+				"H_CHALLENGE	 Ɩ"
+			],
+			[
+				"ti",
+				"Title	string ν"
+			],
+			[
+				"Pack_",
+				"PACK_RESP_JS	 Ɩ"
+			],
+			[
+				"exi",
+				"IsExist	bool ƒ"
+			],
+			[
+				"save",
+				"saveChallengePlay	 ƒ"
+			],
+			[
+				"Chall",
+				"ChallengePlay	struct ʈ"
+			],
+			[
+				"H_chall",
+				"H_CHALLENGE_PLAY	 Ɩ"
+			],
+			[
+				"ch",
+				"ChallengeId	int64 ν"
+			],
+			[
+				"chall",
+				"Challenge	struct ʈ"
+			],
+			[
 				"int64",
 				"redisUint64	uint64, error ƒ"
 			],
@@ -195,15 +239,15 @@
 			"file": "match/event.go",
 			"settings":
 			{
-				"buffer_size": 47092,
+				"buffer_size": 39022,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "match/auth.go",
+			"file": "match/challenge.go",
 			"settings":
 			{
-				"buffer_size": 13784,
+				"buffer_size": 11229,
 				"line_ending": "Unix"
 			}
 		},
@@ -211,15 +255,18 @@
 			"file": "match/main.go",
 			"settings":
 			{
-				"buffer_size": 1139,
+				"buffer_size": 1288,
 				"line_ending": "Unix"
 			}
 		},
 		{
+			"contents": "package main\n\nimport (\n	\"encoding/json\"\n	\"fmt\"\n	\"os\"\n)\n\nconst (\n	CLIENT_VERSION = \"1.0\"\n	APP_STORE_URL  = \"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=904649492\"\n)\n\ntype Conf struct {\n	Port          int\n	RedisHost     string\n	SsdbAuthPort  int\n	SsdbMatchPort int\n\n	AppName            string\n	EventPublishInfoes []EventPublishInfo\n	ChallengeRewards   []int\n}\n\nvar (\n	_conf Conf\n)\n\nfunc initConf(confFile string) {\n	var f *os.File\n	var err error\n\n	if f, err = os.Open(confFile); err != nil {\n		panic(fmt.Sprintf(\"config file not found: %s\", confFile))\n	}\n	defer f.Close()\n\n	//json decode\n	decoder := json.NewDecoder(f)\n	err = decoder.Decode(&_conf)\n	if err != nil {\n		panic(err)\n	}\n}\n",
 			"file": "match/conf.go",
+			"file_size": 744,
+			"file_write_time": 1406736884000000,
 			"settings":
 			{
-				"buffer_size": 717,
+				"buffer_size": 744,
 				"line_ending": "Unix"
 			}
 		},
@@ -227,17 +274,65 @@
 			"file": "match/conf.json",
 			"settings":
 			{
-				"buffer_size": 347,
+				"buffer_size": 466,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "ssh henyouqian@173.255.215.104",
+			"file": "match/pack.go",
 			"settings":
 			{
-				"buffer_size": 30,
+				"buffer_size": 14638,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/player.go",
+			"settings":
+			{
+				"buffer_size": 7613,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/social.go",
+			"settings":
+			{
+				"buffer_size": 5880,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/www/api.js",
+			"settings":
+			{
+				"buffer_size": 11401,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/store.go",
+			"settings":
+			{
+				"buffer_size": 5389,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/etc.go",
+			"settings":
+			{
+				"buffer_size": 3488,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "- (void)scrollViewDidScroll:(UIScrollView *)scrollView {\n//    if (_adviceDatas.count == 0) {\n//        return;\n//    }\n    BOOL underBottom = NO;\n    lwInfo(\"%f, %f, %f, %f\", scrollView.contentSize.height, scrollView.frame.size.height, scrollView.contentOffset.y, scrollView.contentInset.top);\n    if (scrollView.contentSize.height < scrollView.frame.size.height) {\n        if (scrollView.contentOffset.y > -scrollView.contentInset.top) {\n            underBottom = YES;\n        }\n    } else if ((scrollView.contentOffset.y + scrollView.frame.size.height) > scrollView.contentSize.height) {\n        underBottom = YES;\n    }\n    \n    if (underBottom) {\n        if (!_underBottom) {\n            _underBottom = YES;\n            if (!_bottomRefresh.refreshing) {\n                [_bottomRefresh beginRefreshing];\n                \n                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{\n                    [_bottomRefresh endRefreshing];\n                });\n            }\n        }\n    } else {\n        _underBottom = NO;\n    }\n}",
+			"settings":
+			{
+				"buffer_size": 1082,
 				"line_ending": "Unix",
-				"name": "ssh henyouqian@173.255.215.104"
+				"name": "- (void)scrollViewDidScroll:(UIScrollView *)scroll"
 			}
 		}
 	],
@@ -273,7 +368,24 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/ssdb/match/ssdb.conf",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/userPack.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/auth.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
+		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/confServer.json",
+		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/conf.json",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/store.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/scorekeeper.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
+		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/robot/main.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/player.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/pack.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/ssdb/match/log.txt",
+		"/Users/liwei/Documents/projects/2014/SldServer/ssh henyouqian@173.255.215.104",
 		"/Users/liwei/Documents/projects/2014/delight/server/robot/main.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/tools/packUploader/main.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/match/conf.go",
@@ -287,7 +399,6 @@
 		"/Users/liwei/Documents/projects/2014/delight/Sld/Sld/Base.lproj/Main_ipad.storyboard",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/smtp.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/booker/main.go",
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/match/scorekeeper.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/match/db.go",
 		"/Users/liwei/Documents/projects/2014/delight/server/match/collection.go",
@@ -313,134 +424,134 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"CLIENT_VERSION",
-			"checkVersion",
-			"apiListEvent",
-			"getEventPlayerRecord",
-			"BetReward",
-			"event",
-			"calcEventTimes",
-			"apiModEvent",
-			"scoreMap",
-			"recaculateTeamScore",
-			"playerIapSecret",
-			"addPlayerMoney",
-			"apiRate",
-			"addPlayerMoney",
-			"apiGetPlayerInfo",
-			"getInfo",
-			"BET_CLOSE_BEFORE_END_SEC",
-			"TEAM_NAMES",
-			"post(",
-			"postWithCookie",
-			"login",
-			"login(",
-			"login",
-			"setInfo",
-			"TEAM_IDS",
-			"playend",
-			"saveEventPlayerRecord",
-			"getEventPlayerRecord",
-			"H_EVENT_PLAYER_RECORD",
-			"makeEventPlayerRecordSubkey",
-			"setInfo",
-			"getEvent",
-			"apiPassMissingChallenge",
-			"rand",
-			"makePlayerInfoKey",
-			"HGet",
-			"apiSubmitChallengeScore",
-			"login",
-			"上海",
-			"event.Endtime =",
-			"event.Endtime",
-			"BET_CLOSE_BEFORE_END_SEC",
-			"api bet",
-			"newEventBuff",
-			"newEvent",
-			"addtobuff",
-			"postReq",
-			"ChallengeSecs",
-			"Pack",
+			"listAdvice",
+			"startid",
+			"math",
+			"comment",
+			"apiGetComments",
+			"H_ADVICE",
+			"SEREIAL_ADVICE",
+			"makeZAdviceKey",
+			"addComment",
+			"Msec",
+			"apiSocialNewPack",
+			"sld1",
+			"873521060",
+			"com.",
+			"version",
+			"glog",
+			"sha",
+			"apiEventGet",
+			"apiSetPlayerInfo",
+			"setinfo",
+			"AllowSave",
+			"se t p",
+			"H_PACK",
+			"40",
+			"ALL",
+			"Z_USER_PACK",
+			"genImageKey",
+			"update",
 			"loadPack",
-			"title",
-			"pack.js",
-			"newevent",
-			"addtobuff",
-			"PERSONAL_RANK",
-			"EVENT_TYPES",
-			"newevent",
-			"postReq",
-			"apiBet",
-			"bet",
-			"apiGetBettingPool",
-			"apiPlayEnd",
-			"glog.info",
-			"EventIds",
-			"apiListPack",
-			"Error",
-			"getevent",
-			"saveevent",
-			"getEvent",
-			"pack.EventIds",
-			"EventIds\n",
-			"apimod",
-			"api mod",
-			".Thumb",
-			"PackThumbKey",
-			".PackThumbKey",
-			"record.PackThumbKey",
-			".PackId",
-			".Time",
-			"Time",
-			"apiListEvent",
-			"add pack succeed",
-			"pack.js",
-			"EVENT_SERIAL",
-			"H_EVENT_BUFF",
-			"EVENT_SERIAL",
-			"apiRevListEvent",
-			"re v li s t",
-			"apiNewEvent",
-			"apiAddEventToBuff",
-			"addtobuff",
-			"getEvent",
-			"in :=",
-			"apiNewEvent",
-			"addeventto",
-			"addtobuff",
-			"addtobuf",
-			"EVENT_INIT_BETTING_POOL",
-			"newevent",
-			"EVENT_INIT_BETTING_POOL",
-			"TEAM_MAP",
-			"TEAM_IDS",
-			"INIT_BET_MONEY",
-			"makeEventTeamPlayerBetKey",
-			"H_EVENT_BETTING_POOL",
-			"H_EVENT_BETTING_POOL\nH_EVENT_BETTING_POOL",
-			"lwutil",
-			"Z_EVENT_BET_PLAYER",
-			"key",
-			"HGetMapAll",
-			"int32",
-			"HGetMap",
-			"makeEventBettingPoolKey",
-			"H_EVENT_BETTING_POOL",
-			"pool",
-			"100",
+			"update",
+			"loadPack",
+			"PACK_RESP_JS",
+			"update",
+			"userId",
+			"zset",
+			"Z_USER_PACK_PRE",
+			"name",
+			"AuthorId",
+			"EventPublishInfo",
+			"eventPublishInfoes",
+			"eventPublishInfoes\neventPublishInfoes\neventPublishInfoes",
+			"eventPublishInfoes\neventPublishInfoes\n",
+			"eventPublishInfoes\neventPublishInfoes",
+			"eventPublishInfoes\n",
+			"eventPublishInfoes",
+			"EventPublishInfoes",
+			"mod",
+			"Z_CHALLENGE",
+			"redis",
+			"Z_CHALLENGE",
 			"rc",
-			" *redis.Conn, eventId int64) {\nrc",
-			"H_EVENT_TEAM_SCORE",
-			"makeEventBettingPoolKey",
-			"H_EVENT_BETTING_POOL",
-			"betting pool",
-			"fixme",
-			"apiGetBettingPool",
-			"pool",
-			"fixme",
-			"mode",
-			"apiListEvent"
+			"apiChallengeMod",
+			"mod",
+			"com.lw.sld.coin68",
+			"glog",
+			"glog。",
+			"version",
+			"Z_EVENT_PLAYER_RECORD",
+			"bet",
+			"play(",
+			"play",
+			"TotalReward",
+			"calcReward",
+			"TotalReward",
+			"DEFAULT_CHALLENGE_REWARDS",
+			"ChallengeRewards",
+			"apiEventBuffMod",
+			"buffDel",
+			"EventNum",
+			"EventPublishInfo",
+			"EventPublishInfoes",
+			"EventNum",
+			"glog.",
+			"rc.Do",
+			"apiEventBuffDel",
+			"api",
+			"event/",
+			"addtobuff",
+			"challenge",
+			"challenge/list",
+			"exists",
+			"apiDelEventFromBuff",
+			"BuffEvent",
+			"apiAddEventToBuff",
+			"addtobuf",
+			"Thumb",
+			".thumb",
+			"PackTitle",
+			"save",
+			"makePackKey",
+			"makePackKey\n",
+			"getPack",
+			"newevent",
+			"pack.js",
+			"loadPack",
+			"rewriteFile",
+			"pack.js",
+			"rewriteFile",
+			"apiChallengeList",
+			"challenge",
+			"apiChallengeGetPlay",
+			"saveChallengePlay",
+			"makePlayerInfoKey",
+			"makeChallengePlaySubkey",
+			"apiChallengeList",
+			"submitScore",
+			"event",
+			"recordp",
+			"HighScore",
+			"makeChallengePlaySubkey",
+			"makeEventPlayerRecordSubkey",
+			"//subkey:<eventId>/<userId>",
+			"makeEventPlayerRecordSubkey",
+			"H_EVENT_PLAYER_RECORD",
+			"PackThumbKey",
+			"apiChallengeSubmitScore",
+			"apigetplayerin",
+			"PlayerInfo",
+			"PlayerInfo\n",
+			"apiGetPlayerInfo",
+			"getinf",
+			"PackTimeUnix",
+			"HSetStruct",
+			"H_PLAYER_INFO",
+			"EventIds",
+			"apiListEventBuff",
+			"HSetMap",
+			"EVENT_SERIAL"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -459,7 +570,7 @@
 	"groups":
 	[
 		{
-			"selected": 4,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -467,15 +578,15 @@
 					"file": "match/event.go",
 					"settings":
 					{
-						"buffer_size": 47092,
+						"buffer_size": 39022,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4570,
-								4570
+								1015,
+								1015
 							]
 						],
 						"settings":
@@ -483,26 +594,26 @@
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 3.0,
-						"translation.y": 102.0,
+						"translation.x": 0.0,
+						"translation.y": 354.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "match/auth.go",
+					"file": "match/challenge.go",
 					"settings":
 					{
-						"buffer_size": 13784,
+						"buffer_size": 11229,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								249,
-								249
+								4900,
+								4900
 							]
 						],
 						"settings":
@@ -510,8 +621,8 @@
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 72.0,
-						"translation.y": 354.0,
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -521,15 +632,15 @@
 					"file": "match/main.go",
 					"settings":
 					{
-						"buffer_size": 1139,
+						"buffer_size": 1288,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								676,
-								676
+								411,
+								411
 							]
 						],
 						"settings":
@@ -538,7 +649,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 445.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -548,15 +659,15 @@
 					"file": "match/conf.go",
 					"settings":
 					{
-						"buffer_size": 717,
+						"buffer_size": 744,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								76,
-								80
+								55,
+								55
 							]
 						],
 						"settings":
@@ -565,7 +676,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 96.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -575,20 +686,21 @@
 					"file": "match/conf.json",
 					"settings":
 					{
-						"buffer_size": 347,
+						"buffer_size": 466,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								347,
-								347
+								384,
+								384
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -598,26 +710,190 @@
 				},
 				{
 					"buffer": 5,
+					"file": "match/pack.go",
 					"settings":
 					{
-						"buffer_size": 30,
+						"buffer_size": 14638,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								30,
-								0
+								13146,
+								13146
 							]
 						],
 						"settings":
 						{
-							"auto_name": "ssh henyouqian@173.255.215.104",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 12324.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "match/player.go",
+					"settings":
+					{
+						"buffer_size": 7613,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4834,
+								4834
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3217.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "match/social.go",
+					"settings":
+					{
+						"buffer_size": 5880,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1457,
+								1457
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1418.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "match/www/api.js",
+					"settings":
+					{
+						"buffer_size": 11401,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								7050,
+								7050
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 6750.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/store.go",
+					"settings":
+					{
+						"buffer_size": 5389,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								578,
+								578
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 282.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/etc.go",
+					"settings":
+					{
+						"buffer_size": 3488,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								101,
+								101
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"settings":
+					{
+						"buffer_size": 1082,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								303,
+								363
+							]
+						],
+						"settings":
+						{
+							"auto_name": "- (void)scrollViewDidScroll:(UIScrollView *)scroll",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 24.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -664,6 +940,10 @@
 	{
 		"height": 136.0
 	},
+	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/robot":
+	{
+		"height": 136.0
+	},
 	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/match":
 	{
 		"height": 150.0
@@ -679,6 +959,10 @@
 	"output.9o:///Users/liwei/Documents/projects/2014/delight/server/tools/packUploader":
 	{
 		"height": 118.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/delight/tools/packUploader":
+	{
+		"height": 136.0
 	},
 	"replace":
 	{

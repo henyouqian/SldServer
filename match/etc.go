@@ -1,9 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/henyouqian/lwutil"
+	"math"
 	"net/http"
+	"time"
 )
+
+const (
+	Z_ADVICE       = "Z_ADVICE"
+	H_ADVICE       = "H_ADVICE"
+	SEREIAL_ADVICE = "SEREIAL_ADVICE"
+)
+
+type Advice struct {
+	Id              int64
+	UserId          int64
+	UserNickName    string
+	GravatarKey     string
+	CustomAvatarKey string
+	Team            string
+	Text            string
+	TimeUnix        int64
+}
 
 func apiBetHelp(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
@@ -34,7 +54,121 @@ func apiBetHelp(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiAddAdvice(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		Text string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if len(in.Text) == 0 {
+		lwutil.SendError("err_empty_text", "")
+	}
+	stringLimit(&in.Text, 2000)
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//player
+	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	lwutil.CheckError(err, "")
+
+	//override in
+	advice := Advice{}
+	advice.Text = in.Text
+	advice.Id = GenSerial(ssdb, SEREIAL_ADVICE)
+	advice.UserId = session.Userid
+	advice.UserNickName = playerInfo.NickName
+	advice.Team = playerInfo.TeamName
+	advice.GravatarKey = playerInfo.GravatarKey
+	advice.CustomAvatarKey = playerInfo.CustomAvatarKey
+	advice.TimeUnix = time.Now().Unix()
+
+	//save
+	resp, err := ssdb.Do("zset", Z_ADVICE, advice.Id, advice.Id)
+	lwutil.CheckSsdbError(resp, err)
+
+	js, err := json.Marshal(advice)
+	lwutil.CheckError(err, "")
+	resp, err = ssdb.Do("hset", H_ADVICE, advice.Id, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, &advice)
+}
+
+func apiListAdvice(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		StartId int64
+		Limit   uint
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//get zset
+	resp, err := ssdb.Do("zrscan", Z_ADVICE, in.StartId, in.StartId, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	if len(resp) == 1 {
+		w.Write([]byte("[]"))
+		return
+	}
+
+	resp = resp[1:]
+
+	//get advices
+	cmds := make([]interface{}, len(resp)/2+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_ADVICE
+	for i, _ := range cmds {
+		if i >= 2 {
+			cmds[i] = resp[(i-2)*2]
+		}
+	}
+	resp, err = ssdb.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	advices := make([]Advice, len(resp)/2)
+	for i, _ := range advices {
+		js := resp[i*2+1]
+		err = json.Unmarshal([]byte(js), &advices[i])
+		lwutil.CheckError(err, "")
+	}
+
+	//out
+	lwutil.WriteResponse(w, &advices)
+}
+
 func regEtc() {
 	http.Handle("/etc/betHelp", lwutil.ReqHandler(apiBetHelp))
+	http.Handle("/etc/addAdvice", lwutil.ReqHandler(apiAddAdvice))
+	http.Handle("/etc/listAdvice", lwutil.ReqHandler(apiListAdvice))
 	// http.Handle("/etc/getAppConf", lwutil.ReqHandler(apiGetAppConf))
 }
