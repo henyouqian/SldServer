@@ -141,12 +141,14 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		BetCloseBeforeEndSec int
 		AdsPercent           float32
 		RateReward           int
+		ClientConf           map[string]string
 	}{
 		playerInfo,
 		session.Userid,
 		BET_CLOSE_BEFORE_END_SEC,
 		ap,
 		rateReward,
+		_clientConf,
 	}
 	lwutil.WriteResponse(w, out)
 }

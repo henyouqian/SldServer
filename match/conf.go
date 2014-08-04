@@ -23,7 +23,15 @@ type Conf struct {
 }
 
 var (
-	_conf Conf
+	_conf       Conf
+	_clientConf = map[string]string{
+		"DataHost":       "http://dn-pintugame.qbox.me",
+		"StoreId":        "904649492",
+		"Html5Url":       "http://pintuhtml5.qiniudn.com/index.html",
+		"FlurryKey":      "2P9DTVNTFZS8YBZ36QBZ",
+		"MogoKey":        "8c0728f759464dcda07c81afb00d3bf5",
+		"UmengSocialKey": "53aeb00356240bdcb8050c26",
+	}
 )
 
 func initConf(confFile string) {
