@@ -260,13 +260,10 @@
 			}
 		},
 		{
-			"contents": "package main\n\nimport (\n	\"encoding/json\"\n	\"fmt\"\n	\"os\"\n)\n\nconst (\n	CLIENT_VERSION = \"1.0\"\n	APP_STORE_URL  = \"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=904649492\"\n)\n\ntype Conf struct {\n	Port          int\n	RedisHost     string\n	SsdbAuthPort  int\n	SsdbMatchPort int\n\n	AppName            string\n	EventPublishInfoes []EventPublishInfo\n	ChallengeRewards   []int\n}\n\nvar (\n	_conf Conf\n)\n\nfunc initConf(confFile string) {\n	var f *os.File\n	var err error\n\n	if f, err = os.Open(confFile); err != nil {\n		panic(fmt.Sprintf(\"config file not found: %s\", confFile))\n	}\n	defer f.Close()\n\n	//json decode\n	decoder := json.NewDecoder(f)\n	err = decoder.Decode(&_conf)\n	if err != nil {\n		panic(err)\n	}\n}\n",
 			"file": "match/conf.go",
-			"file_size": 744,
-			"file_write_time": 1406736884000000,
 			"settings":
 			{
-				"buffer_size": 744,
+				"buffer_size": 1083,
 				"line_ending": "Unix"
 			}
 		},
@@ -290,7 +287,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 7613,
+				"buffer_size": 7669,
 				"line_ending": "Unix"
 			}
 		},
@@ -324,15 +321,6 @@
 			{
 				"buffer_size": 3488,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "- (void)scrollViewDidScroll:(UIScrollView *)scrollView {\n//    if (_adviceDatas.count == 0) {\n//        return;\n//    }\n    BOOL underBottom = NO;\n    lwInfo(\"%f, %f, %f, %f\", scrollView.contentSize.height, scrollView.frame.size.height, scrollView.contentOffset.y, scrollView.contentInset.top);\n    if (scrollView.contentSize.height < scrollView.frame.size.height) {\n        if (scrollView.contentOffset.y > -scrollView.contentInset.top) {\n            underBottom = YES;\n        }\n    } else if ((scrollView.contentOffset.y + scrollView.frame.size.height) > scrollView.contentSize.height) {\n        underBottom = YES;\n    }\n    \n    if (underBottom) {\n        if (!_underBottom) {\n            _underBottom = YES;\n            if (!_bottomRefresh.refreshing) {\n                [_bottomRefresh beginRefreshing];\n                \n                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{\n                    [_bottomRefresh endRefreshing];\n                });\n            }\n        }\n    } else {\n        _underBottom = NO;\n    }\n}",
-			"settings":
-			{
-				"buffer_size": 1082,
-				"line_ending": "Unix",
-				"name": "- (void)scrollViewDidScroll:(UIScrollView *)scroll"
 			}
 		}
 	],
@@ -570,7 +558,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 10,
 			"sheets":
 			[
 				{
@@ -659,15 +647,15 @@
 					"file": "match/conf.go",
 					"settings":
 					{
-						"buffer_size": 744,
+						"buffer_size": 1083,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								55,
-								55
+								446,
+								457
 							]
 						],
 						"settings":
@@ -676,7 +664,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 159.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -740,15 +728,15 @@
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 7613,
+						"buffer_size": 7669,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4834,
-								4834
+								3259,
+								3259
 							]
 						],
 						"settings":
@@ -757,7 +745,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3217.0,
+						"translation.y": 2670.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -866,34 +854,6 @@
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 11,
-					"settings":
-					{
-						"buffer_size": 1082,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								303,
-								363
-							]
-						],
-						"settings":
-						{
-							"auto_name": "- (void)scrollViewDidScroll:(UIScrollView *)scroll",
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 24.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

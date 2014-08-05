@@ -1426,8 +1426,8 @@ func apiBet(w http.ResponseWriter, r *http.Request) {
 
 	//check event
 	event := getEvent(ssdb, in.EventId)
-	if !isEventRunning(event) {
-		lwutil.SendError("err_event_not_running", "")
+	if event.HasResult {
+		lwutil.SendError("err_event_has_result", "")
 	}
 	now := lwutil.GetRedisTimeUnix()
 
