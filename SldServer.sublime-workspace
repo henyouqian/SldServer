@@ -239,7 +239,7 @@
 			"file": "match/event.go",
 			"settings":
 			{
-				"buffer_size": 39022,
+				"buffer_size": 39014,
 				"line_ending": "Unix"
 			}
 		},
@@ -412,6 +412,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"isEventRunning",
+			"bet",
 			"listAdvice",
 			"startid",
 			"math",
@@ -537,9 +539,7 @@
 			"HSetStruct",
 			"H_PLAYER_INFO",
 			"EventIds",
-			"apiListEventBuff",
-			"HSetMap",
-			"EVENT_SERIAL"
+			"apiListEventBuff"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -558,7 +558,7 @@
 	"groups":
 	[
 		{
-			"selected": 10,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -566,15 +566,15 @@
 					"file": "match/event.go",
 					"settings":
 					{
-						"buffer_size": 39022,
+						"buffer_size": 39014,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1015,
-								1015
+								34131,
+								34131
 							]
 						],
 						"settings":
@@ -583,7 +583,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 354.0,
+						"translation.y": 29753.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

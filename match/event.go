@@ -9,7 +9,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
-	"github.com/robfig/cron"
 	"math"
 	"math/rand"
 	"net/http"
@@ -48,8 +47,6 @@ var (
 	TEAM_NAMES              = []string{"安徽", "澳门", "北京", "重庆", "福建", "甘肃", "广东", "广西", "贵州", "海南", "河北", "黑龙江", "河南", "湖北", "湖南", "江苏", "江西", "吉林", "辽宁", "内蒙古", "宁夏", "青海", "陕西", "山东", "上海", "山西", "四川", "台湾", "天津", "香港", "新疆", "西藏", "云南", "浙江"}
 	EVENT_INIT_BETTING_POOL = map[string]interface{}{}
 	INIT_BET_MONEY          = int64(10000)
-
-	_cron cron.Cron
 )
 
 type Event struct {
@@ -138,7 +135,6 @@ func initEvent() {
 
 	//cron
 	_cron.AddFunc("0 * * * * *", eventPublishTask)
-	_cron.Start()
 
 	//eventPublishInfoes
 	resp, err := ssdbc.Do("get", K_EVENT_PUBLISH)
@@ -155,7 +151,7 @@ func eventPublishTask() {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
+	checkError(err)
 	defer ssdbc.Close()
 
 	//redis
