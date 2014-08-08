@@ -10,6 +10,7 @@ import (
 	qiniurs "github.com/qiniu/api/rs"
 	"github.com/robfig/cron"
 	"net/http"
+	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
@@ -39,6 +40,9 @@ func html5(w http.ResponseWriter, r *http.Request) {
 
 func backupTask() {
 	defer handleError()
+
+	//mkdir
+	os.Mkdir("bak", 0777)
 
 	//dir name
 	now := time.Now()
