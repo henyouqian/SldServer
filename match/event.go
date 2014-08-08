@@ -387,7 +387,7 @@ func calcEventTimes(event *Event) {
 		//lwutil.SendError("err_time", "EndTime must larger than now")
 	}
 
-	//check timePotins
+	//check
 	if event.BeginTime >= event.EndTime {
 		lwutil.SendError("err_time", "event.BeginTime >= event.EndTime")
 	}

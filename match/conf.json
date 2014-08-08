@@ -11,6 +11,8 @@
 		{"PublishTime":[1, 10], "BeginTime":[13, 0], "EndTime":[19, 0], "EventNum":1},
 		{"PublishTime":[1, 10], "BeginTime":[19, 0], "EndTime":[24, 0], "EventNum":1}
 	],
+	"PickSidePublishInfoes_": [
+	],
 	"ChallengeRewards" : [100, 50, 50]
 
 }

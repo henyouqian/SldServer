@@ -18,9 +18,10 @@ type Conf struct {
 	SsdbAuthPort  int
 	SsdbMatchPort int
 
-	AppName            string
-	EventPublishInfoes []EventPublishInfo
-	ChallengeRewards   []int
+	AppName               string
+	EventPublishInfoes    []EventPublishInfo
+	PickSidePublishInfoes []EventPublishInfo
+	ChallengeRewards      []int
 }
 
 var (

@@ -135,6 +135,7 @@ func main() {
 	initConf(confFile)
 	initDb()
 	initEvent()
+	initPickSide()
 
 	u, _ := user.Current()
 
@@ -158,6 +159,7 @@ func main() {
 	regEtc()
 	regUserPack()
 	regSocial()
+	regPickSide()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
