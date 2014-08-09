@@ -90,7 +90,8 @@ func backupTask() {
 
 	//redis
 	glog.Info("backup redis")
-	from := "../redis/dump.rdb"
+	// from := "../redis/dump.rdb"
+	from := "/var/lib/redis/dump.rdb"
 	redisFile := fmt.Sprintf("%s-redis%s.rdb", _conf.AppName, timeStr)
 	to := fmt.Sprintf("./bak/%s", redisFile)
 	cmd = exec.Command("cp", "-f", from, to)

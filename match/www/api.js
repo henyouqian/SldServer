@@ -246,6 +246,40 @@ function Controller($scope, $http) {
 				}
 			]
 		},{
+			"tab":"packSide",
+			"path":"packSide",
+			"apis":[
+				{
+					"name": "buffAdd",
+					"method": "POST",
+					"data": {
+						"PackId": 0,
+						"SliderNum": 5,
+						"ChallengeSecs": [32, 35, 40]
+						}
+				},{
+					"name": "buffList",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "buffDel",
+					"method": "POST",
+					"data": {"Id": 0}
+				},{
+					"name": "buffMod",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "list",
+					"method": "POST",
+					"data": {"StartId": 0, "Limit": 20}
+				},{
+					"name": "mod",
+					"method": "POST",
+					"data": ""
+				}
+			]
+		},{
 			"tab":"challenge",
 			"path":"challenge",
 			"apis":[

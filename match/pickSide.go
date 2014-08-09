@@ -6,6 +6,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const (
@@ -61,7 +63,137 @@ func initPickSide() {
 }
 
 func pickSidePublishTask() {
+	defer handleError()
 
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	checkError(err)
+	defer ssdbc.Close()
+
+	//redis
+	rc := redisPool.Get()
+	defer rc.Close()
+
+	//
+	now := time.Now()
+	for _, pubInfo := range _pickSidePublishInfoes {
+		if pubInfo.PublishTime[0] == now.Hour() && pubInfo.PublishTime[1] == now.Minute() {
+			//pop from Z_PICK_SIDE_EVENT_BUFF and push to Z_PICK_SIDE_EVENT
+			for i := 0; i < pubInfo.EventNum; i++ {
+				//get front event
+				resp, err := ssdbc.Do("zkeys", Z_PICK_SIDE_EVENT_BUFF, "", "", "", 1)
+				checkSsdbError(resp, err)
+				if len(resp) <= 1 {
+					glog.Error("Z_PICK_SIDE_EVENT_BUFF empty!!!!")
+					return
+				}
+				buffEventId, err := strconv.ParseInt(resp[1], 10, 64)
+				checkError(err)
+
+				//del front event
+				resp, err = ssdbc.Do("zdel", Z_PICK_SIDE_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+
+				//get event
+				resp, err = ssdbc.Do("hget", H_PICK_SIDE_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+
+				var event PickSideEvent
+				err = json.Unmarshal([]byte(resp[1]), &event)
+				checkError(err)
+
+				//fill event's begin and end time
+				hour := pubInfo.BeginTime[0]
+				addDay := hour / 24
+				hour = hour % 24
+				min := pubInfo.BeginTime[1]
+				beginTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, time.Local)
+				if addDay > 0 {
+					beginTime = beginTime.AddDate(0, 0, addDay)
+				}
+				event.BeginTime = beginTime.Unix()
+				event.BeginTimeString = beginTime.Format(TIME_FORMAT)
+
+				hour = pubInfo.EndTime[0]
+				addDay = hour / 24
+				hour = hour % 24
+				min = pubInfo.EndTime[1]
+				endTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, time.Local)
+				if addDay > 0 {
+					endTime = endTime.AddDate(0, 0, addDay)
+				}
+				event.EndTime = endTime.Unix()
+				event.EndTimeString = endTime.Format(TIME_FORMAT)
+
+				//BetEndTime
+				event.BetEndTime = event.EndTime - BET_CLOSE_BEFORE_END_SEC
+
+				//change event id
+				resp, err = ssdbc.Do("zrscan", Z_EVENT, "", "", "", 1)
+				checkSsdbError(resp, err)
+				if resp[0] == "not_found" || len(resp) == 1 {
+					event.Id = 1
+				} else {
+					maxId, err := strconv.ParseInt(resp[1], 10, 64)
+					checkError(err)
+					event.Id = maxId + 1
+				}
+
+				// //init betting pool
+				// key := makeEventBettingPoolKey(event.Id)
+				// err = ssdbc.HSetMap(key, EVENT_INIT_BETTING_POOL)
+				// lwutil.CheckError(err, "")
+
+				//get pack
+				pack, err := getPack(ssdbc, event.PackId)
+				lwutil.CheckError(err, fmt.Sprintf("packId:%d", event.PackId))
+
+				event.Thumb = pack.Thumb
+				event.PackTitle = pack.Title
+
+				//save event
+				bts, err := json.Marshal(event)
+				checkError(err)
+				resp, err = ssdbc.Do("hset", H_PICK_SIDE_EVENT, event.Id, bts)
+				checkSsdbError(resp, err)
+
+				//push to Z_EVENT
+				resp, err = ssdbc.Do("zset", Z_PICK_SIDE_EVENT, event.Id, event.Id)
+				checkSsdbError(resp, err)
+
+				//push to Z_CHALLENGE
+				challengeId := int64(1)
+				resp, err = ssdbc.Do("zrrange", Z_CHALLENGE, 0, 1)
+				lwutil.CheckSsdbError(resp, err)
+				if len(resp) > 1 {
+					challengeId, err = strconv.ParseInt(resp[1], 10, 32)
+					lwutil.CheckError(err, "")
+					challengeId++
+				}
+
+				challenge := Challenge{
+					Id:               challengeId,
+					PackId:           event.PackId,
+					PackTitle:        event.PackTitle,
+					Thumb:            event.Thumb,
+					SliderNum:        event.SliderNum,
+					ChallengeSecs:    event.ChallengeSecs,
+					ChallengeRewards: _conf.ChallengeRewards,
+				}
+				resp, err = ssdbc.Do("zset", Z_CHALLENGE, challengeId, challengeId)
+				checkSsdbError(resp, err)
+
+				//add to H_CHALLENGE
+				bts, err = json.Marshal(challenge)
+				checkError(err)
+				resp, err = ssdbc.Do("hset", H_CHALLENGE, challenge.Id, bts)
+				checkSsdbError(resp, err)
+
+				//
+				glog.Infof("Add event and challenge ok:id=%d", event.Id)
+			}
+		}
+	}
 }
 
 func apiPickSideBuffAdd(w http.ResponseWriter, r *http.Request) {
@@ -346,10 +478,12 @@ func apiPickSideMod(w http.ResponseWriter, r *http.Request) {
 }
 
 func regPickSide() {
-	http.Handle("/pickSide/BuffAdd", lwutil.ReqHandler(apiPickSideBuffAdd))
-	http.Handle("/pickSide/BuffList", lwutil.ReqHandler(apiPickSideBuffList))
-	http.Handle("/pickSide/BuffDel", lwutil.ReqHandler(apiPickSideBuffDel))
-	http.Handle("/pickSide/BuffMod", lwutil.ReqHandler(apiPickSideBuffMod))
+	http.Handle("/pickSide/buffAdd", lwutil.ReqHandler(apiPickSideBuffAdd))
+	http.Handle("/pickSide/buffList", lwutil.ReqHandler(apiPickSideBuffList))
+	http.Handle("/pickSide/buffDel", lwutil.ReqHandler(apiPickSideBuffDel))
+	http.Handle("/pickSide/buffMod", lwutil.ReqHandler(apiPickSideBuffMod))
 	http.Handle("/pickSide/list", lwutil.ReqHandler(apiPickSideList))
 	http.Handle("/pickSide/mod", lwutil.ReqHandler(apiPickSideMod))
+	// http.Handle("/pickSide/setPublish", lwutil.ReqHandler(apiPickSideSetPublish))
+	// http.Handle("/pickSide/getPublish", lwutil.ReqHandler(apiPickSideGetPublish))
 }
