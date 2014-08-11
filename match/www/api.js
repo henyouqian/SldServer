@@ -243,11 +243,19 @@ function Controller($scope, $http) {
 					"name": "listPlayResult",
 					"method": "POST",
 					"data": {"StartEventId": 0, "Limit":20}
+				},{
+					"name": "getPublish",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "setPublish",
+					"method": "POST",
+					"data": [{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":1}]
 				}
 			]
 		},{
-			"tab":"packSide",
-			"path":"packSide",
+			"tab":"pickSide",
+			"path":"pickSide",
 			"apis":[
 				{
 					"name": "buffAdd",
@@ -277,6 +285,14 @@ function Controller($scope, $http) {
 					"name": "mod",
 					"method": "POST",
 					"data": ""
+				},{
+					"name": "getPublish",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "setPublish",
+					"method": "POST",
+					"data": [{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":1}]
 				}
 			]
 		},{
@@ -321,14 +337,6 @@ function Controller($scope, $http) {
 					"name": "setCurrChallengeId",
 					"method": "POST",
 					"data": {"UserName": "", "ChallengeId": 0}
-				},{
-					"name": "setEventPublish",
-					"method": "POST",
-					"data": [{"PublishTime":[5, 0], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":1}]
-				},{
-					"name": "getEventPublish",
-					"method": "POST",
-					"data": ""
 				}
 			]
 		},{

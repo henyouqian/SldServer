@@ -134,7 +134,7 @@ func initEvent() {
 	}
 
 	//cron
-	_cron.AddFunc("0 * * * * *", eventPublishTask)
+	_cron.AddFunc("0 * * * * *", eventPublish)
 
 	//eventPublishInfoes
 	resp, err := ssdbc.Do("get", K_EVENT_PUBLISH)
@@ -144,6 +144,11 @@ func initEvent() {
 		err = json.Unmarshal([]byte(resp[1]), &_eventPublishInfoes)
 		checkError(err)
 	}
+}
+
+func eventPublish() {
+	eventPublishTask()
+	pickSidePublishTask()
 }
 
 func eventPublishTask() {
@@ -173,10 +178,6 @@ func eventPublishTask() {
 				}
 				buffEventId, err := strconv.ParseInt(resp[1], 10, 64)
 				checkError(err)
-
-				//del front event
-				resp, err = ssdbc.Do("zdel", Z_EVENT_BUFF, buffEventId)
-				checkSsdbError(resp, err)
 
 				//get event
 				resp, err = ssdbc.Do("hget", H_EVENT_BUFF, buffEventId)
@@ -273,6 +274,12 @@ func eventPublishTask() {
 				resp, err = ssdbc.Do("hset", H_CHALLENGE, challenge.Id, bts)
 				checkSsdbError(resp, err)
 
+				//del front event
+				resp, err = ssdbc.Do("zdel", Z_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+				resp, err = ssdbc.Do("hdel", H_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+
 				//
 				glog.Infof("Add event and challenge ok:id=%d", event.Id)
 			}
@@ -319,6 +326,25 @@ func isEventRunning(event *Event) bool {
 	return false
 }
 
+func initPlayerRecord(record *EventPlayerRecord, ssdbc *ssdb.Client, eventId int64, userId int64) {
+	playerInfo, err := getPlayerInfo(ssdbc, userId)
+	lwutil.CheckError(err, "")
+
+	record.EventId = eventId
+	record.Trys = 0
+	record.PlayerName = playerInfo.NickName
+	record.TeamName = ""
+	record.GravatarKey = playerInfo.GravatarKey
+	record.CustomAvartarKey = playerInfo.CustomAvatarKey
+	record.GameCoinNum = INIT_GAME_COIN_NUM
+
+	//PackThumbKey
+	event := getEvent(ssdbc, eventId)
+	pack, err := getPack(ssdbc, event.PackId)
+	lwutil.CheckError(err, "")
+	record.PackThumbKey = pack.Thumb
+}
+
 func getEventPlayerRecord(ssdb *ssdb.Client, eventId int64, userId int64) *EventPlayerRecord {
 	key := makeEventPlayerRecordSubkey(eventId, userId)
 	resp, err := ssdb.Do("hget", H_EVENT_PLAYER_RECORD, key)
@@ -329,26 +355,7 @@ func getEventPlayerRecord(ssdb *ssdb.Client, eventId int64, userId int64) *Event
 		lwutil.CheckError(err, "")
 		return &record
 	} else { //create record
-		playerInfo, err := getPlayerInfo(ssdb, userId)
-		lwutil.CheckError(err, "")
-
-		record.EventId = eventId
-		record.Trys = 0
-		record.PlayerName = playerInfo.NickName
-		record.TeamName = playerInfo.TeamName
-		record.GravatarKey = playerInfo.GravatarKey
-		record.CustomAvartarKey = playerInfo.CustomAvatarKey
-		record.GameCoinNum = INIT_GAME_COIN_NUM
-
-		//get event
-		event := getEvent(ssdb, eventId)
-		pack, err := getPack(ssdb, event.PackId)
-		lwutil.CheckError(err, "")
-		record.PackThumbKey = pack.Thumb
-
-		js, err := json.Marshal(record)
-		resp, err = ssdb.Do("hset", H_EVENT_PLAYER_RECORD, key, js)
-		lwutil.CheckSsdbError(resp, err)
+		initPlayerRecord(&record, ssdb, eventId, userId)
 		return &record
 	}
 }
@@ -356,6 +363,7 @@ func getEventPlayerRecord(ssdb *ssdb.Client, eventId int64, userId int64) *Event
 func saveEventPlayerRecord(ssdb *ssdb.Client, eventId int64, userId int64, record *EventPlayerRecord) {
 	key := makeEventPlayerRecordSubkey(eventId, userId)
 	js, err := json.Marshal(record)
+	lwutil.CheckError(err, "")
 	resp, err := ssdb.Do("hset", H_EVENT_PLAYER_RECORD, key, js)
 	lwutil.CheckSsdbError(resp, err)
 }
@@ -953,17 +961,13 @@ func apiPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	//get event player record
 	record := getEventPlayerRecord(ssdb, in.EventId, session.Userid)
-
-	// key := makeEventPlayerRecordSubkey(in.EventId, session.Userid)
-	// resp, err = ssdb.Do("hget", H_EVENT_PLAYER_RECORD, key)
-	// lwutil.CheckSsdbError(resp, err)
-	// record := EventPlayerRecord{}
-
-	// err = json.Unmarshal([]byte(resp[1]), &record)
-	// lwutil.CheckError(err, "")
-
-	//
 	record.Trys++
+
+	if record.TeamName == "" {
+		playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+		lwutil.CheckError(err, "")
+		record.TeamName = playerInfo.TeamName
+	}
 
 	if record.GameCoinNum <= 0 {
 		lwutil.SendError("err_game_coin", "")
@@ -976,9 +980,6 @@ func apiPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	//update record
 	saveEventPlayerRecord(ssdb, in.EventId, session.Userid, record)
-	// js, err := json.Marshal(record)
-	// resp, err = ssdb.Do("hset", H_EVENT_PLAYER_RECORD, key, js)
-	// lwutil.CheckSsdbError(resp, err)
 
 	//out
 	lwutil.WriteResponse(w, record)
@@ -1580,6 +1581,63 @@ func apiCheckNewEvent(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiGetEventPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//out
+	lwutil.WriteResponse(w, _eventPublishInfoes)
+}
+
+func apiSetEventPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in []EventPublishInfo
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	for _, v := range in {
+		if v.EventNum < 1 || v.EventNum > 3 {
+			lwutil.SendError("err_input", "EventNum must between [1, 3]")
+		}
+	}
+
+	_eventPublishInfoes = in
+
+	//save
+	js, err := json.Marshal(_eventPublishInfoes)
+	lwutil.CheckError(err, "")
+	resp, err := ssdb.Do("set", K_EVENT_PUBLISH, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
 func regMatch() {
 	http.Handle("/event/new", lwutil.ReqHandler(apiEventNew))
 	http.Handle("/event/del", lwutil.ReqHandler(apiEventDel))
@@ -1598,4 +1656,6 @@ func regMatch() {
 	http.Handle("/event/bet", lwutil.ReqHandler(apiBet))
 	http.Handle("/event/listPlayResult", lwutil.ReqHandler(apiListPlayResult))
 	http.Handle("/event/checkNew", lwutil.ReqHandler(apiCheckNewEvent))
+	http.Handle("/event/getPublish", lwutil.ReqHandler(apiGetEventPublish))
+	http.Handle("/event/setPublish", lwutil.ReqHandler(apiSetEventPublish))
 }

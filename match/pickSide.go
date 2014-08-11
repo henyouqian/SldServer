@@ -11,28 +11,25 @@ import (
 )
 
 const (
-	BUFF_PICK_SIDE_SERIAL  = "BUFF_PICK_SIDE_SERIAL"
-	H_PICK_SIDE_EVENT_BUFF = "H_PICK_SIDE_EVENT_BUFF"
-	Z_PICK_SIDE_EVENT_BUFF = "Z_PICK_SIDE_EVENT_BUFF"
-	H_PICK_SIDE_EVENT      = "H_PICK_SIDE_EVENT"
-	Z_PICK_SIDE_EVENT      = "H_PICK_SIDE_EVENT"
-	K_PICK_SIDE_PUBLISH    = "K_PICK_SIDE_PUBLISH"
+	BUFF_PICK_SIDE_SERIAL     = "BUFF_PICK_SIDE_SERIAL"
+	H_PICK_SIDE_EVENT         = "H_PICK_SIDE_EVENT"
+	Z_PICK_SIDE_EVENT         = "H_PICK_SIDE_EVENT"
+	K_PICK_SIDE_PUBLISH       = "K_PICK_SIDE_PUBLISH"
+	Z_PICK_SIDE_QUESTION      = "Z_PICK_SIDE_QUESTION"
+	H_PICK_SIDE_QUESTION      = "H_PICK_SIDE_QUESTION"
+	PICK_SIDE_QUESTION_SERIAL = "PICK_SIDE_QUESTION_SERIAL"
 )
+
+type PickSideQuestion struct {
+	Id       int64
+	Question string
+	Sides    []string
+}
 
 type PickSideEvent struct {
 	Event
 	Question string
 	Sides    []string
-}
-
-type BuffPickSideEvent struct {
-	Id            int64
-	PackId        int64
-	PackTitle     string
-	SliderNum     int
-	ChallengeSecs []int
-	Question      string
-	Sides         []string
 }
 
 var (
@@ -49,10 +46,7 @@ func initPickSide() {
 	checkError(err)
 	defer ssdbc.Close()
 
-	//cron
-	_cron.AddFunc("0 * * * * *", pickSidePublishTask)
-
-	//eventPublishInfoes
+	//pickSidePublishInfoes
 	resp, err := ssdbc.Do("get", K_PICK_SIDE_PUBLISH)
 	if err != nil || len(resp) <= 1 {
 		_pickSidePublishInfoes = _conf.PickSidePublishInfoes
@@ -78,28 +72,41 @@ func pickSidePublishTask() {
 	now := time.Now()
 	for _, pubInfo := range _pickSidePublishInfoes {
 		if pubInfo.PublishTime[0] == now.Hour() && pubInfo.PublishTime[1] == now.Minute() {
-			//pop from Z_PICK_SIDE_EVENT_BUFF and push to Z_PICK_SIDE_EVENT
+			//pop from buff and push to pickSideEvents
 			for i := 0; i < pubInfo.EventNum; i++ {
 				//get front event
-				resp, err := ssdbc.Do("zkeys", Z_PICK_SIDE_EVENT_BUFF, "", "", "", 1)
+				resp, err := ssdbc.Do("zkeys", Z_EVENT_BUFF, "", "", "", 1)
 				checkSsdbError(resp, err)
 				if len(resp) <= 1 {
-					glog.Error("Z_PICK_SIDE_EVENT_BUFF empty!!!!")
+					glog.Error("Z_EVENT_BUFF empty!!!!")
 					return
 				}
 				buffEventId, err := strconv.ParseInt(resp[1], 10, 64)
 				checkError(err)
 
-				//del front event
-				resp, err = ssdbc.Do("zdel", Z_PICK_SIDE_EVENT_BUFF, buffEventId)
-				checkSsdbError(resp, err)
-
 				//get event
-				resp, err = ssdbc.Do("hget", H_PICK_SIDE_EVENT_BUFF, buffEventId)
+				resp, err = ssdbc.Do("hget", H_EVENT_BUFF, buffEventId)
 				checkSsdbError(resp, err)
 
 				var event PickSideEvent
 				err = json.Unmarshal([]byte(resp[1]), &event)
+				checkError(err)
+
+				//get question
+				resp, err = ssdbc.Do("zkeys", Z_PICK_SIDE_QUESTION, "", "", "", 1)
+				checkSsdbError(resp, err)
+				if len(resp) <= 1 {
+					glog.Error("Z_PICK_SIDE_QUESTION empty!!!!")
+					return
+				}
+				questionId, err := strconv.ParseInt(resp[1], 10, 64)
+				checkError(err)
+
+				resp, err = ssdbc.Do("hget", H_PICK_SIDE_QUESTION, questionId)
+				checkSsdbError(resp, err)
+
+				var question PickSideQuestion
+				err = json.Unmarshal([]byte(resp[1]), &question)
 				checkError(err)
 
 				//fill event's begin and end time
@@ -129,7 +136,7 @@ func pickSidePublishTask() {
 				event.BetEndTime = event.EndTime - BET_CLOSE_BEFORE_END_SEC
 
 				//change event id
-				resp, err = ssdbc.Do("zrscan", Z_EVENT, "", "", "", 1)
+				resp, err = ssdbc.Do("zrscan", Z_PICK_SIDE_EVENT, "", "", "", 1)
 				checkSsdbError(resp, err)
 				if resp[0] == "not_found" || len(resp) == 1 {
 					event.Id = 1
@@ -150,6 +157,10 @@ func pickSidePublishTask() {
 
 				event.Thumb = pack.Thumb
 				event.PackTitle = pack.Title
+
+				//set question
+				event.Question = question.Question
+				event.Sides = question.Sides
 
 				//save event
 				bts, err := json.Marshal(event)
@@ -189,6 +200,18 @@ func pickSidePublishTask() {
 				resp, err = ssdbc.Do("hset", H_CHALLENGE, challenge.Id, bts)
 				checkSsdbError(resp, err)
 
+				//del eventBuff
+				resp, err = ssdbc.Do("zdel", Z_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+				resp, err = ssdbc.Do("hdel", H_EVENT_BUFF, buffEventId)
+				checkSsdbError(resp, err)
+
+				//del question
+				resp, err = ssdbc.Do("zdel", Z_PICK_SIDE_QUESTION, questionId)
+				checkSsdbError(resp, err)
+				resp, err = ssdbc.Do("hdel", H_PICK_SIDE_QUESTION, questionId)
+				checkSsdbError(resp, err)
+
 				//
 				glog.Infof("Add event and challenge ok:id=%d", event.Id)
 			}
@@ -196,7 +219,7 @@ func pickSidePublishTask() {
 	}
 }
 
-func apiPickSideBuffAdd(w http.ResponseWriter, r *http.Request) {
+func apiPickSideQuestionAdd(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//ssdb
@@ -210,50 +233,32 @@ func apiPickSideBuffAdd(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//in
-	var buffEvent BuffPickSideEvent
-	err = lwutil.DecodeRequestBody(r, &buffEvent)
+	var question PickSideQuestion
+	err = lwutil.DecodeRequestBody(r, &question)
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check input
-	if len(buffEvent.ChallengeSecs) != 3 {
-		lwutil.SendError("err_input", "len(buffEvent.ChallengeSecs) != 3")
-	}
-
-	if len(buffEvent.Sides) < 2 {
-		lwutil.SendError("err_input", "len(buffEvent.Sides < 2)")
-	}
-
-	//sliderNum
-	if buffEvent.SliderNum <= 0 {
-		buffEvent.SliderNum = 5
-	} else if buffEvent.SliderNum > 10 {
-		buffEvent.SliderNum = 10
+	if len(question.Sides) < 2 {
+		lwutil.SendError("err_input", "len(question.Sides < 2)")
 	}
 
 	//gen serial
-	buffEvent.Id = GenSerial(ssdb, BUFF_PICK_SIDE_SERIAL)
-
-	//get pack
-	pack, err := getPack(ssdb, buffEvent.PackId)
-	lwutil.CheckError(err, "")
-
-	//
-	buffEvent.PackTitle = pack.Title
+	question.Id = GenSerial(ssdb, PICK_SIDE_QUESTION_SERIAL)
 
 	//save to ssdb
-	js, err := json.Marshal(buffEvent)
+	js, err := json.Marshal(question)
 	lwutil.CheckError(err, "")
-	resp, err := ssdb.Do("hset", H_PICK_SIDE_EVENT_BUFF, buffEvent.Id, js)
+	resp, err := ssdb.Do("hset", H_PICK_SIDE_QUESTION, question.Id, js)
 	lwutil.CheckSsdbError(resp, err)
 
-	resp, err = ssdb.Do("zset", Z_PICK_SIDE_EVENT_BUFF, buffEvent.Id, buffEvent.Id)
+	resp, err = ssdb.Do("zset", Z_PICK_SIDE_QUESTION, question.Id, question.Id)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
-	lwutil.WriteResponse(w, buffEvent)
+	lwutil.WriteResponse(w, question)
 }
 
-func apiPickSideBuffList(w http.ResponseWriter, r *http.Request) {
+func apiPickSideQuestionList(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//ssdb
@@ -267,7 +272,7 @@ func apiPickSideBuffList(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//zkeys
-	resp, err := ssdbc.Do("zkeys", Z_PICK_SIDE_EVENT_BUFF, "", "", "", 100)
+	resp, err := ssdbc.Do("zkeys", Z_PICK_SIDE_QUESTION, "", "", "", 100)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 	if len(resp) == 0 {
@@ -278,7 +283,7 @@ func apiPickSideBuffList(w http.ResponseWriter, r *http.Request) {
 	keyNum := len(resp)
 	cmds := make([]interface{}, keyNum+2)
 	cmds[0] = "multi_hget"
-	cmds[1] = H_PICK_SIDE_EVENT_BUFF
+	cmds[1] = H_PICK_SIDE_QUESTION
 	for i := 0; i < keyNum; i++ {
 		cmds[2+i] = resp[i]
 	}
@@ -287,9 +292,9 @@ func apiPickSideBuffList(w http.ResponseWriter, r *http.Request) {
 	resp = resp[1:]
 
 	//out
-	eventNum := len(resp) / 2
-	out := make([]BuffPickSideEvent, eventNum)
-	for i := 0; i < eventNum; i++ {
+	num := len(resp) / 2
+	out := make([]PickSideQuestion, num)
+	for i := 0; i < num; i++ {
 		err = json.Unmarshal([]byte(resp[i*2+1]), &out[i])
 		lwutil.CheckError(err, "")
 	}
@@ -297,7 +302,7 @@ func apiPickSideBuffList(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
-func apiPickSideBuffDel(w http.ResponseWriter, r *http.Request) {
+func apiPickSideQuestionDel(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//ssdb
@@ -318,22 +323,22 @@ func apiPickSideBuffDel(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check exist
-	resp, err := ssdb.Do("hexists", H_PICK_SIDE_EVENT_BUFF, in.Id)
+	resp, err := ssdb.Do("hexists", H_PICK_SIDE_QUESTION, in.Id)
 	lwutil.CheckError(err, "")
 	if resp[1] != "1" {
-		lwutil.SendError("err_exist", fmt.Sprintf("buffEvent not exist:id=", in.Id))
+		lwutil.SendError("err_exist", fmt.Sprintf("question not exist:id=", in.Id))
 	}
 
 	//del
-	resp, err = ssdb.Do("zdel", Z_PICK_SIDE_EVENT_BUFF, in.Id)
+	resp, err = ssdb.Do("zdel", Z_PICK_SIDE_QUESTION, in.Id)
 	lwutil.CheckSsdbError(resp, err)
-	resp, err = ssdb.Do("hdel", H_PICK_SIDE_EVENT_BUFF, in.Id)
+	resp, err = ssdb.Do("hdel", H_PICK_SIDE_QUESTION, in.Id)
 	lwutil.CheckSsdbError(resp, err)
 
 	lwutil.WriteResponse(w, in)
 }
 
-func apiPickSideBuffMod(w http.ResponseWriter, r *http.Request) {
+func apiPickSideQuestionMod(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//ssdb
@@ -347,25 +352,25 @@ func apiPickSideBuffMod(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//in
-	var event BuffPickSideEvent
-	err = lwutil.DecodeRequestBody(r, &event)
+	var question PickSideQuestion
+	err = lwutil.DecodeRequestBody(r, &question)
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check exist
-	resp, err := ssdb.Do("hget", H_PICK_SIDE_EVENT_BUFF, event.Id)
+	resp, err := ssdb.Do("hget", H_PICK_SIDE_QUESTION, question.Id)
 	if resp[0] == "not_found" {
-		lwutil.SendError("err_not_found", "event not found from H_PICK_SIDE_EVENT_BUFF")
+		lwutil.SendError("err_not_found", "question not found from H_PICK_SIDE_QUESTION")
 	}
 	lwutil.CheckSsdbError(resp, err)
 
 	//save to ssdb
-	js, err := json.Marshal(event)
+	js, err := json.Marshal(question)
 	lwutil.CheckError(err, "")
-	resp, err = ssdb.Do("hset", H_PICK_SIDE_EVENT_BUFF, event.Id, js)
+	resp, err = ssdb.Do("hset", H_PICK_SIDE_QUESTION, question.Id, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
-	lwutil.WriteResponse(w, event)
+	lwutil.WriteResponse(w, question)
 }
 
 func apiPickSideList(w http.ResponseWriter, r *http.Request) {
@@ -477,13 +482,138 @@ func apiPickSideMod(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, event)
 }
 
+func apiPickSideGetPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//out
+	lwutil.WriteResponse(w, _pickSidePublishInfoes)
+}
+
+func apiPickSideSetPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in []EventPublishInfo
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	for _, v := range in {
+		if v.EventNum < 1 || v.EventNum > 3 {
+			lwutil.SendError("err_input", "EventNum must between [1, 3]")
+		}
+	}
+
+	_pickSidePublishInfoes = in
+
+	//save
+	js, err := json.Marshal(_pickSidePublishInfoes)
+	lwutil.CheckError(err, "")
+	resp, err := ssdb.Do("set", K_EVENT_PUBLISH, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiPickSideAddQuestion(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+}
+
+func apiPickSideListQuestion(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+}
+
+func apiPickSideDelQuestion(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+}
+
+func apiPickSideModQuestion(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+}
+
 func regPickSide() {
-	http.Handle("/pickSide/buffAdd", lwutil.ReqHandler(apiPickSideBuffAdd))
-	http.Handle("/pickSide/buffList", lwutil.ReqHandler(apiPickSideBuffList))
-	http.Handle("/pickSide/buffDel", lwutil.ReqHandler(apiPickSideBuffDel))
-	http.Handle("/pickSide/buffMod", lwutil.ReqHandler(apiPickSideBuffMod))
+	http.Handle("/pickSide/questionAdd", lwutil.ReqHandler(apiPickSideQuestionAdd))
+	http.Handle("/pickSide/questionList", lwutil.ReqHandler(apiPickSideQuestionList))
+	http.Handle("/pickSide/questionDel", lwutil.ReqHandler(apiPickSideQuestionDel))
+	http.Handle("/pickSide/questionMod", lwutil.ReqHandler(apiPickSideQuestionMod))
 	http.Handle("/pickSide/list", lwutil.ReqHandler(apiPickSideList))
 	http.Handle("/pickSide/mod", lwutil.ReqHandler(apiPickSideMod))
-	// http.Handle("/pickSide/setPublish", lwutil.ReqHandler(apiPickSideSetPublish))
-	// http.Handle("/pickSide/getPublish", lwutil.ReqHandler(apiPickSideGetPublish))
+	http.Handle("/pickSide/getPublish", lwutil.ReqHandler(apiPickSideGetPublish))
+	http.Handle("/pickSide/setPublish", lwutil.ReqHandler(apiPickSideSetPublish))
+	http.Handle("/pickSide/addQuestion", lwutil.ReqHandler(apiPickSideAddQuestion))
+	http.Handle("/pickSide/listQuestion", lwutil.ReqHandler(apiPickSideListQuestion))
+	http.Handle("/pickSide/delQuestion", lwutil.ReqHandler(apiPickSideDelQuestion))
+	http.Handle("/pickSide/modQuestion", lwutil.ReqHandler(apiPickSideModQuestion))
 }
