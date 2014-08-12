@@ -259,6 +259,13 @@ func apiChallengeMod(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_exist", fmt.Sprintf("challenge not exist:id=", in.Id))
 	}
 
+	//get pack
+	pack, err := getPack(ssdb, in.PackId)
+	lwutil.CheckError(err, "")
+
+	in.PackTitle = pack.Title
+	in.Thumb = pack.Thumb
+
 	//set
 	js, err := json.Marshal(in)
 	lwutil.CheckError(err, "")
