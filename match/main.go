@@ -141,7 +141,7 @@ func main() {
 	u, _ := user.Current()
 
 	if u.Username != "liwei" {
-		_cron.AddFunc("0 0 3 * * *", backupTask)
+		_cron.AddFunc("0 20 2 * * *", backupTask)
 	}
 	// backupTask()
 
