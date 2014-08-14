@@ -278,6 +278,10 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": ""
 				},{
+					"name": "buffMoveToFront",
+					"method": "POST",
+					"data": {"Id": 0}
+				},{
 					"name": "list",
 					"method": "POST",
 					"data": {"StartId": 0, "Limit": 20}
@@ -499,6 +503,21 @@ function Controller($scope, $http) {
 			}
 		}
 		sendCodeMirror.focus()
+	}
+
+	$scope.login = function() {
+		var url = "/auth/login"
+		var email = $('#email').val()
+		var password = $('#password').val()
+		var body = {
+			"Username": email,
+			"Password": password
+		}
+		var bodyStr = JSON.stringify(body, null)
+		$.post(url, bodyStr, function(json){
+			alert("login ok")
+		}, "json")
+		.fail(function(){alert("login failed")})
 	}
 
 	$scope.queryTick = 0

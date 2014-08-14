@@ -5,7 +5,9 @@ import (
 	"fmt"
 	// "github.com/garyburd/redigo/redis"
 	"./ssdb"
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
@@ -20,8 +22,9 @@ const (
 	PASSWORD_SALT      = "liwei"
 	SESSION_LIFE_SEC   = 60 * 60 * 24 * 7
 	SESSION_UPDATE_SEC = 60 * 60
-	H_ACCOUNT          = "H_ACCOUNT"
-	H_NAME_ACCONT      = "H_NAME_ACCONT"
+	H_ACCOUNT          = "H_ACCOUNT"        //key:userId, value:accountJson
+	H_NAME_ACCONT      = "H_NAME_ACCONT"    //key:userName, value:userId
+	H_SNS_ACCONT       = "H_SNS_ACCONT"     //key:snsKey, value:userId
 	H_SESSION          = "H_SESSION"        //key:token, value:session
 	H_USER_TOKEN       = "H_USER_TOKEN"     //key:appid/userid, value:token
 	K_RESET_PASSWORD   = "K_RESET_PASSWORD" //key:K_RESET_PASSWORD/<resetKey> value:accountEmail
@@ -150,6 +153,7 @@ func apiAuthRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	in.Password = lwutil.Sha224(in.Password + PASSWORD_SALT)
+	in.RegisterTime = time.Now().Format(time.RFC3339)
 
 	//check exist
 	rName, err := ssdb.Do("hexists", H_NAME_ACCONT, in.Username)
@@ -244,7 +248,7 @@ func apiAuthLogin(w http.ResponseWriter, r *http.Request) {
 	// new session
 	usertoken := newSession(w, userId, in.Username, appid, ssdb)
 
-	// reply
+	// out
 	out := struct {
 		Token  string
 		Now    int64
@@ -253,6 +257,112 @@ func apiAuthLogin(w http.ResponseWriter, r *http.Request) {
 		usertoken,
 		lwutil.GetRedisTimeUnix(),
 		userId,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiAuthGetSnsSecret(w http.ResponseWriter, r *http.Request) {
+	//ssdb
+	ssdbc, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	k1 := lwutil.GenUUID()
+	key := fmt.Sprintf("snsSecret/%s", k1)
+
+	resp, err := ssdbc.Do("setx", key, 1, 60)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	out := struct {
+		Secret string
+	}{
+		k1,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		Type     string
+		SnsKey   string
+		Secret   string
+		Checksum string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check type
+	snsTypes := map[string]bool{
+		"weibo":   true,
+		"tencent": true,
+		"douban":  true,
+	}
+
+	if snsTypes[in.Type] == false {
+		lwutil.SendError("err_type", "")
+	}
+
+	//check secret
+	secret := fmt.Sprintf("snsSecret/%s", in.Secret)
+	resp, err := ssdbc.Do("exists", secret)
+	if resp[1] != "1" {
+		lwutil.SendError("err_exist", "secret not exists")
+	}
+
+	//checksum
+	checksum := fmt.Sprintf("%s+%sll46i", in.SnsKey, in.Secret)
+	hasher := sha1.New()
+	hasher.Write([]byte(checksum))
+	checksum = hex.EncodeToString(hasher.Sum(nil))
+	if in.Checksum != checksum {
+		lwutil.SendError("err_checksum", "")
+	}
+
+	//get userId
+	key := fmt.Sprintf("%s/%s", in.Type, in.SnsKey)
+	resp, err = ssdbc.Do("hget", H_SNS_ACCONT, key)
+	var userId int64
+	if resp[0] == ssdb.NOT_FOUND {
+		userId = GenSerial(ssdbc, "account")
+
+		resp, err = ssdbc.Do("hset", H_SNS_ACCONT, key, userId)
+		lwutil.CheckSsdbError(resp, err)
+
+		//set account
+		var account Account
+		account.RegisterTime = time.Now().Format(time.RFC3339)
+		js, err := json.Marshal(account)
+		lwutil.CheckError(err, "")
+		_, err = ssdbc.Do("hset", H_ACCOUNT, userId, js)
+		lwutil.CheckError(err, "")
+
+	} else {
+		lwutil.CheckSsdbError(resp, err)
+		userId, err = strconv.ParseInt(resp[1], 10, 64)
+	}
+
+	userToken := newSession(w, userId, key, 0, ssdbc)
+
+	// out
+	out := struct {
+		Token    string
+		Now      int64
+		UserId   int64
+		UserName string
+	}{
+		userToken,
+		lwutil.GetRedisTimeUnix(),
+		userId,
+		key,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -562,6 +672,8 @@ func apiSsdbTest(w http.ResponseWriter, r *http.Request) {
 
 func regAuth() {
 	http.Handle("/auth/login", lwutil.ReqHandler(apiAuthLogin))
+	http.Handle("/auth/getSnsSecret", lwutil.ReqHandler(apiAuthGetSnsSecret))
+	http.Handle("/auth/loginSns", lwutil.ReqHandler(apiAuthLoginSns))
 	http.Handle("/auth/logout", lwutil.ReqHandler(apiAuthLogout))
 	http.Handle("/auth/register", lwutil.ReqHandler(apiAuthRegister))
 	http.Handle("/auth/info", lwutil.ReqHandler(apiAuthLoginInfo))
