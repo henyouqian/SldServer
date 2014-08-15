@@ -47,8 +47,14 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
+	if in.SliderNum < 3 {
+		in.SliderNum = 3
+	} else if in.SliderNum > 9 {
+		in.SliderNum = 9
+	}
+
 	//new pack
-	newPack(ssdbc, &in.Pack)
+	newPack(ssdbc, &in.Pack, session.Userid)
 
 	//new user pack
 	userPackId := GenSerial(ssdbc, USER_PACK_SERIAL)

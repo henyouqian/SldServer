@@ -106,7 +106,13 @@ func makeTagName(tag string) (outName string) {
 	return strings.ToLower(s)
 }
 
-func newPack(ssdbc *ssdb.Client, pack *Pack) {
+func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
+	if len(pack.Images) < 4 {
+		lwutil.SendError("err_images", "len(pack.Images) < 4")
+	}
+
+	pack.AuthorId = authorId
+
 	now := time.Now()
 	pack.Time = now.Format(time.RFC3339)
 	pack.TimeUnix = now.Unix()
@@ -158,13 +164,14 @@ func apiNewPack(w http.ResponseWriter, r *http.Request) {
 	var pack Pack
 	err = lwutil.DecodeRequestBody(r, &pack)
 	lwutil.CheckError(err, "err_decode_body")
+	authorId := int64(0)
 	if isAdmin(session.Username) {
-		pack.AuthorId = 0
+		authorId = 0
 	} else {
-		pack.AuthorId = session.Userid
+		authorId = session.Userid
 	}
 
-	newPack(ssdb, &pack)
+	newPack(ssdb, &pack, authorId)
 
 	//out
 	lwutil.WriteResponse(w, pack)
