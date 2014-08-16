@@ -121,7 +121,8 @@ func apiUserPackList(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	if len(resp) == 1 {
-		lwutil.SendError("err_not_found", "")
+		w.Write([]byte("[]"))
+		return
 	}
 	resp = resp[1:]
 
