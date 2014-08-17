@@ -13,7 +13,7 @@ import (
 const (
 	H_PLAYER_INFO      = "H_PLAYER_INFO"     //key:H_PLAYER_INFO/<userId> subkey:property
 	H_APP_PLAYER_RATE  = "H_APP_PLAYER_RATE" //subkey:appName/userId value:1
-	USER_UPLOAD_BUCKET = "pintugame"
+	USER_UPLOAD_BUCKET = "pintuuserupload"
 	INIT_MONEY         = 500
 	FLD_PLAYER_MONEY   = "money"
 	FLD_PLAYER_TEAM    = "team"
@@ -257,7 +257,7 @@ func apiAddRewardFromCache(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
-func apiGetUptoken(w http.ResponseWriter, r *http.Request) {
+func apiGetUptokens(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//in
@@ -283,6 +283,29 @@ func apiGetUptoken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//out
+	lwutil.WriteResponse(w, &out)
+}
+
+func apiGetUptoken(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	_, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//
+	scope := fmt.Sprintf("%s", USER_UPLOAD_BUCKET)
+	putPolicy := rs.PutPolicy{
+		Scope: scope,
+	}
+
+	//out
+	out := struct {
+		Token string
+	}{
+		putPolicy.Token(nil),
+	}
+
 	lwutil.WriteResponse(w, &out)
 }
 
@@ -322,6 +345,7 @@ func regPlayer() {
 	http.Handle("/player/getInfo", lwutil.ReqHandler(apiGetPlayerInfo))
 	http.Handle("/player/setInfo", lwutil.ReqHandler(apiSetPlayerInfo))
 	http.Handle("/player/addRewardFromCache", lwutil.ReqHandler(apiAddRewardFromCache))
+	http.Handle("/player/getUptokens", lwutil.ReqHandler(apiGetUptokens))
 	http.Handle("/player/getUptoken", lwutil.ReqHandler(apiGetUptoken))
 	http.Handle("/player/rate", lwutil.ReqHandler(apiRate))
 }

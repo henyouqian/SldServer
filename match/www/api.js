@@ -162,6 +162,10 @@ function Controller($scope, $http) {
 				},{
 					"name": "getUptoken",
 					"method": "POST",
+					"data": ""
+				},{
+					"name": "getUptokens",
+					"method": "POST",
 					"data": ["test1.jpg", "test2.jpg"]
 				}
 			]
