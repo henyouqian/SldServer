@@ -6,15 +6,17 @@ import (
 	"github.com/henyouqian/lwutil"
 	"math"
 	"net/http"
+	"strconv"
 )
 
 const (
-	H_USER_PACK         = "H_USER_PACK"        //key:H_USER_PACK subkey:userPackId value:userPack
-	Z_USER_PACK         = "Z_USER_PACK"        //key:Z_USER_PACK/userId subkey:userPackId score:userPackId
-	Z_USER_PACK_LATEST  = "Z_USER_PACK_LATEST" //subkey:userPackId
-	USER_PACK_SERIAL    = "USER_PACK_SERIAL"
-	H_USER_PACK_RANKS   = "H_USER_PACK_RANKS" //subkey:userPackId
-	USER_PACK_PRICE_MAX = 10
+	H_USER_PACK            = "H_USER_PACK"        //key:H_USER_PACK subkey:userPackId value:userPack
+	Z_USER_PACK            = "Z_USER_PACK"        //key:Z_USER_PACK/userId subkey:userPackId score:userPackId
+	Z_USER_PACK_LATEST     = "Z_USER_PACK_LATEST" //subkey:userPackId
+	USER_PACK_SERIAL       = "USER_PACK_SERIAL"
+	USER_PACK_PRICE_MAX    = 10
+	Z_USER_PACK_RANKS      = "Z_USER_PACK_RANKS"      //key:Z_USER_PACK_RANKS/userPackId subkey:userId
+	H_USER_PACK_PLAY_TIMES = "H_USER_PACK_PLAY_TIMES" //subkey:userPackId
 )
 
 type UserPackRank struct {
@@ -27,13 +29,16 @@ type UserPack struct {
 	Id        int64
 	PackId    int64
 	SliderNum int
-	PlayTimes int
 	Price     int
 	Thumb     string
 }
 
 func makeZUserPackKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_USER_PACK, userId)
+}
+
+func makeZUserPackRanksKey(userPackId int64) string {
+	return fmt.Sprintf("%s/%d", Z_USER_PACK_RANKS, userPackId)
 }
 
 func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
@@ -82,8 +87,8 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 		Id:        userPackId,
 		PackId:    in.Pack.Id,
 		SliderNum: in.SliderNum,
-		PlayTimes: 0,
 		Price:     in.Price,
+		Thumb:     in.Thumb,
 	}
 
 	//json
@@ -101,10 +106,6 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 
 	//add to Z_USER_PACK_LATEST
 	resp, err = ssdbc.Do("zset", Z_USER_PACK_LATEST, userPackId, userPackId)
-	lwutil.CheckSsdbError(resp, err)
-
-	//userPackRanks
-	resp, err = ssdbc.Do("hset", H_USER_PACK_RANKS, userPackId, "[]")
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
@@ -133,14 +134,16 @@ func apiUserPackDel(w http.ResponseWriter, r *http.Request) {
 
 	//check owner
 	zkey := makeZUserPackKey(session.Userid)
-	resp, err := ssdbc.Do("zexists", zkey, in.UserPackId)
-	lwutil.CheckError(err, "")
-	if resp[0] == "0" {
-		lwutil.SendError("err_owner", "not the pack's owner")
+	if !isAdmin(session.Username) {
+		resp, err := ssdbc.Do("zexists", zkey, in.UserPackId)
+		lwutil.CheckError(err, "")
+		if resp[0] == "0" {
+			lwutil.SendError("err_owner", "not the pack's owner")
+		}
 	}
 
 	//del
-	resp, err = ssdbc.Do("zdel", zkey, in.UserPackId)
+	resp, err := ssdbc.Do("zdel", zkey, in.UserPackId)
 	lwutil.CheckSsdbError(resp, err)
 
 	resp, err = ssdbc.Do("zdel", Z_USER_PACK_LATEST, in.UserPackId)
@@ -149,7 +152,11 @@ func apiUserPackDel(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hdel", H_USER_PACK, in.UserPackId)
 	lwutil.CheckSsdbError(resp, err)
 
-	resp, err = ssdbc.Do("hdel", H_USER_PACK_RANKS, in.UserPackId)
+	ranksKey := makeZUserPackRanksKey(in.UserPackId)
+	resp, err = ssdbc.Do("zclear", ranksKey)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("hdel", H_USER_PACK_PLAY_TIMES, in.UserPackId)
 	lwutil.CheckSsdbError(resp, err)
 }
 
@@ -181,10 +188,14 @@ func apiUserPackListMine(w http.ResponseWriter, r *http.Request) {
 		in.Limit = 50
 	}
 
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+
 	//get keys
 	userId := session.Userid
 	zkey := makeZUserPackKey(userId)
-	resp, err := ssdbc.Do("zkeys", zkey, in.StartId, in.StartId, "", in.Limit)
+	resp, err := ssdbc.Do("zrscan", zkey, in.StartId, in.StartId, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
 	if len(resp) == 1 {
@@ -194,21 +205,52 @@ func apiUserPackListMine(w http.ResponseWriter, r *http.Request) {
 	resp = resp[1:]
 
 	//get user packs
-	args := make([]interface{}, len(resp)+2)
+	num := len(resp) / 2
+	args := make([]interface{}, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_USER_PACK
-	for _, v := range resp {
-		args = append(args, v)
+
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
 	}
 	resp, err = ssdbc.Do(args...)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
-	userPacks := make([]UserPack, len(resp)/2)
+	type UserPackOut struct {
+		UserPack
+		PlayTimes int
+	}
+
+	userPacks := make([]UserPackOut, len(resp)/2)
+	m := make(map[int64]int) //key:userPackId, value:index
 	for i, _ := range userPacks {
 		packjs := resp[i*2+1]
 		err = json.Unmarshal([]byte(packjs), &userPacks[i])
 		lwutil.CheckError(err, "")
+		m[userPacks[i].Id] = i
+	}
+
+	if len(userPacks) > 0 {
+		args = make([]interface{}, len(userPacks)+2)
+		args[0] = "multi_hget"
+		args[1] = H_USER_PACK_PLAY_TIMES
+		for _, v := range userPacks {
+			args = append(args, v.Id)
+		}
+		resp, err = ssdbc.Do(args...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			userPackId, err := strconv.ParseInt(resp[i*2], 10, 64)
+			lwutil.CheckError(err, "")
+			idx := m[userPackId]
+			playTimes, err := strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+			userPacks[idx].PlayTimes = int(playTimes)
+		}
 	}
 
 	//out
@@ -268,11 +310,40 @@ func apiUserPackListLatest(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
-	userPacks := make([]UserPack, len(resp)/2)
+	type UserPackOut struct {
+		UserPack
+		PlayTimes int
+	}
+
+	userPacks := make([]UserPackOut, len(resp)/2)
+	m := make(map[int64]int) //key:userPackId, value:index
 	for i, _ := range userPacks {
 		packjs := resp[i*2+1]
 		err = json.Unmarshal([]byte(packjs), &userPacks[i])
 		lwutil.CheckError(err, "")
+		m[userPacks[i].Id] = i
+	}
+
+	if len(userPacks) > 0 {
+		args = make([]interface{}, len(userPacks)+2)
+		args[0] = "multi_hget"
+		args[1] = H_USER_PACK_PLAY_TIMES
+		for _, v := range userPacks {
+			args = append(args, v.Id)
+		}
+		resp, err = ssdbc.Do(args...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			userPackId, err := strconv.ParseInt(resp[i*2], 10, 64)
+			lwutil.CheckError(err, "")
+			idx := m[userPackId]
+			playTimes, err := strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+			userPacks[idx].PlayTimes = int(playTimes)
+		}
 	}
 
 	//out
@@ -312,6 +383,7 @@ func apiUserPackGet(w http.ResponseWriter, r *http.Request) {
 
 func regUserPack() {
 	http.Handle("/userPack/new", lwutil.ReqHandler(apiUserPackNew))
+	http.Handle("/userPack/del", lwutil.ReqHandler(apiUserPackDel))
 	http.Handle("/userPack/listMine", lwutil.ReqHandler(apiUserPackListMine))
 	http.Handle("/userPack/listLatest", lwutil.ReqHandler(apiUserPackListLatest))
 	http.Handle("/userPack/get", lwutil.ReqHandler(apiUserPackGet))
