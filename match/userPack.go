@@ -4,21 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/henyouqian/lwutil"
+	"math"
 	"net/http"
 )
 
 const (
-	H_USER_PACK        = "H_USER_PACK"        //key:H_USER_PACK subkey:userPackId value:userPack
-	Z_USER_PACK        = "Z_USER_PACK"        //key:Z_USER_PACK/userId subkey:userPackId score:userPackId
-	Z_USER_PACK_LATEST = "Z_USER_PACK_LATEST" //subkey:userPackId
-	USER_PACK_SERIAL   = "USER_PACK_SERIAL"
+	H_USER_PACK         = "H_USER_PACK"        //key:H_USER_PACK subkey:userPackId value:userPack
+	Z_USER_PACK         = "Z_USER_PACK"        //key:Z_USER_PACK/userId subkey:userPackId score:userPackId
+	Z_USER_PACK_LATEST  = "Z_USER_PACK_LATEST" //subkey:userPackId
+	USER_PACK_SERIAL    = "USER_PACK_SERIAL"
+	H_USER_PACK_RANKS   = "H_USER_PACK_RANKS" //subkey:userPackId
+	USER_PACK_PRICE_MAX = 10
 )
+
+type UserPackRank struct {
+	UserId   int64
+	UserName string
+	Score    int
+}
 
 type UserPack struct {
 	Id        int64
 	PackId    int64
 	SliderNum int
 	PlayTimes int
+	Price     int
+	Thumb     string
 }
 
 func makeZUserPackKey(userId int64) string {
@@ -43,6 +54,7 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Pack
 		SliderNum int
+		Price     int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -52,6 +64,14 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	} else if in.SliderNum > 9 {
 		in.SliderNum = 9
 	}
+	if in.Price < 0 {
+		in.Price = 1
+	} else if in.Price > USER_PACK_PRICE_MAX {
+		in.Price = USER_PACK_PRICE_MAX
+	}
+
+	stringLimit(&in.Title, 100)
+	stringLimit(&in.Text, 2000)
 
 	//new pack
 	newPack(ssdbc, &in.Pack, session.Userid)
@@ -63,6 +83,7 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 		PackId:    in.Pack.Id,
 		SliderNum: in.SliderNum,
 		PlayTimes: 0,
+		Price:     in.Price,
 	}
 
 	//json
@@ -70,7 +91,7 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	//add to hash
-	resp, err := ssdbc.Do("hset", H_USER_PACK, js)
+	resp, err := ssdbc.Do("hset", H_USER_PACK, userPackId, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//add to zset
@@ -82,11 +103,57 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", Z_USER_PACK_LATEST, userPackId, userPackId)
 	lwutil.CheckSsdbError(resp, err)
 
+	//userPackRanks
+	resp, err = ssdbc.Do("hset", H_USER_PACK_RANKS, userPackId, "[]")
+	lwutil.CheckSsdbError(resp, err)
+
 	//out
 	lwutil.WriteResponse(w, userPack)
 }
 
-func apiUserPackList(w http.ResponseWriter, r *http.Request) {
+func apiUserPackDel(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	checkError(err)
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		UserPackId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check owner
+	zkey := makeZUserPackKey(session.Userid)
+	resp, err := ssdbc.Do("zexists", zkey, in.UserPackId)
+	lwutil.CheckError(err, "")
+	if resp[0] == "0" {
+		lwutil.SendError("err_owner", "not the pack's owner")
+	}
+
+	//del
+	resp, err = ssdbc.Do("zdel", zkey, in.UserPackId)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("zdel", Z_USER_PACK_LATEST, in.UserPackId)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("hdel", H_USER_PACK, in.UserPackId)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("hdel", H_USER_PACK_RANKS, in.UserPackId)
+	lwutil.CheckSsdbError(resp, err)
+}
+
+func apiUserPackListMine(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
 
@@ -175,6 +242,10 @@ func apiUserPackListLatest(w http.ResponseWriter, r *http.Request) {
 		in.Limit = 50
 	}
 
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+
 	//get keys
 	resp, err := ssdbc.Do("zrscan", Z_USER_PACK_LATEST, in.StartId, in.StartId, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
@@ -241,6 +312,7 @@ func apiUserPackGet(w http.ResponseWriter, r *http.Request) {
 
 func regUserPack() {
 	http.Handle("/userPack/new", lwutil.ReqHandler(apiUserPackNew))
-	http.Handle("/userPack/list", lwutil.ReqHandler(apiUserPackList))
+	http.Handle("/userPack/listMine", lwutil.ReqHandler(apiUserPackListMine))
+	http.Handle("/userPack/listLatest", lwutil.ReqHandler(apiUserPackListLatest))
 	http.Handle("/userPack/get", lwutil.ReqHandler(apiUserPackGet))
 }

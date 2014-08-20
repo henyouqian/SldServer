@@ -400,7 +400,15 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": ""
 				},{
-					"name": "list",
+					"name": "del",
+					"method": "POST",
+					"data": {"UserPackId": 0}
+				},{
+					"name": "listMine",
+					"method": "POST",
+					"data": {"UserId": 0, "StartId": 0, "Limit":12}
+				},{
+					"name": "listLatest",
 					"method": "POST",
 					"data": {"UserId": 0, "StartId": 0, "Limit":12}
 				},{
