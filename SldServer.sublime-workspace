@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"maxint",
+				"MaxInt64	 Ɩ"
+			],
+			[
+				"H_userp",
+				"H_USER_PACK_PLAY_TIMES	 Ɩ"
+			],
+			[
+				"makezuser",
+				"makeZUserPackRanksKey	string ƒ"
+			],
+			[
 				"sprn",
 				"Sprintf	string ƒ"
 			],
@@ -228,10 +240,6 @@
 				"Z_EVENT_PLAYER_RECORD	 Ɩ"
 			],
 			[
-				"maxint",
-				"MaxInt32	 Ɩ"
-			],
-			[
 				"parse",
 				"ParseInt	i int64, err error ƒ"
 			],
@@ -279,7 +287,7 @@
 			"file": "match/event.go",
 			"settings":
 			{
-				"buffer_size": 40153,
+				"buffer_size": 40953,
 				"line_ending": "Unix"
 			}
 		},
@@ -295,7 +303,7 @@
 			"file": "match/www/api.js",
 			"settings":
 			{
-				"buffer_size": 12659,
+				"buffer_size": 12931,
 				"line_ending": "Unix"
 			}
 		},
@@ -328,7 +336,7 @@
 			"file": "match/userPack.go",
 			"settings":
 			{
-				"buffer_size": 5188,
+				"buffer_size": 8800,
 				"line_ending": "Unix"
 			}
 		},
@@ -337,6 +345,30 @@
 			"settings":
 			{
 				"buffer_size": 14791,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go",
+			"settings":
+			{
+				"buffer_size": 9449,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/player.go",
+			"settings":
+			{
+				"buffer_size": 8127,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/conf.go",
+			"settings":
+			{
+				"buffer_size": 1223,
 				"line_ending": "Unix"
 			}
 		}
@@ -373,19 +405,20 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/www/api.html",
 		"/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/event_template.js",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/challenge.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/conf.json",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/scorekeeper.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/store.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/player.go",
@@ -438,6 +471,19 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"strconv",
+			"makeZUserPackRanksKey",
+			"apiUserPackList",
+			"stringLimit",
+			"playerMoney",
+			"apiUserPackList",
+			"makeZUserPackKey",
+			"newPack",
+			"apiUserPackNew",
+			"USER_UPLOAD_BUCKET",
+			"apiGetUptokens",
+			"USER_UPLOAD_BUCKET",
+			"Write(",
 			"newPack",
 			"newpack",
 			"newPack\nnewPack",
@@ -552,20 +598,7 @@
 			"H_PACK",
 			"40",
 			"ALL",
-			"Z_USER_PACK",
-			"genImageKey",
-			"update",
-			"loadPack",
-			"update",
-			"loadPack",
-			"PACK_RESP_JS",
-			"update",
-			"userId",
-			"zset",
-			"Z_USER_PACK_PRE",
-			"name",
-			"AuthorId",
-			"EventPublishInfo"
+			"Z_USER_PACK"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -584,7 +617,7 @@
 	"groups":
 	[
 		{
-			"selected": 6,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -592,15 +625,15 @@
 					"file": "match/event.go",
 					"settings":
 					{
-						"buffer_size": 40153,
+						"buffer_size": 40953,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								63,
-								34
+								3242,
+								3242
 							]
 						],
 						"settings":
@@ -609,7 +642,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2029.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -626,8 +659,8 @@
 						"selection":
 						[
 							[
-								10212,
-								10212
+								1370,
+								1370
 							]
 						],
 						"settings":
@@ -636,7 +669,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 8340.0,
+						"translation.y": 914.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -646,15 +679,15 @@
 					"file": "match/www/api.js",
 					"settings":
 					{
-						"buffer_size": 12659,
+						"buffer_size": 12931,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								5836,
-								5836
+								8276,
+								8276
 							]
 						],
 						"settings":
@@ -663,7 +696,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 11427.0,
+						"translation.y": 8306.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -680,8 +713,8 @@
 						"selection":
 						[
 							[
-								8532,
-								8532
+								950,
+								950
 							]
 						],
 						"settings":
@@ -689,8 +722,8 @@
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 2.0,
-						"translation.y": 7176.0,
+						"translation.x": 0.0,
+						"translation.y": 362.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -718,7 +751,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 543.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -755,15 +788,15 @@
 					"file": "match/userPack.go",
 					"settings":
 					{
-						"buffer_size": 5188,
+						"buffer_size": 8800,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1815,
-								1815
+								1157,
+								1157
 							]
 						],
 						"settings":
@@ -772,7 +805,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1424.0,
+						"translation.y": 845.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -789,8 +822,35 @@
 						"selection":
 						[
 							[
-								3351,
-								3358
+								3796,
+								3796
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 4.0,
+						"translation.y": 518.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go",
+					"settings":
+					{
+						"buffer_size": 9449,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8428,
+								8428
 							]
 						],
 						"settings":
@@ -799,7 +859,61 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2505.0,
+						"translation.y": 8877.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/player.go",
+					"settings":
+					{
+						"buffer_size": 8127,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1052,
+								1052
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 1.0,
+						"translation.y": 777.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/conf.go",
+					"settings":
+					{
+						"buffer_size": 1223,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								917,
+								917
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 479.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

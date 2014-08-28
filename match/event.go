@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	COUPON_MAX                  = 1000
 	H_EVENT                     = "H_EVENT"
 	Z_EVENT                     = "Z_EVENT"
 	H_EVENT_BUFF                = "H_EVENT_BUFF"
@@ -62,6 +63,7 @@ type Event struct {
 	HasResult       bool
 	SliderNum       int
 	ChallengeSecs   []int
+	CouponSetting   [][2]int //[rankStart, couponNum]
 }
 
 type BuffEvent struct {
@@ -99,6 +101,40 @@ type EventPublishInfo struct {
 	BeginTime   [2]int
 	EndTime     [2]int
 	EventNum    int
+}
+
+func checkCouponSetting(event *Event) bool {
+	couponSetting := event.CouponSetting
+	if len(couponSetting) == 0 {
+		return true
+	}
+
+	if couponSetting[0][0] != 1 {
+		glog.Error("couponSetting[0][0] != 1")
+		return false
+	}
+
+	rank := 0
+	couponNum := COUPON_MAX
+	for i := 0; i < len(couponSetting); i++ {
+		if couponSetting[i][0] <= rank {
+			glog.Error("couponSetting'rank must be asc")
+			return false
+		}
+		if couponSetting[i][1] >= couponNum {
+			glog.Error("couponSetting's couponNum must be desc")
+			return false
+		}
+		rank = couponSetting[i][0]
+		couponNum = couponSetting[i][1]
+	}
+
+	if couponSetting[len(couponSetting)-1][1] != 0 {
+		glog.Error("last couponNum must be 0")
+		return false
+	}
+
+	return true
 }
 
 func makeRedisLeaderboardKey(evnetId int64) string {

@@ -412,7 +412,7 @@ func apiChallengeSubmitScore(w http.ResponseWriter, r *http.Request) {
 	//update ChallangeEventId
 	if currChallengeId == in.ChallengeId && play.CupType > 0 {
 		currChallengeId++
-		resp, err := ssdb.Do("hset", playerKey, playerCurrChallengeId, currChallengeId)
+		resp, err := ssdb.Do("hincr", playerKey, playerCurrChallengeId, 1)
 		lwutil.CheckSsdbError(resp, err)
 	}
 

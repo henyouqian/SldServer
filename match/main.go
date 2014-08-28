@@ -137,6 +137,7 @@ func main() {
 	initDb()
 	initEvent()
 	initPickSide()
+	initAdmin()
 
 	u, _ := user.Current()
 

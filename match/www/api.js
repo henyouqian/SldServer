@@ -338,9 +338,9 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"UserId": 0, "UserName": "aa", "AddMoney": 100}
 				},{
-					"name": "setAdsPercent",
+					"name": "setAdsConf",
 					"method": "POST",
-					"data": {"AdsPercent": 0.5}
+					"data": {"ShowPercent": 0.5, "DelayPercent": 0.5, "DelaySec": 1.0}
 				},{
 					"name": "setCurrChallengeId",
 					"method": "POST",

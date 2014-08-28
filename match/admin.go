@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
@@ -8,15 +9,43 @@ import (
 )
 
 const (
-	ADS_PERCENT_KEY = "ADS_PERCENT_KEY"
+	ADS_CONF_KEY = "ADS_CONF_KEY"
 )
 
+type AdsConf struct {
+	ShowPercent  float32
+	DelayPercent float32
+	DelaySec     float32
+}
+
 var (
-	_adsPercent = float32(-1.0)
+	_adsConf AdsConf
 )
 
 func glogAdmin() {
 	glog.Info("")
+}
+
+func initAdmin() {
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//load adsConf
+	resp, err := ssdbc.Do("get", ADS_CONF_KEY)
+	checkError(err)
+
+	if len(resp) < 2 {
+		//save
+		js, err := json.Marshal(_adsConf)
+		lwutil.CheckError(err, "")
+		resp, err := ssdbc.Do("set", ADS_CONF_KEY, js)
+		lwutil.CheckSsdbError(resp, err)
+	} else {
+		err = json.Unmarshal([]byte(resp[1]), &_adsConf)
+		checkError(err)
+	}
 }
 
 func apiAddMoney(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +99,7 @@ func apiAddMoney(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, playerInfo)
 }
 
-func apiSetAdsPercent(w http.ResponseWriter, r *http.Request) {
+func apiSetAdsConf(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -86,21 +115,21 @@ func apiSetAdsPercent(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//in
-	var in struct {
-		AdsPercent float32
-	}
+	var in AdsConf
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
-	if in.AdsPercent < 0 {
-		in.AdsPercent = 0
-	} else if in.AdsPercent > 1 {
-		in.AdsPercent = 1
+	if in.ShowPercent < 0 {
+		in.ShowPercent = 0
+	} else if in.ShowPercent > 1 {
+		in.ShowPercent = 1
 	}
 
-	_adsPercent = in.AdsPercent
+	_adsConf = in
 
 	//save
-	resp, err := ssdb.Do("set", ADS_PERCENT_KEY, in.AdsPercent)
+	js, err := json.Marshal(_adsConf)
+	lwutil.CheckError(err, "")
+	resp, err := ssdb.Do("set", ADS_CONF_KEY, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
@@ -159,6 +188,6 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 
 func regAdmin() {
 	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
-	http.Handle("/admin/setAdsPercent", lwutil.ReqHandler(apiSetAdsPercent))
+	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
 	http.Handle("/admin/setCurrChallengeId", lwutil.ReqHandler(apiSetCurrChallengeId))
 }

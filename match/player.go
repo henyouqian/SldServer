@@ -112,20 +112,6 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
 	lwutil.CheckError(err, "")
 
-	//get adsPercent
-	ap := _adsPercent
-	if ap < 0 {
-		resp, err := ssdb.Do("get", ADS_PERCENT_KEY)
-		if resp[0] == "not_found" {
-			ap = ADS_PERCENT_DEFAUT
-		} else {
-			lwutil.CheckSsdbError(resp, err)
-			ap64, err := strconv.ParseFloat(resp[1], 32)
-			ap = float32(ap64)
-			lwutil.CheckError(err, "")
-		}
-	}
-
 	//get appPlayerRate
 	subkey := makeAppPlayerRateSubkey(_conf.AppName, session.Userid)
 	resp, err := ssdb.Do("hget", H_APP_PLAYER_RATE, subkey)
@@ -139,14 +125,14 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		*PlayerInfo
 		UserId               int64
 		BetCloseBeforeEndSec int
-		AdsPercent           float32
+		AdsConf              AdsConf
 		RateReward           int
 		ClientConf           map[string]string
 	}{
 		playerInfo,
 		session.Userid,
 		BET_CLOSE_BEFORE_END_SEC,
-		ap,
+		_adsConf,
 		rateReward,
 		_clientConf,
 	}
@@ -213,11 +199,9 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	out := struct {
 		PlayerInfo
 		BetCloseBeforeEndSec int
-		AdsPercent           float32
 	}{
 		*playerInfo,
 		BET_CLOSE_BEFORE_END_SEC,
-		ADS_PERCENT_DEFAUT,
 	}
 	lwutil.WriteResponse(w, out)
 }
