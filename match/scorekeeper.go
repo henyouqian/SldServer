@@ -147,7 +147,7 @@ func scoreKeeper() {
 
 				//add player reward
 				playerKey := makePlayerInfoKey(userId)
-				resp, err = ssdb.Do("hincr", playerKey, playerRewardCache, record.MatchReward)
+				resp, err = ssdb.Do("hincr", playerKey, PLAYER_REWARD_CACHE, record.MatchReward)
 				checkSsdbError(resp, err)
 
 				//add to Z_EVENT_PLAYER_RECORD
@@ -249,7 +249,7 @@ func scoreKeeper() {
 					//add reward to player
 					playerKey := makePlayerInfoKey(playerId)
 					addMoney := int64(float32(playerBet) * winMult)
-					resp, err = ssdb.Do("hincr", playerKey, playerRewardCache, addMoney)
+					resp, err = ssdb.Do("hincr", playerKey, PLAYER_REWARD_CACHE, addMoney)
 					checkSsdbError(resp, err)
 
 					key := makeEventPlayerRecordSubkey(event.Id, playerId)

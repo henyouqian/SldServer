@@ -4,8 +4,28 @@
 		"selected_items":
 		[
 			[
+				"coupo",
+				"CouponItemType	struct ʈ"
+			],
+			[
+				"coupon_",
+				"COUPON_ITME_PROVIDERS	[]string ν"
+			],
+			[
+				"coup",
+				"CouponSum	int ν"
+			],
+			[
+				"Er",
+				"Errorf	 ƒ"
+			],
+			[
 				"maxint",
-				"MaxInt64	 Ɩ"
+				"MaxInt32	 Ɩ"
+			],
+			[
+				"ch",
+				"CheckSsdbError	 ƒ"
 			],
 			[
 				"H_userp",
@@ -90,10 +110,6 @@
 			[
 				"H_chall",
 				"H_CHALLENGE_PLAY	 Ɩ"
-			],
-			[
-				"ch",
-				"ChallengeId	int64 ν"
 			],
 			[
 				"chall",
@@ -287,7 +303,7 @@
 			"file": "match/event.go",
 			"settings":
 			{
-				"buffer_size": 40953,
+				"buffer_size": 41437,
 				"line_ending": "Unix"
 			}
 		},
@@ -300,28 +316,11 @@
 			}
 		},
 		{
-			"file": "match/www/api.js",
-			"settings":
-			{
-				"buffer_size": 12931,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "match/auth.go",
 			"settings":
 			{
 				"buffer_size": 16291,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "{\n    data =     {\n        sina =         {\n            accessToken = \"2.00soTjhB03t9ZIdb0399d8cfhth4TD\";\n            username = adultsOnly;\n            usid = 1562354670;\n        };\n    };\n    message = \"no error\";\n    responseCode = 200;\n    responseType = 9;\n    viewControllerType = 7;\n}\n\n{\n    data =     {\n        douban =         {\n            birthday = \"<null>\";\n            company = \"<null>\";\n            education = \"<null>\";\n            gender = \"<null>\";\n            icon = \"http://img3.douban.com/icon/ui2359365-4.jpg\";\n            \"profile_url\" = \"http://www.douban.com/people/2359365\";\n            tags =             (\n            );\n            username = \"\\U8282\\U6c34\\U5c0f\\U5148\\U950b\";\n            usid = 2359365;\n        };\n    };\n    message = \"no error\";\n    responseCode = 200;\n    responseType = 10;\n    viewControllerType = 7;\n}\n\n{\n    data =     {\n        tencent =         {\n            birthday = \"1982-9-17\";\n            company = \"<null>\";\n            education = \"<null>\";\n            gender = 1;\n            icon = \"/100\";\n            openid = 2D42BB2BEE9795DA2B305CB1F31D0B81;\n            \"profile_url\" = \"http://t.qq.com/adultsOnly\";\n            tags =             (\n            );\n            username = \"\\U674e\\U709c\";\n            usid = adultsOnly;\n        };\n    };\n    message = \"no error\";\n    responseCode = 200;\n    responseType = 10;\n    viewControllerType = 7;\n}",
-			"settings":
-			{
-				"buffer_size": 1409,
-				"line_ending": "Unix",
-				"name": "{"
 			}
 		},
 		{
@@ -360,7 +359,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 8127,
+				"buffer_size": 8152,
 				"line_ending": "Unix"
 			}
 		},
@@ -369,6 +368,46 @@
 			"settings":
 			{
 				"buffer_size": 1223,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/admin.go",
+			"settings":
+			{
+				"buffer_size": 5139,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/www/api.js",
+			"settings":
+			{
+				"buffer_size": 13087,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/main.go",
+			"settings":
+			{
+				"buffer_size": 3550,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/store.go",
+			"settings":
+			{
+				"buffer_size": 9997,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/util.go",
+			"settings":
+			{
+				"buffer_size": 318,
 				"line_ending": "Unix"
 			}
 		}
@@ -405,12 +444,14 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/challenge.go",
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/Default/Default (OSX).sublime-keymap",
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/User/Default (OSX).sublime-keymap",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/www/api.html",
 		"/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/event_template.js",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/challenge.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go",
@@ -471,6 +512,26 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"hexists",
+			"//in",
+			"//out",
+			"hexists",
+			"apiAddCouponItem",
+			"tit",
+			"in",
+			"stack",
+			"playerCoupon",
+			"getPlayerInfo",
+			"playerMoney",
+			"COUPON_MAX",
+			"CouponSetting",
+			"ADS_PERCENT_DEFAUT",
+			"json",
+			"_adsPercent",
+			"ADS_PER",
+			"ADS_PERCENT_KEY",
+			"percent",
+			"currChallengeId",
 			"strconv",
 			"makeZUserPackRanksKey",
 			"apiUserPackList",
@@ -578,27 +639,7 @@
 			"math",
 			"comment",
 			"apiGetComments",
-			"H_ADVICE",
-			"SEREIAL_ADVICE",
-			"makeZAdviceKey",
-			"addComment",
-			"Msec",
-			"apiSocialNewPack",
-			"sld1",
-			"873521060",
-			"com.",
-			"version",
-			"glog",
-			"sha",
-			"apiEventGet",
-			"apiSetPlayerInfo",
-			"setinfo",
-			"AllowSave",
-			"se t p",
-			"H_PACK",
-			"40",
-			"ALL",
-			"Z_USER_PACK"
+			"H_ADVICE"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -617,7 +658,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 12,
 			"sheets":
 			[
 				{
@@ -625,15 +666,15 @@
 					"file": "match/event.go",
 					"settings":
 					{
-						"buffer_size": 40953,
+						"buffer_size": 41437,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3242,
-								3242
+								2739,
+								2739
 							]
 						],
 						"settings":
@@ -642,7 +683,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2029.0,
+						"translation.y": 1150.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -669,40 +710,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 914.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "match/www/api.js",
-					"settings":
-					{
-						"buffer_size": 12931,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								8276,
-								8276
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 8306.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
 					"file": "match/auth.go",
 					"settings":
 					{
@@ -723,41 +737,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 362.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"settings":
-					{
-						"buffer_size": 1409,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1070,
-								1076
-							]
-						],
-						"settings":
-						{
-							"auto_name": "{",
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 3,
 					"file": "match/ssdb/ssdb.go",
 					"settings":
 					{
@@ -784,7 +770,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 6,
+					"buffer": 4,
 					"file": "match/userPack.go",
 					"settings":
 					{
@@ -811,7 +797,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 5,
 					"file": "match/pack.go",
 					"settings":
 					{
@@ -832,13 +818,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 4.0,
-						"translation.y": 518.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 8,
+					"buffer": 6,
 					"file": "/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go",
 					"settings":
 					{
@@ -859,25 +845,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 8877.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 9,
+					"buffer": 7,
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 8127,
+						"buffer_size": 8152,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1052,
-								1052
+								2742,
+								2742
 							]
 						],
 						"settings":
@@ -885,14 +871,14 @@
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 1.0,
-						"translation.y": 777.0,
+						"translation.x": 0.0,
+						"translation.y": 1849.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 8,
 					"file": "match/conf.go",
 					"settings":
 					{
@@ -903,8 +889,8 @@
 						"selection":
 						[
 							[
-								917,
-								917
+								888,
+								888
 							]
 						],
 						"settings":
@@ -913,7 +899,142 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 479.0,
+						"translation.y": 165.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/admin.go",
+					"settings":
+					{
+						"buffer_size": 5139,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2935,
+								2964
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2583.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/www/api.js",
+					"settings":
+					{
+						"buffer_size": 13087,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6876,
+								6876
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 6773.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "match/main.go",
+					"settings":
+					{
+						"buffer_size": 3550,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2972,
+								2972
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2685.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "match/store.go",
+					"settings":
+					{
+						"buffer_size": 9997,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								9043,
+								9043
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 8497.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 13,
+					"file": "match/util.go",
+					"settings":
+					{
+						"buffer_size": 318,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								243,
+								243
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

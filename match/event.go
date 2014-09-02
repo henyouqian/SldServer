@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	COUPON_MAX                  = 1000
+	COUPON_SUM_MAX              = 1000
 	H_EVENT                     = "H_EVENT"
 	Z_EVENT                     = "Z_EVENT"
 	H_EVENT_BUFF                = "H_EVENT_BUFF"
@@ -51,22 +51,32 @@ var (
 )
 
 type Event struct {
-	Id              int64
-	PackId          int64
-	PackTitle       string
-	Thumb           string
-	BeginTime       int64
-	EndTime         int64
-	BeginTimeString string
-	EndTimeString   string
-	BetEndTime      int64
-	HasResult       bool
-	SliderNum       int
-	ChallengeSecs   []int
-	CouponSetting   [][2]int //[rankStart, couponNum]
+	Id                 int64
+	PackId             int64
+	PackTitle          string
+	Thumb              string
+	BeginTime          int64
+	EndTime            int64
+	BeginTimeString    string
+	EndTimeString      string
+	BetEndTime         int64
+	HasResult          bool
+	SliderNum          int
+	ChallengeSecs      []int
+	CouponSetting      [][2]int //[rankStart, couponNum]
+	CouponLuckySetting [][2]int //[rank, couponNum]
+	CouponSum          int
 }
 
 type BuffEvent struct {
+	Id            int64
+	PackId        int64
+	PackTitle     string
+	SliderNum     int
+	ChallengeSecs []int
+}
+
+type CouponBuffEvent struct {
 	Id            int64
 	PackId        int64
 	PackTitle     string
@@ -115,7 +125,8 @@ func checkCouponSetting(event *Event) bool {
 	}
 
 	rank := 0
-	couponNum := COUPON_MAX
+	couponNum := int(math.MaxInt32)
+	couponSum := 0
 	for i := 0; i < len(couponSetting); i++ {
 		if couponSetting[i][0] <= rank {
 			glog.Error("couponSetting'rank must be asc")
@@ -127,12 +138,20 @@ func checkCouponSetting(event *Event) bool {
 		}
 		rank = couponSetting[i][0]
 		couponNum = couponSetting[i][1]
+		couponSum += couponNum
 	}
 
 	if couponSetting[len(couponSetting)-1][1] != 0 {
 		glog.Error("last couponNum must be 0")
 		return false
 	}
+
+	if couponSum > COUPON_SUM_MAX {
+		glog.Errorf("couponSum > COUPON_SUM_MAX, couponSum=%d, COUPON_SUM_MAX=%d", couponSum, COUPON_SUM_MAX)
+		return false
+	}
+
+	event.CouponSum = couponSum
 
 	return true
 }
@@ -1490,7 +1509,7 @@ func apiBet(w http.ResponseWriter, r *http.Request) {
 
 	//update money
 	playerKey := makePlayerInfoKey(userId)
-	resp, err := ssdb.Do("hincr", playerKey, playerMoney, -in.Money)
+	resp, err := ssdb.Do("hincr", playerKey, PLAYER_MONEY, -in.Money)
 	lwutil.CheckSsdbError(resp, err)
 	money -= in.Money
 

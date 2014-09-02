@@ -326,7 +326,7 @@ func apiChallengeSubmitScore(w http.ResponseWriter, r *http.Request) {
 
 	//check challengeId
 	var currChallengeId int64
-	err = ssdb.HGet(playerKey, playerCurrChallengeId, &currChallengeId)
+	err = ssdb.HGet(playerKey, PLAYER_CURR_CHALLENGE_ID, &currChallengeId)
 	lwutil.CheckError(err, "")
 	if in.ChallengeId > currChallengeId {
 		lwutil.SendError("err_invalid_event", "")
@@ -398,12 +398,12 @@ func apiChallengeSubmitScore(w http.ResponseWriter, r *http.Request) {
 	newMoney := int64(0)
 	totalReward := int64(0)
 	if reward > 0 {
-		resp, err := ssdb.Do("hincr", playerKey, playerMoney, reward)
+		resp, err := ssdb.Do("hincr", playerKey, PLAYER_MONEY, reward)
 		lwutil.CheckSsdbError(resp, err)
 		newMoney, err = strconv.ParseInt(resp[1], 10, 64)
 		lwutil.CheckError(err, "")
 
-		resp, err = ssdb.Do("hincr", playerKey, playerTotalReward, reward)
+		resp, err = ssdb.Do("hincr", playerKey, PLAYER_TOTAL_REWARD, reward)
 		lwutil.CheckSsdbError(resp, err)
 		totalReward, err = strconv.ParseInt(resp[1], 10, 64)
 		lwutil.CheckError(err, "")
@@ -412,7 +412,7 @@ func apiChallengeSubmitScore(w http.ResponseWriter, r *http.Request) {
 	//update ChallangeEventId
 	if currChallengeId == in.ChallengeId && play.CupType > 0 {
 		currChallengeId++
-		resp, err := ssdb.Do("hincr", playerKey, playerCurrChallengeId, 1)
+		resp, err := ssdb.Do("hincr", playerKey, PLAYER_CURR_CHALLENGE_ID, 1)
 		lwutil.CheckSsdbError(resp, err)
 	}
 
@@ -459,7 +459,7 @@ func apiPassMissingChallenge(w http.ResponseWriter, r *http.Request) {
 
 	//check challengeId
 	var currChallengeId int64
-	err = ssdb.HGet(playerKey, playerCurrChallengeId, &currChallengeId)
+	err = ssdb.HGet(playerKey, PLAYER_CURR_CHALLENGE_ID, &currChallengeId)
 	lwutil.CheckError(err, "")
 	if in.ChallengeId != currChallengeId {
 		lwutil.SendError("err_invalid_challenge", "")
@@ -473,13 +473,13 @@ func apiPassMissingChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//add chanllengeId
-	resp, err = ssdb.Do("hincr", playerKey, playerCurrChallengeId, 1)
+	resp, err = ssdb.Do("hincr", playerKey, PLAYER_CURR_CHALLENGE_ID, 1)
 	lwutil.CheckSsdbError(resp, err)
 	currChallengeId++
 
 	//add money
 	addMoney := 100 + rand.Int()%400
-	resp, err = ssdb.Do("hincr", playerKey, playerMoney, addMoney)
+	resp, err = ssdb.Do("hincr", playerKey, PLAYER_MONEY, addMoney)
 	lwutil.CheckSsdbError(resp, err)
 	money, err := strconv.ParseInt(resp[1], 10, 64)
 	lwutil.CheckError(err, "")

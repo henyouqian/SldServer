@@ -15,3 +15,7 @@ func stringLimit(str *string, limit uint) {
 		}
 	}
 }
+
+func ssdbCheckExists(resp []string) bool {
+	return resp[1] == "1"
+}

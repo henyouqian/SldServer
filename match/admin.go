@@ -89,11 +89,62 @@ func apiAddMoney(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := makePlayerInfoKey(userId)
-	resp, err := ssdb.Do("hincr", key, playerMoney, in.AddMoney)
+	resp, err := ssdb.Do("hincr", key, PLAYER_MONEY, in.AddMoney)
 	lwutil.CheckSsdbError(resp, err)
 
 	var playerInfo PlayerInfo
 	ssdb.HGetStruct(key, &playerInfo)
+
+	//out
+	lwutil.WriteResponse(w, playerInfo)
+}
+
+func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	ssdbAuth, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbAuth.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		UserId    int64
+		UserName  string
+		AddCoupon int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get userid
+	userId := in.UserId
+	if userId == 0 {
+		resp, err := ssdbAuth.Do("hget", H_NAME_ACCONT, in.UserName)
+		lwutil.CheckError(err, "")
+		if resp[0] != "ok" {
+			lwutil.SendError("err_not_exist", "account not exist")
+		}
+		userId, err = strconv.ParseInt(resp[1], 10, 64)
+		lwutil.CheckError(err, "")
+	}
+
+	key := makePlayerInfoKey(userId)
+	resp, err := ssdbc.Do("hincr", key, PLAYER_COUPON, in.AddCoupon)
+	lwutil.CheckSsdbError(resp, err)
+
+	var playerInfo PlayerInfo
+	ssdbc.HGetStruct(key, &playerInfo)
 
 	//out
 	lwutil.WriteResponse(w, playerInfo)
@@ -179,7 +230,7 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 	//save
 	playerKey := makePlayerInfoKey(userId)
 
-	resp, err = ssdb.Do("hset", playerKey, playerCurrChallengeId, in.ChallengeId)
+	resp, err = ssdb.Do("hset", playerKey, PLAYER_CURR_CHALLENGE_ID, in.ChallengeId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
@@ -188,6 +239,7 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 
 func regAdmin() {
 	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
+	http.Handle("/admin/addCoupon", lwutil.ReqHandler(apiAddCoupon))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
 	http.Handle("/admin/setCurrChallengeId", lwutil.ReqHandler(apiSetCurrChallengeId))
 }

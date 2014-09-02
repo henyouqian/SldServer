@@ -167,7 +167,12 @@ function Controller($scope, $http) {
 					"name": "getUptokens",
 					"method": "POST",
 					"data": ["test1.jpg", "test2.jpg"]
+				},{
+					"name": "listMyCoupon",
+					"method": "POST",
+					"data": {"StartId":0, "Limit":20}
 				}
+
 			]
 		},{
 			"tab":"event",
@@ -338,6 +343,10 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"UserId": 0, "UserName": "aa", "AddMoney": 100}
 				},{
+					"name": "addCoupon",
+					"method": "POST",
+					"data": {"UserId": 0, "UserName": "aa", "AddCoupon": 100}
+				},{
 					"name": "setAdsConf",
 					"method": "POST",
 					"data": {"ShowPercent": 0.5, "DelayPercent": 0.5, "DelaySec": 1.0}
@@ -371,6 +380,26 @@ function Controller($scope, $http) {
 					"name": "buyIap",
 					"method": "POST",
 					"data": {"ProductId":"", "Checksum":""}
+				},{
+					"name": "addCouponItemType",
+					"method": "POST",
+					"data": {"Key":"", "Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000}
+				},{
+					"name": "delCouponItemType",
+					"method": "POST",
+					"data": {"Key":""}
+				},{
+					"name": "listCouponItemType",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "addCouponItem",
+					"method": "POST",
+					"data": {"TypeKey":"", "CouponCode":"", "ExpireDate":""}
+				},{
+					"name": "buyCouponItem",
+					"method": "POST",
+					"data": {"TypeKey":""}
 				}
 			]
 		},{
@@ -438,6 +467,10 @@ function Controller($scope, $http) {
 		}
 	]
 
+	//
+	$('#email').val(localStorage.email)
+
+	//
 	var sendCodeMirror = CodeMirror.fromTextArea(sendTextArea, 
 		{
 			theme: "elegant",
@@ -528,6 +561,7 @@ function Controller($scope, $http) {
 		var bodyStr = JSON.stringify(body, null)
 		$.post(url, bodyStr, function(json){
 			alert("login ok")
+			localStorage.email = email
 		}, "json")
 		.fail(function(){alert("login failed")})
 	}
