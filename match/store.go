@@ -15,8 +15,9 @@ const (
 	H_COUPON_ITEM_TYPE = "H_COUPON_ITEM_TYPE" //subkey:typeKey value:CouponItemType
 	H_COUPON_ITEM      = "H_COUPON_ITEM"      //subkey:itemId, value:couponItemJson
 	Q_COUPON_ITEM      = "Q_COUPON_ITEM"
-	H_COUPON_CODE      = "H_COUPON_CODE"   //subkey:provider/code value:couponItemId
-	Z_PLAYER_COUPON    = "Z_PLAYER_COUPON" //key:Z_PLAYER_COUPON/playerId, subkey:couponItemId, score:serial
+	H_COUPON_CODE      = "H_COUPON_CODE"      //subkey:provider/code value:couponItemId
+	Z_PLAYER_COUPON    = "Z_PLAYER_COUPON"    //key:Z_PLAYER_COUPON/playerId, subkey:couponItemId, score:time
+	Z_COUPON_PURCHASED = "Z_COUPON_PURCHASED" //subkey:couponItemId, score:time
 )
 
 var (
@@ -524,21 +525,24 @@ func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_not_enough", "not enough coupon")
 	}
 
-	//buy
+	//buy, pop from coupon item queue
 	couponItemQueueKey := makeCouponItemQueueKey(in.TypeKey)
 	resp, err = ssdbc.Do("qpop_front", couponItemQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	itemId, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 
+	//buy, add to player coupon zset
 	playerCouponZKey := makePlayerCouponZsetKey(session.Userid)
-	resp, err = ssdbc.Do("zset", playerCouponZKey, itemId, itemId)
+	score := lwutil.GetRedisTimeUnix()
+	resp, err = ssdbc.Do("zset", playerCouponZKey, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
+	//buy, sub player coupon num
 	resp, err = ssdbc.Do("hincr", playerKey, PLAYER_COUPON, -itemType.CouponPrice)
 	lwutil.CheckSsdbError(resp, err)
 
-	//update num
+	//update coupon type's coupon num
 	resp, err = ssdbc.Do("qsize", couponItemQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
@@ -547,6 +551,10 @@ func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
 	js, err := json.Marshal(itemType)
 	lwutil.CheckError(err, "")
 	resp, err = ssdbc.Do("hset", H_COUPON_ITEM_TYPE, in.TypeKey, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//add to purchased list
+	resp, err = ssdbc.Do("zset", Z_COUPON_PURCHASED, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out

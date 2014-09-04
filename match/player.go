@@ -30,6 +30,7 @@ type PlayerInfo struct {
 	CustomAvatarKey string
 	GravatarKey     string
 	Money           int64
+	Crystal         int
 	Coupon          int
 	BetMax          int
 	RewardCache     int64
@@ -42,6 +43,7 @@ type PlayerInfo struct {
 //player property
 const (
 	PLAYER_MONEY             = "Money"
+	PLAYER_CRYSTAL           = "Crystal"
 	PLAYER_COUPON            = "Coupon"
 	PLAYER_REWARD_CACHE      = "RewardCache"
 	PLAYER_TOTAL_REWARD      = "TotalReward"
@@ -99,14 +101,28 @@ func addPlayerMoneyToCache(ssc *ssdb.Client, userId int64, addMoney int64) {
 	lwutil.CheckSsdbError(resp, err)
 }
 
-func addPlayerCoupon(ssc *ssdb.Client, userId int64, addCoupon int) (rCoupon int) {
-	playerKey := makePlayerInfoKey(userId)
+func addPlayerCrystal(ssc *ssdb.Client, playerKey string, addNum int) (rNum int) {
+	resp, err := ssc.Do("hincr", playerKey, PLAYER_CRYSTAL, addNum)
+	lwutil.CheckSsdbError(resp, err)
+	num, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "")
+	return num
+}
+func getPlayerCrystal(ssc *ssdb.Client, playerKey string) (rNum int) {
+	resp, err := ssc.Do("hget", playerKey, PLAYER_CRYSTAL)
+	lwutil.CheckSsdbError(resp, err)
+	num, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "")
+	return num
+}
+
+func addPlayerCoupon(ssc *ssdb.Client, playerKey string, addCoupon int) (rCoupon int) {
 	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON, addCoupon)
 	lwutil.CheckSsdbError(resp, err)
-	coupon, err := strconv.ParseInt(resp[1], 10, 32)
+	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 
-	return int(coupon)
+	return num
 }
 
 func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {

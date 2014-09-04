@@ -140,8 +140,7 @@ func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := makePlayerInfoKey(userId)
-	resp, err := ssdbc.Do("hincr", key, PLAYER_COUPON, in.AddCoupon)
-	lwutil.CheckSsdbError(resp, err)
+	addPlayerCoupon(ssdbc, key, in.AddCoupon)
 
 	var playerInfo PlayerInfo
 	ssdbc.HGetStruct(key, &playerInfo)

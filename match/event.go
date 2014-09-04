@@ -51,32 +51,21 @@ var (
 )
 
 type Event struct {
-	Id                 int64
-	PackId             int64
-	PackTitle          string
-	Thumb              string
-	BeginTime          int64
-	EndTime            int64
-	BeginTimeString    string
-	EndTimeString      string
-	BetEndTime         int64
-	HasResult          bool
-	SliderNum          int
-	ChallengeSecs      []int
-	CouponSetting      [][2]int //[rankStart, couponNum]
-	CouponLuckySetting [][2]int //[rank, couponNum]
-	CouponSum          int
+	Id              int64
+	PackId          int64
+	PackTitle       string
+	Thumb           string
+	BeginTime       int64
+	EndTime         int64
+	BeginTimeString string
+	EndTimeString   string
+	BetEndTime      int64
+	HasResult       bool
+	SliderNum       int
+	ChallengeSecs   []int
 }
 
 type BuffEvent struct {
-	Id            int64
-	PackId        int64
-	PackTitle     string
-	SliderNum     int
-	ChallengeSecs []int
-}
-
-type CouponBuffEvent struct {
 	Id            int64
 	PackId        int64
 	PackTitle     string
@@ -113,48 +102,48 @@ type EventPublishInfo struct {
 	EventNum    int
 }
 
-func checkCouponSetting(event *Event) bool {
-	couponSetting := event.CouponSetting
-	if len(couponSetting) == 0 {
-		return true
-	}
+// func checkCouponSetting(event *Event) bool {
+// 	couponSetting := event.CouponSetting
+// 	if len(couponSetting) == 0 {
+// 		return true
+// 	}
 
-	if couponSetting[0][0] != 1 {
-		glog.Error("couponSetting[0][0] != 1")
-		return false
-	}
+// 	if couponSetting[0][0] != 1 {
+// 		glog.Error("couponSetting[0][0] != 1")
+// 		return false
+// 	}
 
-	rank := 0
-	couponNum := int(math.MaxInt32)
-	couponSum := 0
-	for i := 0; i < len(couponSetting); i++ {
-		if couponSetting[i][0] <= rank {
-			glog.Error("couponSetting'rank must be asc")
-			return false
-		}
-		if couponSetting[i][1] >= couponNum {
-			glog.Error("couponSetting's couponNum must be desc")
-			return false
-		}
-		rank = couponSetting[i][0]
-		couponNum = couponSetting[i][1]
-		couponSum += couponNum
-	}
+// 	rank := 0
+// 	couponNum := int(math.MaxInt32)
+// 	couponSum := 0
+// 	for i := 0; i < len(couponSetting); i++ {
+// 		if couponSetting[i][0] <= rank {
+// 			glog.Error("couponSetting'rank must be asc")
+// 			return false
+// 		}
+// 		if couponSetting[i][1] >= couponNum {
+// 			glog.Error("couponSetting's couponNum must be desc")
+// 			return false
+// 		}
+// 		rank = couponSetting[i][0]
+// 		couponNum = couponSetting[i][1]
+// 		couponSum += couponNum
+// 	}
 
-	if couponSetting[len(couponSetting)-1][1] != 0 {
-		glog.Error("last couponNum must be 0")
-		return false
-	}
+// 	if couponSetting[len(couponSetting)-1][1] != 0 {
+// 		glog.Error("last couponNum must be 0")
+// 		return false
+// 	}
 
-	if couponSum > COUPON_SUM_MAX {
-		glog.Errorf("couponSum > COUPON_SUM_MAX, couponSum=%d, COUPON_SUM_MAX=%d", couponSum, COUPON_SUM_MAX)
-		return false
-	}
+// 	if couponSum > COUPON_SUM_MAX {
+// 		glog.Errorf("couponSum > COUPON_SUM_MAX, couponSum=%d, COUPON_SUM_MAX=%d", couponSum, COUPON_SUM_MAX)
+// 		return false
+// 	}
 
-	event.CouponSum = couponSum
+// 	event.CouponSum = couponSum
 
-	return true
-}
+// 	return true
+// }
 
 func makeRedisLeaderboardKey(evnetId int64) string {
 	return fmt.Sprintf("%s/%d", RDS_Z_EVENT_LEADERBOARD_PRE, evnetId)
