@@ -30,7 +30,8 @@ type PlayerInfo struct {
 	CustomAvatarKey string
 	GravatarKey     string
 	Money           int64
-	Crystal         int
+	GoldenCoin      int
+	SilverCoin      int
 	Coupon          int
 	BetMax          int
 	RewardCache     int64
@@ -43,7 +44,8 @@ type PlayerInfo struct {
 //player property
 const (
 	PLAYER_MONEY             = "Money"
-	PLAYER_CRYSTAL           = "Crystal"
+	PLAYER_GOLD_COIN         = "GoldenCoin"
+	PLAYER_SILVER_COIN       = "SilverCoin"
 	PLAYER_COUPON            = "Coupon"
 	PLAYER_REWARD_CACHE      = "RewardCache"
 	PLAYER_TOTAL_REWARD      = "TotalReward"
@@ -101,16 +103,20 @@ func addPlayerMoneyToCache(ssc *ssdb.Client, userId int64, addMoney int64) {
 	lwutil.CheckSsdbError(resp, err)
 }
 
-func addPlayerCrystal(ssc *ssdb.Client, playerKey string, addNum int) (rNum int) {
-	resp, err := ssc.Do("hincr", playerKey, PLAYER_CRYSTAL, addNum)
+func addPlayerGoldCoin(ssc *ssdb.Client, playerKey string, addNum int) (rNum int) {
+	resp, err := ssc.Do("hincr", playerKey, PLAYER_GOLD_COIN, addNum)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 	return num
 }
-func getPlayerCrystal(ssc *ssdb.Client, playerKey string) (rNum int) {
-	resp, err := ssc.Do("hget", playerKey, PLAYER_CRYSTAL)
-	lwutil.CheckSsdbError(resp, err)
+func getPlayerGoldCoin(ssc *ssdb.Client, playerKey string) (rNum int) {
+	resp, err := ssc.Do("hget", playerKey, PLAYER_GOLD_COIN)
+	lwutil.CheckError(err, "")
+	if resp[0] == ssdb.NOT_FOUND {
+		return 0
+	}
+
 	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 	return num

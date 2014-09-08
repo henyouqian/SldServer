@@ -154,6 +154,7 @@ func main() {
 	regPack()
 	regCollection()
 	regPlayer()
+	regEvent()
 	regMatch()
 	regAdmin()
 	regStore()

@@ -1682,7 +1682,7 @@ func apiSetEventPublish(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
-func regMatch() {
+func regEvent() {
 	http.Handle("/event/new", lwutil.ReqHandler(apiEventNew))
 	http.Handle("/event/del", lwutil.ReqHandler(apiEventDel))
 	http.Handle("/event/mod", lwutil.ReqHandler(apiEventMod))

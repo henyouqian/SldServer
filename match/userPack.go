@@ -2,8 +2,8 @@ package main
 
 import (
 	"./ssdb"
-	"crypto/sha1"
-	"encoding/hex"
+	// "crypto/sha1"
+	// "encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	// "github.com/garyburd/redigo/redis"
 	"github.com/henyouqian/lwutil"
 )
 
@@ -131,13 +131,13 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_coupon_reward", "in.CouponReward % 100 != 0")
 	}
 
-	//check crystal
+	//check gold coin
 	playerKey := makePlayerInfoKey(session.Userid)
 	admin := isAdmin(session.Username)
 	if !admin {
-		crystalNum := getPlayerCrystal(ssdbc, playerKey)
-		if crystalNum < in.CouponReward {
-			lwutil.SendError("err_crystal", "crystalNum < in.CouponReward")
+		goldNum := getPlayerGoldCoin(ssdbc, playerKey)
+		if goldNum < in.CouponReward {
+			lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
 		}
 	}
 
@@ -179,9 +179,9 @@ func apiUserPackNew(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", Z_USER_PACK_LATEST, userPackId, userPackId)
 	lwutil.CheckSsdbError(resp, err)
 
-	//decrease crystal
+	//decrease gold coin
 	if !admin {
-		addPlayerCrystal(ssdbc, playerKey, -in.CouponReward)
+		addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
 	}
 
 	//out
@@ -526,114 +526,114 @@ func apiUserPackPlayBegin(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUserPackPlayEnd(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
+	// var err error
+	// lwutil.CheckMathod(r, "POST")
 
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
+	// //ssdb
+	// ssdbc, err := ssdbPool.Get()
+	// lwutil.CheckError(err, "")
+	// defer ssdbc.Close()
 
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
+	// //session
+	// session, err := findSession(w, r, nil)
+	// lwutil.CheckError(err, "err_auth")
 
-	//in
-	var in struct {
-		EventId  int64
-		Secret   string
-		Score    int
-		Checksum string
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
+	// //in
+	// var in struct {
+	// 	EventId  int64
+	// 	Secret   string
+	// 	Score    int
+	// 	Checksum string
+	// }
+	// err = lwutil.DecodeRequestBody(r, &in)
+	// lwutil.CheckError(err, "err_decode_body")
 
-	//checksum
-	checksum := fmt.Sprintf("%s+%d9d7a", in.Secret, in.Score+8703)
-	hasher := sha1.New()
-	hasher.Write([]byte(checksum))
-	checksum = hex.EncodeToString(hasher.Sum(nil))
-	if in.Checksum != checksum {
-		lwutil.SendError("err_checksum", "")
-	}
+	// //checksum
+	// checksum := fmt.Sprintf("%s+%d9d7a", in.Secret, in.Score+8703)
+	// hasher := sha1.New()
+	// hasher.Write([]byte(checksum))
+	// checksum = hex.EncodeToString(hasher.Sum(nil))
+	// if in.Checksum != checksum {
+	// 	lwutil.SendError("err_checksum", "")
+	// }
 
-	//check event record
-	now := lwutil.GetRedisTimeUnix()
-	recordKey := makeEventPlayerRecordSubkey(in.EventId, session.Userid)
-	resp, err := ssdb.Do("hget", H_EVENT_PLAYER_RECORD, recordKey)
-	lwutil.CheckError(err, "")
-	if resp[0] != "ok" {
-		lwutil.SendError("err_not_found", "event record not found")
-	}
+	// //check event record
+	// now := lwutil.GetRedisTimeUnix()
+	// recordKey := makeEventPlayerRecordSubkey(in.EventId, session.Userid)
+	// resp, err := ssdbc.Do("hget", H_EVENT_PLAYER_RECORD, recordKey)
+	// lwutil.CheckError(err, "")
+	// if resp[0] != "ok" {
+	// 	lwutil.SendError("err_not_found", "event record not found")
+	// }
 
-	record := EventPlayerRecord{}
-	err = json.Unmarshal([]byte(resp[1]), &record)
-	lwutil.CheckError(err, "")
-	if record.Secret != in.Secret {
-		lwutil.SendError("err_not_match", "Secret not match")
-	}
-	if now > record.SecretExpire {
-		lwutil.SendError("err_expired", "secret expired")
-	}
+	// record := EventPlayerRecord{}
+	// err = json.Unmarshal([]byte(resp[1]), &record)
+	// lwutil.CheckError(err, "")
+	// if record.Secret != in.Secret {
+	// 	lwutil.SendError("err_not_match", "Secret not match")
+	// }
+	// if now > record.SecretExpire {
+	// 	lwutil.SendError("err_expired", "secret expired")
+	// }
 
-	//clear secret
-	record.SecretExpire = 0
+	// //clear secret
+	// record.SecretExpire = 0
 
-	//update score
-	scoreUpdate := false
-	if record.Trys == 1 || record.HighScore == 0 {
-		record.HighScore = in.Score
-		record.HighScoreTime = now
-		scoreUpdate = true
-	} else {
-		if in.Score > record.HighScore {
-			record.HighScore = in.Score
-			scoreUpdate = true
-		}
-	}
+	// //update score
+	// scoreUpdate := false
+	// if record.Trys == 1 || record.HighScore == 0 {
+	// 	record.HighScore = in.Score
+	// 	record.HighScoreTime = now
+	// 	scoreUpdate = true
+	// } else {
+	// 	if in.Score > record.HighScore {
+	// 		record.HighScore = in.Score
+	// 		scoreUpdate = true
+	// 	}
+	// }
 
-	//save record
-	jsRecord, err := json.Marshal(record)
-	resp, err = ssdb.Do("hset", H_EVENT_PLAYER_RECORD, recordKey, jsRecord)
-	lwutil.CheckSsdbError(resp, err)
+	// //save record
+	// jsRecord, err := json.Marshal(record)
+	// resp, err = ssdbc.Do("hset", H_EVENT_PLAYER_RECORD, recordKey, jsRecord)
+	// lwutil.CheckSsdbError(resp, err)
 
-	//redis
-	rc := redisPool.Get()
-	defer rc.Close()
+	// //redis
+	// rc := redisPool.Get()
+	// defer rc.Close()
 
-	//event leaderboard
-	eventLbLey := makeRedisLeaderboardKey(in.EventId)
-	if scoreUpdate {
-		_, err = rc.Do("ZADD", eventLbLey, record.HighScore, session.Userid)
-		lwutil.CheckError(err, "")
-	}
+	// //event leaderboard
+	// eventLbLey := makeRedisLeaderboardKey(in.EventId)
+	// if scoreUpdate {
+	// 	_, err = rc.Do("ZADD", eventLbLey, record.HighScore, session.Userid)
+	// 	lwutil.CheckError(err, "")
+	// }
 
-	//get rank
-	rc.Send("ZREVRANK", eventLbLey, session.Userid)
-	rc.Send("ZCARD", eventLbLey)
-	err = rc.Flush()
-	lwutil.CheckError(err, "")
-	rank, err := redis.Int(rc.Receive())
-	lwutil.CheckError(err, "")
-	rankNum, err := redis.Int(rc.Receive())
-	lwutil.CheckError(err, "")
+	// //get rank
+	// rc.Send("ZREVRANK", eventLbLey, session.Userid)
+	// rc.Send("ZCARD", eventLbLey)
+	// err = rc.Flush()
+	// lwutil.CheckError(err, "")
+	// rank, err := redis.Int(rc.Receive())
+	// lwutil.CheckError(err, "")
+	// rankNum, err := redis.Int(rc.Receive())
+	// lwutil.CheckError(err, "")
 
-	//recaculate team score
-	if scoreUpdate && rank <= TEAM_SCORE_RANK_MAX {
-		recaculateTeamScore(ssdb, rc, in.EventId)
-	}
+	// //recaculate team score
+	// if scoreUpdate && rank <= TEAM_SCORE_RANK_MAX {
+	// 	recaculateTeamScore(ssdbc, rc, in.EventId)
+	// }
 
-	//out
-	out := struct {
-		Rank    uint32
-		RankNum uint32
-	}{
-		uint32(rank + 1),
-		uint32(rankNum),
-	}
+	// //out
+	// out := struct {
+	// 	Rank    uint32
+	// 	RankNum uint32
+	// }{
+	// 	uint32(rank + 1),
+	// 	uint32(rankNum),
+	// }
 
-	//out
-	lwutil.WriteResponse(w, out)
+	// //out
+	// lwutil.WriteResponse(w, out)
 }
 
 func regUserPack() {

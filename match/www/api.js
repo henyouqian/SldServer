@@ -464,6 +464,33 @@ function Controller($scope, $http) {
 					"data":{"Key": "aaabbb", "CheckSum": "xxxx", "UserName":"liwei", "Msec":50000}
 				}
 			]
+		},{
+			"tab":"match",
+			"path":"match",
+			"apis":[
+				{
+					"name": "new",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "del",
+					"method": "POST",
+					"data": {"MatchId": 0}
+				},{
+					"name": "list",
+					"method": "POST",
+					"data": {"StartId": 0, "BeginTime": 0, "Limit":12}
+				},{
+					"name": "listMine",
+					"method": "POST",
+					"data": {"StartId": 0, "BeginTime": 0, "Limit":12}
+				},{
+					"name": "getExtra",
+					"method": "POST",
+					"data": {"MatchId": 0}
+				}
+
+			]
 		}
 	]
 
