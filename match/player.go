@@ -30,7 +30,7 @@ type PlayerInfo struct {
 	CustomAvatarKey string
 	GravatarKey     string
 	Money           int64
-	GoldenCoin      int
+	GoldCoin        int
 	SilverCoin      int
 	Coupon          int
 	BetMax          int
@@ -44,7 +44,7 @@ type PlayerInfo struct {
 //player property
 const (
 	PLAYER_MONEY             = "Money"
-	PLAYER_GOLD_COIN         = "GoldenCoin"
+	PLAYER_GOLD_COIN         = "GoldCoin"
 	PLAYER_SILVER_COIN       = "SilverCoin"
 	PLAYER_COUPON            = "Coupon"
 	PLAYER_REWARD_CACHE      = "RewardCache"
