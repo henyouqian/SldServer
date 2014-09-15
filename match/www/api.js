@@ -485,7 +485,7 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"StartId": 0, "BeginTime": 0, "Limit":12}
 				},{
-					"name": "getExtra",
+					"name": "getDynamicData",
 					"method": "POST",
 					"data": {"MatchId": 0}
 				}

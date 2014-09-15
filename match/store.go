@@ -245,7 +245,7 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	addMoney, exist := iapProducts[in.ProductId]
+	addGoldCoin, exist := iapProducts[in.ProductId]
 	if !exist {
 		lwutil.SendError("err_product_id", "")
 	}
@@ -272,19 +272,21 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_checksum", checksum)
 	}
 
-	//set money
-	resp, err := ssdb.Do("hincr", playerKey, PLAYER_MONEY, addMoney)
+	//set goldCoin
+	resp, err := ssdb.Do("hincr", playerKey, PLAYER_GOLD_COIN, addGoldCoin)
 	lwutil.CheckSsdbError(resp, err)
-	money, err := strconv.ParseInt(resp[1], 10, 64)
+	goldCoin, err := strconv.ParseInt(resp[1], 10, 64)
 
 	//update secret
 	err = ssdb.HSet(playerKey, PLAYER_IAP_SECRET, "")
 	lwutil.CheckError(err, "")
 
+	glog.Info(addGoldCoin, goldCoin)
+
 	//out
 	out := map[string]int64{
-		"AddMoney": int64(addMoney),
-		"Money":    money,
+		"AddGoldCoin": int64(addGoldCoin),
+		"GoldCoin":    goldCoin,
 	}
 	lwutil.WriteResponse(w, out)
 }

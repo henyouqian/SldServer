@@ -79,7 +79,7 @@ type EventPlayerRecord struct {
 	TeamName           string
 	Secret             string
 	SecretExpire       int64
-	Trys               int
+	Tries              int
 	HighScore          int
 	HighScoreTime      int64
 	FinalRank          int
@@ -375,7 +375,7 @@ func initPlayerRecord(record *EventPlayerRecord, ssdbc *ssdb.Client, eventId int
 	lwutil.CheckError(err, "")
 
 	record.EventId = eventId
-	record.Trys = 0
+	record.Tries = 0
 	record.PlayerName = playerInfo.NickName
 	record.TeamName = ""
 	record.GravatarKey = playerInfo.GravatarKey
@@ -903,7 +903,7 @@ func apiGetUserPlay(w http.ResponseWriter, r *http.Request) {
 	//Out
 	type Out struct {
 		HighScore          int
-		Trys               int
+		Tries              int
 		Rank               int
 		RankNum            int
 		TeamName           string
@@ -955,7 +955,7 @@ func apiGetUserPlay(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := Out{
 		record.HighScore,
-		record.Trys,
+		record.Tries,
 		rank,
 		rankNum,
 		record.TeamName,
@@ -1005,7 +1005,7 @@ func apiPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	//get event player record
 	record := getEventPlayerRecord(ssdb, in.EventId, session.Userid)
-	record.Trys++
+	record.Tries++
 
 	if record.TeamName == "" {
 		playerInfo, err := getPlayerInfo(ssdb, session.Userid)
@@ -1085,7 +1085,7 @@ func apiPlayEnd(w http.ResponseWriter, r *http.Request) {
 
 	//update score
 	scoreUpdate := false
-	if record.Trys == 1 || record.HighScore == 0 {
+	if record.Tries == 1 || record.HighScore == 0 {
 		record.HighScore = in.Score
 		record.HighScoreTime = now
 		scoreUpdate = true
@@ -1254,7 +1254,7 @@ func apiGetRanks(w http.ResponseWriter, r *http.Request) {
 		CustomAvatarKey string
 		Score           int
 		Time            int64
-		Trys            int
+		Tries           int
 	}
 
 	type Out struct {
@@ -1386,7 +1386,7 @@ func apiGetRanks(w http.ResponseWriter, r *http.Request) {
 		ranks[i].Score = record.HighScore
 		ranks[i].NickName = record.PlayerName
 		ranks[i].Time = record.HighScoreTime
-		ranks[i].Trys = record.Trys
+		ranks[i].Tries = record.Tries
 		ranks[i].TeamName = record.TeamName
 		ranks[i].GravatarKey = record.GravatarKey
 		ranks[i].CustomAvatarKey = record.CustomAvartarKey
