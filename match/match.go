@@ -21,10 +21,12 @@ const (
 	H_MATCH                 = "H_MATCH"                 //subkey:matchId value:matchJson
 	H_MATCH_EXTRA           = "H_MATCH_EXTRA"           //key:H_MATCH_EXTRA subkey:matchId/fieldKey value:fieldValue
 	H_MATCH_PLAY            = "H_MATCH_PLAY"            //key:H_MATCH_PLAY subkey:matchId/userId value:match json
+	H_MATCH_RANK            = "H_MATCH_RANK"            //key:H_MATCH_RANK/matchId subkey:rank value:userId
 	Z_MATCH                 = "Z_MATCH"                 //subkey:matchId score:beginTime
 	Z_REWARD_MATCH          = "Z_REWARD_MATCH"          //subkey:matchId score:beginTime
 	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
 	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
+	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 
 	FREE_TRY_NUM = 3
@@ -57,15 +59,18 @@ type MatchExtra struct {
 }
 
 type MatchPlay struct {
-	HighScore     int
-	HighScoreTime int64
-	FinalRank     int
-	FreeTries     int
-	Tries         int
-	Team          string
-	Secret        string
-	SecretExpire  int64
-	LuckyNums     []int64
+	PlayerName       string
+	GravatarKey      string
+	CustomAvartarKey string
+	HighScore        int
+	HighScoreTime    int64
+	FinalRank        int
+	FreeTries        int
+	Tries            int
+	Team             string
+	Secret           string
+	SecretExpire     int64
+	LuckyNums        []int64
 }
 
 const (
@@ -102,8 +107,21 @@ func makeMatchPlaySubkey(matchId int64, userId int64) string {
 	return fmt.Sprintf("%d/%d", matchId, userId)
 }
 
-func makeMatchLeaderboardKey(matchId int64) string {
+func makeMatchLeaderboardRdsKey(matchId int64) string {
 	return fmt.Sprintf("%s/%d", RDS_Z_MATCH_LEADERBOARD, matchId)
+}
+
+func makeHMatchRankKey(matchId int64) string {
+	return fmt.Sprintf("%s/%d", H_MATCH_RANK, matchId)
+}
+
+func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
+	resp, err := ssdbc.Do("hget", H_MATCH, matchId)
+	lwutil.CheckSsdbError(resp, err)
+	var match Match
+	err = json.Unmarshal([]byte(resp[1]), &match)
+	lwutil.CheckError(err, "")
+	return &match
 }
 
 func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
@@ -118,6 +136,9 @@ func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
 		playerInfo, err := getPlayerInfo(ssdbc, userId)
 		lwutil.CheckError(err, "")
 		play.Team = playerInfo.TeamName
+		play.PlayerName = playerInfo.NickName
+		play.GravatarKey = playerInfo.GravatarKey
+		play.CustomAvartarKey = playerInfo.CustomAvatarKey
 
 		//save
 		js, err := json.Marshal(play)
@@ -258,6 +279,10 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 			resp, err = ssdbc.Do("zset", Z_REWARD_MATCH, matchId, beginTimeUnix)
 			lwutil.CheckSsdbError(resp, err)
 		}
+
+		//Z_OPEN_MATCH
+		resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+		lwutil.CheckSsdbError(resp, err)
 	} else {
 		//add to Z_PENDING_MATCH
 		resp, err = ssdbc.Do("zset", Z_PENDING_MATCH, matchId, beginTimeUnix)
@@ -708,6 +733,45 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	//get match play
 	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
 
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+
+	//get rank
+	myRank := 0
+	rankNum := 0
+	if match.HasResult {
+		myRank = play.FinalRank
+
+		//rankNum
+		hRankKey := makeHMatchRankKey(in.MatchId)
+		resp, err = ssdbc.Do("hsize", hRankKey)
+		lwutil.CheckSsdbError(resp, err)
+		rankNum, err = strconv.Atoi(resp[1])
+		lwutil.CheckError(err, "")
+	} else {
+		//redis
+		rc := redisPool.Get()
+		defer rc.Close()
+
+		lbKey := makeMatchLeaderboardRdsKey(in.MatchId)
+
+		//get my rank and rank count
+		rc.Send("ZREVRANK", lbKey, session.Userid)
+		rc.Send("ZCARD", lbKey)
+		err = rc.Flush()
+		lwutil.CheckError(err, "")
+		myRank, err = redis.Int(rc.Receive())
+		if err == nil {
+			myRank += 1
+		} else {
+			myRank = 0
+		}
+		rankNum, err = redis.Int(rc.Receive())
+		if err != nil {
+			rankNum = 0
+		}
+	}
+
 	//out
 	out := struct {
 		PlayTimes   int
@@ -718,8 +782,8 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	}{
 		playTimes,
 		extraReward,
-		123,
-		12345,
+		myRank,
+		rankNum,
 		*play,
 	}
 	lwutil.WriteResponse(w, out)
@@ -889,7 +953,7 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 	defer rc.Close()
 
 	//match leaderboard
-	lbKey := makeMatchLeaderboardKey(in.MatchId)
+	lbKey := makeMatchLeaderboardRdsKey(in.MatchId)
 	if scoreUpdate {
 		_, err = rc.Do("ZADD", lbKey, matchPlay.HighScore, session.Userid)
 		lwutil.CheckError(err, "")
@@ -919,9 +983,190 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 		uint32(rankNum),
 	}
 
-	glog.Infof("%+v", out)
+	//out
+	lwutil.WriteResponse(w, out)
+}
+
+func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+		Offset  int
+		Limit   int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	//check match id
+	resp, err := ssdbc.Do("hget", H_MATCH, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+	var match Match
+	err = json.Unmarshal([]byte(resp[1]), &match)
+	lwutil.CheckError(err, "")
+
+	//RankInfo
+	type RankInfo struct {
+		Rank            int
+		UserId          int64
+		NickName        string
+		TeamName        string
+		GravatarKey     string
+		CustomAvatarKey string
+		Score           int
+		Time            int64
+		Tries           int
+	}
+
+	type Out struct {
+		MatchId int64
+		MyRank  int
+		Ranks   []RankInfo
+		RankNum int
+	}
+
+	//get ranks
+	var ranks []RankInfo
+	myRank := 0
+	rankNum := 0
+
+	if match.HasResult {
+		cmds := make([]interface{}, in.Limit+2)
+		cmds[0] = "multi_hget"
+		cmds[1] = makeHMatchRankKey(match.Id)
+		hRankKey := cmds[1]
+		for i := 0; i < in.Limit; i++ {
+			rank := i + in.Offset + 1
+			cmds[i+2] = rank
+		}
+
+		resp, err := ssdbc.Do(cmds...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		ranks = make([]RankInfo, num)
+
+		for i := 0; i < num; i++ {
+			ranks[i].Rank, err = strconv.Atoi(resp[i*2])
+			lwutil.CheckError(err, "")
+			ranks[i].UserId, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+
+		//my rank
+		play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+		myRank = play.FinalRank
+
+		//rankNum
+		resp, err = ssdbc.Do("hsize", hRankKey)
+		lwutil.CheckSsdbError(resp, err)
+		rankNum, err = strconv.Atoi(resp[1])
+		lwutil.CheckError(err, "")
+	} else {
+		//redis
+		rc := redisPool.Get()
+		defer rc.Close()
+
+		lbKey := makeMatchLeaderboardRdsKey(in.MatchId)
+
+		//get ranks from redis
+		values, err := redis.Values(rc.Do("ZREVRANGE", lbKey, in.Offset, in.Offset+in.Limit-1))
+		lwutil.CheckError(err, "")
+
+		num := len(values)
+		if num > 0 {
+			ranks = make([]RankInfo, num)
+
+			currRank := in.Offset + 1
+			for i := 0; i < num; i++ {
+				ranks[i].Rank = currRank
+				currRank++
+				ranks[i].UserId, err = redisInt64(values[i], nil)
+				lwutil.CheckError(err, "")
+			}
+		}
+
+		//get my rank and rank count
+		rc.Send("ZREVRANK", lbKey, session.Userid)
+		rc.Send("ZCARD", lbKey)
+		err = rc.Flush()
+		lwutil.CheckError(err, "")
+		myRank, err = redis.Int(rc.Receive())
+		if err == nil {
+			myRank += 1
+		} else {
+			myRank = 0
+		}
+		rankNum, err = redis.Int(rc.Receive())
+		if err != nil {
+			rankNum = 0
+		}
+	}
+
+	num := len(ranks)
+	if num == 0 {
+		out := Out{
+			in.MatchId,
+			myRank,
+			[]RankInfo{},
+			rankNum,
+		}
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	//get match plays
+	cmds := make([]interface{}, 0, num+2)
+	cmds = append(cmds, "multi_hget")
+	cmds = append(cmds, H_MATCH_PLAY)
+	for _, rank := range ranks {
+		subkey := makeMatchPlaySubkey(in.MatchId, rank.UserId)
+		cmds = append(cmds, subkey)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	if num*2 != len(resp) {
+		lwutil.SendError("err_data_missing", "")
+	}
+	var play MatchPlay
+	for i := range ranks {
+		err = json.Unmarshal([]byte(resp[i*2+1]), &play)
+		lwutil.CheckError(err, "")
+		ranks[i].Score = play.HighScore
+		ranks[i].NickName = play.PlayerName
+		ranks[i].Time = play.HighScoreTime
+		ranks[i].Tries = play.Tries
+		ranks[i].TeamName = play.Team
+		ranks[i].GravatarKey = play.GravatarKey
+		ranks[i].CustomAvatarKey = play.CustomAvartarKey
+	}
 
 	//out
+	out := Out{
+		in.MatchId,
+		myRank,
+		ranks,
+		rankNum,
+	}
+
 	lwutil.WriteResponse(w, out)
 }
 
@@ -933,8 +1178,9 @@ func regMatch() {
 	http.Handle("/match/listMine", lwutil.ReqHandler(apiMatchListMine))
 	http.Handle("/match/listRewardMatch", lwutil.ReqHandler(apiMatchListRewardMatch))
 
-	http.Handle("/match/getDynamicData", lwutil.ReqHandler(apiMatchGetDynamicData))
-
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
+
+	http.Handle("/match/getDynamicData", lwutil.ReqHandler(apiMatchGetDynamicData))
+	http.Handle("/match/getRanks", lwutil.ReqHandler(apiMatchGetRanks))
 }
