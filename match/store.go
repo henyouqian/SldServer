@@ -65,16 +65,16 @@ var (
 		// "com.liwei.pin.coin128": 12800 + 2500,
 		// "com.liwei.pin.coin328": 32800 + 10000,
 		// "com.liwei.pin.coin588": 58800 + 25000,
-		"com.lw.pin.goldcoin6":    30,
-		"com.lw.pin.goldcoin18":   90,
-		"com.lw.pin.goldcoin30":   150,
-		"com.lw.pin.goldcoin60":   300,
-		"com.lw.pin.goldcoin188":  1000,
-		"com.lw.pin.goldcoin388":  2000,
-		"com.lw.pin.goldcoin588":  3000,
-		"com.lw.pin.goldcoin998":  5000,
-		"com.lw.pin.goldcoin2998": 15000,
-		"com.lw.pin.goldcoin5898": 30000,
+		"com.lw.pin.goldcoin6":    300,
+		"com.lw.pin.goldcoin18":   900,
+		"com.lw.pin.goldcoin30":   1500,
+		"com.lw.pin.goldcoin60":   3000,
+		"com.lw.pin.goldcoin188":  10000,
+		"com.lw.pin.goldcoin388":  20000,
+		"com.lw.pin.goldcoin588":  30000,
+		"com.lw.pin.goldcoin998":  50000,
+		"com.lw.pin.goldcoin2998": 150000,
+		"com.lw.pin.goldcoin5898": 300000,
 	}
 )
 
@@ -280,8 +280,6 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 	//update secret
 	err = ssdb.HSet(playerKey, PLAYER_IAP_SECRET, "")
 	lwutil.CheckError(err, "")
-
-	glog.Info(addGoldCoin, goldCoin)
 
 	//out
 	out := map[string]int64{

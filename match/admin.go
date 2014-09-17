@@ -99,6 +99,44 @@ func apiAddMoney(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, playerInfo)
 }
 
+func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	ssdbAuth, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbAuth.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		AddGoldCoin int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	key := makePlayerInfoKey(session.Userid)
+	resp, err := ssdb.Do("hincr", key, PLAYER_GOLD_COIN, in.AddGoldCoin)
+	lwutil.CheckSsdbError(resp, err)
+
+	var playerInfo PlayerInfo
+	ssdb.HGetStruct(key, &playerInfo)
+
+	//out
+	lwutil.WriteResponse(w, playerInfo)
+}
+
 func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -238,6 +276,7 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 
 func regAdmin() {
 	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
+	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
 	http.Handle("/admin/addCoupon", lwutil.ReqHandler(apiAddCoupon))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
 	http.Handle("/admin/setCurrChallengeId", lwutil.ReqHandler(apiSetCurrChallengeId))

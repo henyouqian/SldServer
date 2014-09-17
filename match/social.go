@@ -56,7 +56,7 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -181,7 +181,7 @@ func apiSocialGetPack(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//in
@@ -220,7 +220,7 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//in

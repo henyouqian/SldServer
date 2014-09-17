@@ -27,6 +27,7 @@ const (
 	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
 	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
+	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:reward(totalReward)
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 
 	FREE_TRY_NUM = 3
@@ -71,6 +72,7 @@ type MatchPlay struct {
 	Secret           string
 	SecretExpire     int64
 	LuckyNums        []int64
+	Reward           int
 }
 
 const (
@@ -172,7 +174,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -182,7 +184,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	//in
 	var in struct {
 		Pack
-		BeginTime        string
+		BeginTimeStr     string
 		SliderNum        int
 		CouponReward     int
 		ChallengeSeconds int
@@ -207,12 +209,16 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 
 	//check gold coin
 	playerKey := makePlayerInfoKey(session.Userid)
-	admin := isAdmin(session.Username)
-	if !admin {
-		goldNum := getPlayerGoldCoin(ssdbc, playerKey)
-		if goldNum < in.CouponReward {
-			lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
-		}
+	// admin := isAdmin(session.Username)
+	// if !admin {
+	// 	goldNum := getPlayerGoldCoin(ssdbc, playerKey)
+	// 	if goldNum < in.CouponReward {
+	// 		lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
+	// 	}
+	// }
+	goldNum := getPlayerGoldCoin(ssdbc, playerKey)
+	if goldNum < in.CouponReward {
+		lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
 	}
 
 	//new pack
@@ -221,17 +227,17 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	//new match
 	matchId := GenSerial(ssdbc, MATCH_SERIAL)
 	beginTimeUnix := int64(0)
-	beginTimeStr := in.BeginTime
+	beginTimeStr := in.BeginTimeStr
 	endTimeUnix := int64(0)
 	isPublishNow := false
-	if in.BeginTime == "" {
+	if in.BeginTimeStr == "" {
 		beginTime := lwutil.GetRedisTime()
 		beginTimeUnix = beginTime.Unix()
 		beginTimeStr = beginTime.Format("2006-01-02T15:04:05")
 		endTimeUnix = beginTime.Add(24 * time.Hour).Unix()
 		isPublishNow = true
 	} else {
-		beginTime, err := time.Parse("2006-01-02T15:04:05", in.BeginTime)
+		beginTime, err := time.Parse("2006-01-02T15:04:05", in.BeginTimeStr)
 		lwutil.CheckError(err, "")
 		if beginTime.Before(lwutil.GetRedisTime()) {
 			lwutil.SendError("err_time", "begin time must later than now")
@@ -295,9 +301,10 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//decrease gold coin
-	if !admin {
-		addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
-	}
+	// if !admin {
+	// 	addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
+	// }
+	addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
 
 	//out
 	lwutil.WriteResponse(w, match)
@@ -309,7 +316,7 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -359,7 +366,7 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -470,7 +477,7 @@ func apiMatchListRewardMatch(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -581,7 +588,7 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session
@@ -692,7 +699,7 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
-	checkError(err)
+	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
 	//session

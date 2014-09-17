@@ -138,6 +138,7 @@ func main() {
 	initEvent()
 	initPickSide()
 	initAdmin()
+	initMatchCron()
 
 	u, _ := user.Current()
 

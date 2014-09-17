@@ -343,6 +343,10 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"UserId": 0, "UserName": "aa", "AddMoney": 100}
 				},{
+					"name": "addGoldCoin",
+					"method": "POST",
+					"data": {"AddGoldCoin": 100}
+				},{
 					"name": "addCoupon",
 					"method": "POST",
 					"data": {"UserId": 0, "UserName": "aa", "AddCoupon": 100}
