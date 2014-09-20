@@ -18,7 +18,23 @@ func initMatchCron() {
 	matchCron()
 }
 
-func calcMatchReward(matchId int64, rank int) int {
+func calcRankReward(match *Match, rewardSum int, rank int) int {
+	fSum := float32(rewardSum)
+
+	// //owner reward
+	// ownerReward := int(match.OwnerRewardProportion * fSum)
+	// playerKey := makePlayerInfoKey(userId)
+
+	rankIdx := rank - 1
+	fixRewardNum := len(match.RankRewardProportions)
+	if rankIdx < fixRewardNum {
+		return int(match.RankRewardProportions[rankIdx] * fSum)
+	}
+
+	oneCoinNum := int(fSum * match.OneCoinRewardProportion)
+	if rankIdx < (fixRewardNum + oneCoinNum) {
+		return 1
+	}
 
 	return 0
 }
@@ -40,6 +56,7 @@ func matchCron() {
 	endTime := int64(0)
 	limit := 100
 
+	delMatchIds := make([]int64, 0, 16)
 	looping := true
 	for looping {
 		resp, err := ssdbc.Do("zscan", Z_OPEN_MATCH, matchId, endTime, "", limit)
@@ -49,9 +66,10 @@ func matchCron() {
 			break
 		}
 		resp = resp[1:]
-		glog.Info(resp)
 
 		num := len(resp) / 2
+
+		//for each match
 		for i := 0; i < num; i++ {
 			endTime, err = strconv.ParseInt(resp[i*2+1], 10, 64)
 			checkError(err)
@@ -59,7 +77,18 @@ func matchCron() {
 			if now >= endTime {
 				matchId, err = strconv.ParseInt(resp[i*2], 10, 64)
 				checkError(err)
-				glog.Info(matchId)
+
+				//reward sum
+				match := getMatch(ssdbc, matchId)
+				extraRewardSubkey := makeHMatchExtraSubkey(matchId, MATCH_EXTRA_COUPON_REWARD)
+				respCoupon, err := ssdbc.Do("hget", H_MATCH_EXTRA, extraRewardSubkey)
+				checkError(err)
+				extraReward := 0
+				if len(respCoupon) == 2 {
+					extraReward, err = strconv.Atoi(respCoupon[1])
+					checkError(err)
+				}
+				rewardSum := match.CouponReward + extraReward
 
 				//get ranks
 				lbKey := makeMatchLeaderboardRdsKey(matchId)
@@ -67,6 +96,8 @@ func matchCron() {
 				checkError(err)
 				numPerBatch := 1000
 				currRank := 1
+
+				//for each rank batch
 				for iBatch := 0; iBatch < rankNum/numPerBatch+1; iBatch++ {
 					offset := iBatch * numPerBatch
 					values, err := redis.Values(rc.Do("ZREVRANGE", lbKey, offset, offset+numPerBatch-1, "WITHSCORES"))
@@ -74,9 +105,11 @@ func matchCron() {
 
 					num := len(values) / 2
 					if num == 0 {
-						continue
+						// continue
+						break
 					}
 
+					//for each rank
 					for i := 0; i < num; i++ {
 						rank := currRank
 						currRank++
@@ -88,7 +121,9 @@ func matchCron() {
 						//set to matchPlay
 						play := getMatchPlay(ssdbc, matchId, userId)
 						play.FinalRank = rank
-						play.Reward = calcMatchReward(matchId, rank)
+
+						///get reward sum
+						play.Reward = calcRankReward(match, rewardSum, rank)
 
 						js, err := json.Marshal(play)
 						checkError(err)
@@ -103,20 +138,44 @@ func matchCron() {
 						checkSsdbError(r, err)
 
 						//add player reward
-						playerKey := makePlayerInfoKey(userId)
-						r, err = ssdbc.Do("hincr", playerKey, PLAYER_REWARD_CACHE, play.Reward)
-						checkSsdbError(r, err)
+						addGcRewardToCache(ssdbc, userId, matchId, play.Reward, REWARD_REASON_RANK)
 
-						//fixme: remove from Z_OPEN_MATCH and Z_HOT_MATCH
-
+						//add to del array
+						delMatchIds = append(delMatchIds, matchId)
 					}
 				}
+
+				//owner reward
+				ownerReward := int(match.OwnerRewardProportion * float32(rewardSum))
+				if ownerReward > 0 {
+					addGcRewardToCache(ssdbc, match.OwnerId, matchId, ownerReward, REWARD_REASON_OWNER)
+				}
 			} else {
-				glog.Info("xxxxx", matchId)
 				looping = false
 				break
 			}
 		}
+	}
+
+	//del from Z_OPEN_MATCH and Z_HOT_MATCH
+	if len(delMatchIds) > 0 {
+		cmds := make([]interface{}, 0, 10)
+		cmds = append(cmds, "multi_zdel")
+		cmds = append(cmds, Z_OPEN_MATCH)
+		for _, v := range delMatchIds {
+			cmds = append(cmds, v)
+		}
+		resp, err := ssdbc.Do(cmds...)
+		lwutil.CheckSsdbError(resp, err)
+
+		cmds = make([]interface{}, 0, 10)
+		cmds = append(cmds, "multi_zdel")
+		cmds = append(cmds, Z_HOT_MATCH)
+		for _, v := range delMatchIds {
+			cmds = append(cmds, v)
+		}
+		resp, err = ssdbc.Do(cmds...)
+		lwutil.CheckSsdbError(resp, err)
 	}
 
 }

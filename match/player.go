@@ -13,14 +13,17 @@ import (
 )
 
 const (
-	H_PLAYER_INFO      = "H_PLAYER_INFO"     //key:H_PLAYER_INFO/<userId> subkey:property
-	H_APP_PLAYER_RATE  = "H_APP_PLAYER_RATE" //subkey:appName/userId value:1
-	USER_UPLOAD_BUCKET = "pintuuserupload"
-	INIT_MONEY         = 500
-	FLD_PLAYER_MONEY   = "money"
-	FLD_PLAYER_TEAM    = "team"
-	ADS_PERCENT_DEFAUT = 0.5
-	RATE_REWARD        = 500
+	H_PLAYER_INFO        = "H_PLAYER_INFO"     //key:H_PLAYER_INFO/<userId> subkey:property
+	H_APP_PLAYER_RATE    = "H_APP_PLAYER_RATE" //subkey:appName/userId value:1
+	USER_UPLOAD_BUCKET   = "pintuuserupload"
+	INIT_MONEY           = 500
+	FLD_PLAYER_MONEY     = "money"
+	FLD_PLAYER_TEAM      = "team"
+	ADS_PERCENT_DEFAUT   = 0.5
+	RATE_REWARD          = 500
+	H_PLAYER_REWARD      = "H_PLAYER_REWARD" //key:H_PLAYER_REWARD subkey:rewardRecordId value rewardRecordJson
+	Z_PLAYER_REWARD      = "Z_PLAYER_REWARD" //key:Z_PLAYER_REWARD/userId subkey:rewardRecordId score:timeUnix
+	SEREAL_PLAYER_REWARD = "SEREAL_PLAYER_REWARD"
 )
 
 type PlayerInfo struct {
@@ -34,11 +37,52 @@ type PlayerInfo struct {
 	SilverCoin      int
 	Coupon          int
 	BetMax          int
+	GcRewardCache   int
 	RewardCache     int64
 	TotalReward     int64
 	Secret          string
 	CurrChallengeId int
 	AllowSave       bool
+}
+
+const (
+	REWARD_REASON_RANK  = "排名奖励"
+	REWARD_REASON_LUCK  = "幸运奖"
+	REWARD_REASON_OWNER = "发布分成"
+)
+
+type RewardRecord struct {
+	Reason  string
+	MatchId int64
+	Num     int
+}
+
+func makeZPlayerRewardKey(userId int64) string {
+	return fmt.Sprintf("%s, %d", Z_PLAYER_REWARD, userId)
+}
+
+func addGcRewardToCache(ssdbc *ssdb.Client, userId int64, matchId int64, coinNum int, reason string) {
+	if coinNum == 0 {
+		return
+	}
+	playerKey := makePlayerInfoKey(userId)
+	resp, err := ssdbc.Do("hincr", playerKey, PLAYER_GCREWARD_CACHE, coinNum)
+	lwutil.CheckSsdbError(resp, err)
+
+	var record RewardRecord
+	record.Reason = reason
+	record.MatchId = matchId
+	record.Num = coinNum
+	js, err := json.Marshal(record)
+	lwutil.CheckError(err, "")
+
+	recordId := GenSerial(ssdbc, SEREAL_PLAYER_REWARD)
+	resp, err = ssdbc.Do("hset", H_PLAYER_REWARD, recordId, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	zkey := makeZPlayerRewardKey(userId)
+	resp, err = ssdbc.Do("zset", zkey, recordId, recordId)
+	lwutil.CheckSsdbError(resp, err)
 }
 
 //player property
@@ -47,6 +91,7 @@ const (
 	PLAYER_GOLD_COIN         = "GoldCoin"
 	PLAYER_SILVER_COIN       = "SilverCoin"
 	PLAYER_COUPON            = "Coupon"
+	PLAYER_GCREWARD_CACHE    = "GcRewardCache"
 	PLAYER_REWARD_CACHE      = "RewardCache"
 	PLAYER_TOTAL_REWARD      = "TotalReward"
 	PLAYER_IAP_SECRET        = "IapSecret"
