@@ -204,11 +204,12 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		*PlayerInfo
-		UserId               int64
-		BetCloseBeforeEndSec int
-		AdsConf              AdsConf
-		RateReward           int
-		ClientConf           map[string]string
+		UserId                int64
+		BetCloseBeforeEndSec  int
+		AdsConf               AdsConf
+		RateReward            int
+		ClientConf            map[string]string
+		OwnerRewardProportion float32
 	}{
 		playerInfo,
 		session.Userid,
@@ -216,6 +217,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		_adsConf,
 		rateReward,
 		_clientConf,
+		MATCH_OWNER_REWARD_PROPORTION,
 	}
 	lwutil.WriteResponse(w, out)
 }
