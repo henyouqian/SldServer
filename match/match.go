@@ -707,6 +707,9 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
 
+	//
+	lastPlayedTime := int64(0)
+
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
@@ -738,13 +741,28 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 		in.PlayedTime = math.MaxInt64
 	}
 
+	//out struct
+	type OutMatch struct {
+		Match
+		MatchExtra
+	}
+
+	type Out struct {
+		Matches        []OutMatch
+		LastPlayedTime int64
+	}
+	out := Out{
+		[]OutMatch{},
+		0,
+	}
+
 	//get keys
 	key := makeMyPlayedMatchKey(session.Userid)
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.PlayedTime, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
 	if len(resp) == 1 {
-		w.Write([]byte("[]"))
+		lwutil.WriteResponse(w, out)
 		return
 	}
 	resp = resp[1:]
@@ -756,15 +774,12 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
 		args = append(args, resp[i*2])
+		lastPlayedTime, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+		lwutil.CheckError(err, "")
 	}
 	resp, err = ssdbc.Do(args...)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
-
-	type OutMatch struct {
-		Match
-		MatchExtra
-	}
 
 	matches := make([]OutMatch, len(resp)/2)
 	m := make(map[int64]int) //key:matchId, value:index
@@ -811,7 +826,12 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//out
-	lwutil.WriteResponse(w, matches)
+	out = Out{
+		matches,
+		lastPlayedTime,
+	}
+
+	lwutil.WriteResponse(w, out)
 }
 
 func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
