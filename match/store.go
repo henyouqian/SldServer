@@ -114,92 +114,6 @@ func apiListGameCoinPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
-func apiBuyGameCoin(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//in
-	var in struct {
-		EventId        int64
-		GameCoinPackId int
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	if in.GameCoinPackId < 0 || in.GameCoinPackId >= len(gameCoinPacks) {
-		lwutil.SendError("err_game_coin_id", "")
-	}
-
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
-
-	//
-	var gameCoinPack GameCoinPack
-	gameCoinPack = gameCoinPacks[in.GameCoinPackId]
-
-	//get event info
-	resp, err := ssdb.Do("hget", H_EVENT, in.EventId)
-	if resp[0] == "not_found" {
-		lwutil.SendError("err_event_id", "")
-	}
-	lwutil.CheckSsdbError(resp, err)
-
-	event := Event{}
-	err = json.Unmarshal([]byte(resp[1]), &event)
-
-	now := lwutil.GetRedisTimeUnix()
-	if event.HasResult || now >= event.EndTime {
-		lwutil.SendError("err_event_closed", "")
-	}
-
-	//check money
-	var money int64
-	playerKey := makePlayerInfoKey(session.Userid)
-	ssdb.HGet(playerKey, PLAYER_MONEY, &money)
-
-	if int(money) < gameCoinPack.Price {
-		lwutil.SendError("err_money", "")
-	}
-
-	//get record
-	recordKey := makeEventPlayerRecordSubkey(in.EventId, session.Userid)
-	resp, err = ssdb.Do("hget", H_EVENT_PLAYER_RECORD, recordKey)
-	lwutil.CheckSsdbError(resp, err)
-
-	record := EventPlayerRecord{}
-	err = json.Unmarshal([]byte(resp[1]), &record)
-	lwutil.CheckError(err, "")
-
-	//set game coin number
-	record.GameCoinNum += gameCoinPack.CoinNum
-
-	//save game coin
-	js, err := json.Marshal(record)
-	lwutil.CheckError(err, "")
-	resp, err = ssdb.Do("hset", H_EVENT_PLAYER_RECORD, recordKey, js)
-	lwutil.CheckSsdbError(resp, err)
-
-	//spend money
-	money -= int64(gameCoinPack.Price)
-	resp, err = ssdb.Do("hincr", playerKey, PLAYER_MONEY, -gameCoinPack.Price)
-
-	//out
-	out := struct {
-		Money       int64
-		GameCoinNum int
-	}{
-		money,
-		record.GameCoinNum,
-	}
-	lwutil.WriteResponse(w, out)
-}
-
 func apiListIapProductId(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
@@ -588,7 +502,6 @@ func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
 
 func regStore() {
 	http.Handle("/store/listGameCoinPack", lwutil.ReqHandler(apiListGameCoinPack))
-	http.Handle("/store/buyGameCoin", lwutil.ReqHandler(apiBuyGameCoin))
 	http.Handle("/store/listIapProductId", lwutil.ReqHandler(apiListIapProductId))
 	http.Handle("/store/getIapSecret", lwutil.ReqHandler(apiGetIapSecret))
 	http.Handle("/store/buyIap", lwutil.ReqHandler(apiBuyIap))

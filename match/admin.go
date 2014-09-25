@@ -48,57 +48,6 @@ func initAdmin() {
 	}
 }
 
-func apiAddMoney(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
-
-	ssdbAuth, err := ssdbAuthPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbAuth.Close()
-
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	checkAdmin(session)
-
-	//in
-	var in struct {
-		UserId   int64
-		UserName string
-		AddMoney int64
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	//get userid
-	userId := in.UserId
-	if userId == 0 {
-		resp, err := ssdbAuth.Do("hget", H_NAME_ACCONT, in.UserName)
-		lwutil.CheckError(err, "")
-		if resp[0] != "ok" {
-			lwutil.SendError("err_not_match", "name and password not match")
-		}
-		userId, err = strconv.ParseInt(resp[1], 10, 64)
-		lwutil.CheckError(err, "")
-	}
-
-	key := makePlayerInfoKey(userId)
-	resp, err := ssdb.Do("hincr", key, PLAYER_MONEY, in.AddMoney)
-	lwutil.CheckSsdbError(resp, err)
-
-	var playerInfo PlayerInfo
-	ssdb.HGetStruct(key, &playerInfo)
-
-	//out
-	lwutil.WriteResponse(w, playerInfo)
-}
-
 func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -275,7 +224,6 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 }
 
 func regAdmin() {
-	http.Handle("/admin/addMoney", lwutil.ReqHandler(apiAddMoney))
 	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
 	http.Handle("/admin/addCoupon", lwutil.ReqHandler(apiAddCoupon))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))

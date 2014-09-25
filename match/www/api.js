@@ -156,7 +156,7 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"NickName":"", "Gender":0, "TeamName":"上海", "CustomAvatarKey":"", "GravatarKey":""}
 				},{
-					"name": "addRewardFromCache",
+					"name": "addCouponFromCache",
 					"method": "POST",
 					"data": ""
 				},{
@@ -339,10 +339,6 @@ function Controller($scope, $http) {
 			"path":"admin",
 			"apis":[
 				{
-					"name": "addMoney",
-					"method": "POST",
-					"data": {"UserId": 0, "UserName": "aa", "AddMoney": 100}
-				},{
 					"name": "addGoldCoin",
 					"method": "POST",
 					"data": {"AddGoldCoin": 100}
@@ -368,10 +364,6 @@ function Controller($scope, $http) {
 					"name": "listGameCoinPack",
 					"method": "POST",
 					"data": ""
-				},{
-					"name": "buyGameCoin",
-					"method": "POST",
-					"data": {"EventId":0, "GameCoinPackId":0}
 				},{
 					"name": "listIapProductId",
 					"method": "POST",
@@ -492,6 +484,10 @@ function Controller($scope, $http) {
 					"name": "listMyPlayed",
 					"method": "POST",
 					"data": {"StartId": 0, "PlayedTime": 0, "Limit":12}
+				},{
+					"name": "listHot",
+					"method": "POST",
+					"data": {"StartId": 0, "CouponSum": 0, "Limit":12}
 				},{
 					"name": "getDynamicData",
 					"method": "POST",

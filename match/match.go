@@ -31,7 +31,8 @@ const (
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:reward(totalReward)
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 
-	FREE_TRY_NUM = 3
+	FREE_TRY_NUM             = 3
+	MATCH_TRY_EXPIRE_SECONDS = 600
 )
 
 type Match struct {
@@ -42,7 +43,7 @@ type Match struct {
 	Thumb                   string
 	Icon                    string
 	Title                   string
-	CouponReward            int
+	RewardCoupon            int
 	BeginTime               int64
 	BeginTimeStr            string
 	EndTime                 int64
@@ -58,7 +59,7 @@ type Match struct {
 
 type MatchExtra struct {
 	PlayTimes   int
-	ExtraReward int
+	ExtraCoupon int
 }
 
 type MatchPlay struct {
@@ -79,7 +80,7 @@ type MatchPlay struct {
 
 const (
 	MATCH_EXTRA_PLAY_TIMES    = "PlayTimes"
-	MATCH_EXTRA_COUPON_REWARD = "ExtraReward"
+	MATCH_EXTRA_REWARD_COUPON = "ExtraCoupon"
 )
 
 const (
@@ -192,7 +193,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		Pack
 		BeginTimeStr     string
 		SliderNum        int
-		CouponReward     int
+		RewardCoupon     int
 		ChallengeSeconds int
 		PromoUrl         string
 		PromoImage       string
@@ -209,8 +210,8 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	stringLimit(&in.Title, 100)
 	stringLimit(&in.Text, 2000)
 
-	if in.CouponReward%100 != 0 {
-		lwutil.SendError("err_coupon_reward", "in.CouponReward % 100 != 0")
+	if in.RewardCoupon%100 != 0 {
+		lwutil.SendError("err_coupon_reward", "in.RewardCoupon % 100 != 0")
 	}
 
 	//check gold coin
@@ -218,13 +219,13 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	// admin := isAdmin(session.Username)
 	// if !admin {
 	// 	goldNum := getPlayerGoldCoin(ssdbc, playerKey)
-	// 	if goldNum < in.CouponReward {
-	// 		lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
+	// 	if goldNum < in.RewardCoupon {
+	// 		lwutil.SendError("err_gold_coin", "goldNum < in.RewardCoupon")
 	// 	}
 	// }
 	goldNum := getPlayerGoldCoin(ssdbc, playerKey)
-	if goldNum < in.CouponReward {
-		lwutil.SendError("err_gold_coin", "goldNum < in.CouponReward")
+	if goldNum < in.RewardCoupon {
+		lwutil.SendError("err_gold_coin", "goldNum < in.RewardCoupon")
 	}
 
 	//new pack
@@ -259,7 +260,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		SliderNum:               in.SliderNum,
 		Thumb:                   in.Pack.Thumb,
 		Title:                   in.Title,
-		CouponReward:            in.CouponReward,
+		RewardCoupon:            in.RewardCoupon,
 		BeginTime:               beginTimeUnix,
 		BeginTimeStr:            beginTimeStr,
 		EndTime:                 endTimeUnix,
@@ -287,7 +288,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckSsdbError(resp, err)
 
 		//Z_REWARD_MATCH
-		if in.CouponReward > 0 {
+		if in.RewardCoupon > 0 {
 			resp, err = ssdbc.Do("zset", Z_REWARD_MATCH, matchId, beginTimeUnix)
 			lwutil.CheckSsdbError(resp, err)
 		}
@@ -297,7 +298,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckSsdbError(resp, err)
 
 		//Z_HOT_MATCH
-		resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.CouponReward)
+		resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.RewardCoupon)
 		lwutil.CheckSsdbError(resp, err)
 	} else {
 		//add to Z_PENDING_MATCH
@@ -312,9 +313,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 
 	//decrease gold coin
 	// if !admin {
-	// 	addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
+	// 	addPlayerGoldCoin(ssdbc, playerKey, -in.RewardCoupon)
 	// }
-	addPlayerGoldCoin(ssdbc, playerKey, -in.CouponReward)
+	addPlayerGoldCoin(ssdbc, playerKey, -in.RewardCoupon)
 
 	//out
 	lwutil.WriteResponse(w, match)
@@ -368,6 +369,53 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 
 	resp, err = ssdbc.Do("hdel", H_MATCH, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
+}
+
+func apiMatchMod(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId    int64
+		Title      string
+		PromoUrl   string
+		PromoImage string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+
+	//check owner
+	if match.OwnerId != session.Userid {
+		lwutil.SendError("err_owner", "not the pack's owner")
+	}
+
+	//update match
+	match.Title = in.Title
+	match.PromoImage = in.PromoImage
+	match.PromoUrl = in.PromoUrl
+
+	js, err := json.Marshal(match)
+	lwutil.CheckError(err, "")
+
+	//save
+	resp, err := ssdbc.Do("hset", H_MATCH, in.MatchId, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, match)
 }
 
 func apiMatchList(w http.ResponseWriter, r *http.Request) {
@@ -449,8 +497,8 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 		args[1] = H_MATCH_EXTRA
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
-			couponRewardKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_COUPON_REWARD)
-			args = append(args, playTimesKey, couponRewardKey)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -469,10 +517,10 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 				playTimes, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].PlayTimes = playTimes
-			} else if fieldKey == MATCH_EXTRA_COUPON_REWARD {
-				ExtraReward, err := strconv.Atoi(resp[i*2+1])
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
-				matches[idx].ExtraReward = ExtraReward
+				matches[idx].ExtraCoupon = ExtraCoupon
 			}
 		}
 	}
@@ -560,8 +608,8 @@ func apiMatchListRewardMatch(w http.ResponseWriter, r *http.Request) {
 		args[1] = H_MATCH_EXTRA
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
-			couponRewardKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_COUPON_REWARD)
-			args = append(args, playTimesKey, couponRewardKey)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -580,10 +628,10 @@ func apiMatchListRewardMatch(w http.ResponseWriter, r *http.Request) {
 				playTimes, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].PlayTimes = playTimes
-			} else if fieldKey == MATCH_EXTRA_COUPON_REWARD {
-				ExtraReward, err := strconv.Atoi(resp[i*2+1])
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
-				matches[idx].ExtraReward = ExtraReward
+				matches[idx].ExtraCoupon = ExtraCoupon
 			}
 		}
 	}
@@ -671,8 +719,8 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 		args[1] = H_MATCH_EXTRA
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
-			couponRewardKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_COUPON_REWARD)
-			args = append(args, playTimesKey, couponRewardKey)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -691,10 +739,10 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 				playTimes, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].PlayTimes = playTimes
-			} else if fieldKey == MATCH_EXTRA_COUPON_REWARD {
-				ExtraReward, err := strconv.Atoi(resp[i*2+1])
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
-				matches[idx].ExtraReward = ExtraReward
+				matches[idx].ExtraCoupon = ExtraCoupon
 			}
 		}
 	}
@@ -797,8 +845,8 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 		args[1] = H_MATCH_EXTRA
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
-			couponRewardKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_COUPON_REWARD)
-			args = append(args, playTimesKey, couponRewardKey)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -817,10 +865,10 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 				playTimes, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].PlayTimes = playTimes
-			} else if fieldKey == MATCH_EXTRA_COUPON_REWARD {
-				ExtraReward, err := strconv.Atoi(resp[i*2+1])
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
-				matches[idx].ExtraReward = ExtraReward
+				matches[idx].ExtraCoupon = ExtraCoupon
 			}
 		}
 	}
@@ -829,6 +877,131 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 	out = Out{
 		matches,
 		lastPlayedTime,
+	}
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	_, err = findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		StartId   int64
+		CouponSum int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.CouponSum == -1 {
+		in.CouponSum = math.MaxInt64
+	}
+
+	//out struct
+	type OutMatch struct {
+		Match
+		MatchExtra
+	}
+
+	type Out struct {
+		Matches []OutMatch
+	}
+	out := Out{
+		[]OutMatch{},
+	}
+
+	//get keys
+	resp, err := ssdbc.Do("zrscan", Z_HOT_MATCH, in.StartId, in.CouponSum, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	glog.Info(resp, in)
+
+	if len(resp) == 1 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+	resp = resp[1:]
+
+	//get matches
+	num := len(resp) / 2
+	args := make([]interface{}, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		lwutil.CheckError(err, "")
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	matches := make([]OutMatch, len(resp)/2)
+	m := make(map[int64]int) //key:matchId, value:index
+	for i, _ := range matches {
+		packjs := resp[i*2+1]
+		err = json.Unmarshal([]byte(packjs), &matches[i])
+		lwutil.CheckError(err, "")
+		m[matches[i].Id] = i
+	}
+
+	//match extra
+	if len(matches) > 0 {
+		args = make([]interface{}, 2, len(matches)*2+2)
+		args[0] = "multi_hget"
+		args[1] = H_MATCH_EXTRA
+		for _, v := range matches {
+			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
+		}
+		resp, err = ssdbc.Do(args...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			key := resp[i*2]
+			var matchId int64
+			var fieldKey string
+			_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
+			lwutil.CheckError(err, "")
+
+			idx := m[matchId]
+			if fieldKey == MATCH_EXTRA_PLAY_TIMES {
+				playTimes, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].PlayTimes = playTimes
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].ExtraCoupon = ExtraCoupon
+			}
+		}
+	}
+
+	//out
+	out = Out{
+		matches,
 	}
 
 	lwutil.WriteResponse(w, out)
@@ -859,21 +1032,21 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	args[0] = "multi_hget"
 	args[1] = H_MATCH_EXTRA
 	playTimesKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PLAY_TIMES)
-	couponRewardKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_COUPON_REWARD)
-	args = append(args, playTimesKey, couponRewardKey)
+	RewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
+	args = append(args, playTimesKey, RewardCouponKey)
 	resp, err := ssdbc.Do(args...)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
 	var playTimes int
-	var extraReward int
+	var ExtraCoupon int
 	num := len(resp) / 2
 	for i := 0; i < num; i++ {
 		if resp[i*2] == playTimesKey {
 			playTimes, err = strconv.Atoi(resp[i*2+1])
 			lwutil.CheckError(err, "")
-		} else if resp[i*2] == couponRewardKey {
-			extraReward, err = strconv.Atoi(resp[i*2+1])
+		} else if resp[i*2] == RewardCouponKey {
+			ExtraCoupon, err = strconv.Atoi(resp[i*2+1])
 			lwutil.CheckError(err, "")
 		}
 	}
@@ -923,13 +1096,13 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		PlayTimes   int
-		ExtraReward int
+		ExtraCoupon int
 		MyRank      int
 		RankNum     int
 		MatchPlay
 	}{
 		playTimes,
-		extraReward,
+		ExtraCoupon,
 		myRank,
 		rankNum,
 		*play,
@@ -989,13 +1162,13 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 			goldCoin--
 			autoPaging = true
 
-			couponRewardKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_COUPON_REWARD)
-			resp, err = ssdbc.Do("hincr", H_MATCH_EXTRA, couponRewardKey, 1)
+			RewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
+			resp, err = ssdbc.Do("hincr", H_MATCH_EXTRA, RewardCouponKey, 1)
 			lwutil.CheckSsdbError(resp, err)
-			extraReward, err := strconv.Atoi(resp[1])
+			ExtraCoupon, err := strconv.Atoi(resp[1])
 			lwutil.CheckError(err, "")
 
-			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.CouponReward+extraReward)
+			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.RewardCoupon+ExtraCoupon)
 			lwutil.CheckSsdbError(resp, err)
 		} else {
 			lwutil.SendError("err_gold_coin", "no coin")
@@ -1015,7 +1188,7 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	//gen secret
 	play.Secret = lwutil.GenUUID()
-	play.SecretExpire = lwutil.GetRedisTimeUnix() + TRY_EXPIRE_SECONDS
+	play.SecretExpire = lwutil.GetRedisTimeUnix() + MATCH_TRY_EXPIRE_SECONDS
 
 	//update play
 	js, err := json.Marshal(play)
@@ -1338,10 +1511,12 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 func regMatch() {
 	http.Handle("/match/new", lwutil.ReqHandler(apiMatchNew))
 	http.Handle("/match/del", lwutil.ReqHandler(apiMatchDel))
+	http.Handle("/match/mod", lwutil.ReqHandler(apiMatchMod))
 
 	http.Handle("/match/list", lwutil.ReqHandler(apiMatchList))
 	http.Handle("/match/listMine", lwutil.ReqHandler(apiMatchListMine))
 	http.Handle("/match/listMyPlayed", lwutil.ReqHandler(apiMatchListMyPlayed))
+	http.Handle("/match/listHot", lwutil.ReqHandler(apiMatchListHot))
 	http.Handle("/match/listRewardMatch", lwutil.ReqHandler(apiMatchListRewardMatch))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))

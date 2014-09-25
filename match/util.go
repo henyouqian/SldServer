@@ -1,6 +1,10 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"github.com/golang/glog"
+	"runtime"
 	"unicode/utf8"
 )
 
@@ -18,4 +22,34 @@ func stringLimit(str *string, limit uint) {
 
 func ssdbCheckExists(resp []string) bool {
 	return resp[1] == "1"
+}
+
+func checkError(err error) {
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		e := fmt.Sprintf("[%s:%d]%v", file, line, err)
+		panic(e)
+	}
+}
+
+func checkSsdbError(resp []string, err error) {
+	if resp[0] != "ok" {
+		err = errors.New(fmt.Sprintf("ssdb error: %s", resp[0]))
+	}
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		e := fmt.Sprintf("[%s:%d]%v", file, line, err)
+		panic(e)
+	}
+}
+
+func handleError() {
+	if r := recover(); r != nil {
+		_, file, line, _ := runtime.Caller(2)
+		glog.Error(r, file, line)
+
+		buf := make([]byte, 2048)
+		runtime.Stack(buf, false)
+		glog.Errorf("%s", buf)
+	}
 }

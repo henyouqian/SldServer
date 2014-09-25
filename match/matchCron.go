@@ -60,8 +60,7 @@ func matchCron() {
 	looping := true
 	for looping {
 		resp, err := ssdbc.Do("zscan", Z_OPEN_MATCH, matchId, endTime, "", limit)
-
-		checkSsdbError(resp, err)
+		checkError(err)
 		if len(resp) == 1 {
 			break
 		}
@@ -80,15 +79,15 @@ func matchCron() {
 
 				//reward sum
 				match := getMatch(ssdbc, matchId)
-				extraRewardSubkey := makeHMatchExtraSubkey(matchId, MATCH_EXTRA_COUPON_REWARD)
+				extraRewardSubkey := makeHMatchExtraSubkey(matchId, MATCH_EXTRA_REWARD_COUPON)
 				respCoupon, err := ssdbc.Do("hget", H_MATCH_EXTRA, extraRewardSubkey)
 				checkError(err)
-				extraReward := 0
+				extraCoupon := 0
 				if len(respCoupon) == 2 {
-					extraReward, err = strconv.Atoi(respCoupon[1])
+					extraCoupon, err = strconv.Atoi(respCoupon[1])
 					checkError(err)
 				}
-				rewardSum := match.CouponReward + extraReward
+				rewardSum := match.RewardCoupon + extraCoupon
 
 				//get ranks
 				lbKey := makeMatchLeaderboardRdsKey(matchId)
@@ -138,7 +137,7 @@ func matchCron() {
 						checkSsdbError(r, err)
 
 						//add player reward
-						addGcRewardToCache(ssdbc, userId, matchId, play.Reward, REWARD_REASON_RANK)
+						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK)
 
 						//add to del array
 						delMatchIds = append(delMatchIds, matchId)
@@ -148,7 +147,7 @@ func matchCron() {
 				//owner reward
 				ownerReward := int(match.OwnerRewardProportion * float32(rewardSum))
 				if ownerReward > 0 {
-					addGcRewardToCache(ssdbc, match.OwnerId, matchId, ownerReward, REWARD_REASON_OWNER)
+					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER)
 				}
 			} else {
 				looping = false

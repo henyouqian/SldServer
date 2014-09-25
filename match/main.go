@@ -135,8 +135,8 @@ func main() {
 
 	initConf(confFile)
 	initDb()
-	initEvent()
-	initPickSide()
+	// initEvent()
+	// initPickSide()
 	initAdmin()
 	initMatchCron()
 
@@ -155,19 +155,19 @@ func main() {
 	regPack()
 	regCollection()
 	regPlayer()
-	regEvent()
+	// regEvent()
 	regMatch()
 	regAdmin()
 	regStore()
-	regChallenge()
+	// regChallenge()
 	regEtc()
-	regUserPack()
+	// regUserPack()
 	regSocial()
-	regPickSide()
+	// regPickSide()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	go scoreKeeperMain()
+	// go scoreKeeperMain()
 
 	glog.Infof("Server running: cpu=%d, port=%d", runtime.NumCPU(), _conf.Port)
 	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", _conf.Port), nil))
