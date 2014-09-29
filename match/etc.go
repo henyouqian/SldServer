@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"math"
 	"net/http"
@@ -12,6 +13,7 @@ const (
 	Z_ADVICE       = "Z_ADVICE"
 	H_ADVICE       = "H_ADVICE"
 	SEREIAL_ADVICE = "SEREIAL_ADVICE"
+	Z_REPORT       = "Z_REPORT" //subkey:matchId score:time
 )
 
 type Advice struct {
@@ -23,6 +25,10 @@ type Advice struct {
 	Team            string
 	Text            string
 	TimeUnix        int64
+}
+
+func etcGlog() {
+	glog.Info("")
 }
 
 func apiBetHelp(w http.ResponseWriter, r *http.Request) {
@@ -168,9 +174,41 @@ func apiListAdvice(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, &advices)
 }
 
+func apiEtcReport(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//checkMatchExist
+	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
+	lwutil.CheckError(err, "")
+	if !ssdbCheckExists(resp) {
+		lwutil.SendError("err_match_id", "Can't find match")
+	}
+
+	//
+	resp, err = ssdbc.Do("zset", Z_REPORT, in.MatchId, lwutil.GetRedisTimeUnix())
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, &in)
+}
+
 func regEtc() {
 	http.Handle("/etc/betHelp", lwutil.ReqHandler(apiBetHelp))
 	http.Handle("/etc/addAdvice", lwutil.ReqHandler(apiAddAdvice))
 	http.Handle("/etc/listAdvice", lwutil.ReqHandler(apiListAdvice))
+	http.Handle("/etc/report", lwutil.ReqHandler(apiEtcReport))
 	// http.Handle("/etc/getAppConf", lwutil.ReqHandler(apiGetAppConf))
 }

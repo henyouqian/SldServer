@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	H_COUPON_ITEM_TYPE = "H_COUPON_ITEM_TYPE" //subkey:typeKey value:CouponItemType
-	H_COUPON_ITEM      = "H_COUPON_ITEM"      //subkey:itemId, value:couponItemJson
-	Q_COUPON_ITEM      = "Q_COUPON_ITEM"
-	H_COUPON_CODE      = "H_COUPON_CODE"      //subkey:provider/code value:couponItemId
-	Z_PLAYER_COUPON    = "Z_PLAYER_COUPON"    //key:Z_PLAYER_COUPON/playerId, subkey:couponItemId, score:time
-	Z_COUPON_PURCHASED = "Z_COUPON_PURCHASED" //subkey:couponItemId, score:time
+	H_ECARD_TYPE      = "H_ECARD_TYPE" //subkey:typeKey value:ecardType
+	H_ECARD           = "H_ECARD"      //subkey:itemId, value:ecardJson
+	Q_ECARD           = "Q_ECARD"
+	H_ECARD_CODE      = "H_ECARD_CODE"      //subkey:provider/code value:ecardId
+	Z_PLAYER_ECARD    = "Z_PLAYER_ECARD"    //key:Z_PLAYER_ECARD/playerId, subkey:ecardId, score:time
+	Z_ECARD_PURCHASED = "Z_ECARD_PURCHASED" //subkey:ecardId, score:time
 )
 
 var (
@@ -32,22 +32,24 @@ type GameCoinPack struct {
 	CoinNum int
 }
 
-type CouponItemType struct {
+type ECardType struct {
 	Key         string
 	Name        string
 	Provider    string
+	Thumb       string
 	RmbPrice    int
 	CouponPrice int
 	Num         int
 }
 
-type CouponItem struct {
+type ECard struct {
 	Id          int64
 	TypeKey     string
 	CouponCode  string
 	ExpireDate  string
 	GenDate     string
 	UserGetDate string
+	OwnerId     int64
 }
 
 var (
@@ -89,16 +91,16 @@ var (
 	}
 )
 
-func makeCouponItemQueueKey(typeKey string) string {
-	return fmt.Sprintf("Q_COUPON_ITEM/%s", typeKey)
+func makeEcardQueueKey(typeKey string) string {
+	return fmt.Sprintf("Q_ECARD_ITEM/%s", typeKey)
 }
 
-func makeCouponCodeSubkey(provider string, code string) string {
+func makeEcardCodeSubkey(provider string, code string) string {
 	return fmt.Sprintf("%s/%s", provider, code)
 }
 
-func makePlayerCouponZsetKey(playerId int64) string {
-	return fmt.Sprintf("%s/%d", Z_PLAYER_COUPON, playerId)
+func makePlayerEcardZsetKey(playerId int64) string {
+	return fmt.Sprintf("%s/%d", Z_PLAYER_ECARD, playerId)
 }
 
 func glogStore() {
@@ -214,7 +216,7 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
-func apiAddCouponItemType(w http.ResponseWriter, r *http.Request) {
+func apiAddEcardType(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -231,13 +233,13 @@ func apiAddCouponItemType(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//in
-	var in CouponItemType
+	var in ECardType
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 	in.Num = 0
 
 	//check exist
-	resp, err := ssdbc.Do("hexists", H_COUPON_ITEM_TYPE, in.Key)
+	resp, err := ssdbc.Do("hexists", H_ECARD_TYPE, in.Key)
 	lwutil.CheckSsdbError(resp, err)
 	if ssdbCheckExists(resp) {
 		lwutil.SendError("err_exist", "key exist")
@@ -258,14 +260,62 @@ func apiAddCouponItemType(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	//ssdb hset
-	resp, err = ssdbc.Do("hset", H_COUPON_ITEM_TYPE, in.Key, js)
+	resp, err = ssdbc.Do("hset", H_ECARD_TYPE, in.Key, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
 	lwutil.WriteResponse(w, in)
 }
 
-func apiDelCouponItemType(w http.ResponseWriter, r *http.Request) {
+func apiEditEcardType(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//check admin
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		Key   string
+		Name  string
+		Thumb string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check exist
+	resp, err := ssdbc.Do("hget", H_ECARD_TYPE, in.Key)
+	lwutil.CheckSsdbError(resp, err)
+	var eCardType ECardType
+	err = json.Unmarshal([]byte(resp[1]), &eCardType)
+	lwutil.CheckError(err, "")
+
+	//update
+	eCardType.Name = in.Name
+	eCardType.Thumb = in.Thumb
+
+	//json
+	js, err := json.Marshal(eCardType)
+	lwutil.CheckError(err, "")
+
+	//ssdb hset
+	resp, err = ssdbc.Do("hset", H_ECARD_TYPE, in.Key, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, eCardType)
+}
+
+func apiDelEcardType(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -289,7 +339,7 @@ func apiDelCouponItemType(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check queue empty
-	qkey := makeCouponItemQueueKey(in.Key)
+	qkey := makeEcardQueueKey(in.Key)
 	resp, err := ssdbc.Do("qsize", qkey)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -300,17 +350,14 @@ func apiDelCouponItemType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//ssdb hdel
-	resp, err = ssdbc.Do("hdel", H_COUPON_ITEM_TYPE, in.Key)
-	lwutil.CheckSsdbError(resp, err)
-
-	resp, err = ssdbc.Do("hdel", H_COUPON_ITEM_TYPE, in.Key)
+	resp, err = ssdbc.Do("hdel", H_ECARD_TYPE, in.Key)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
 	lwutil.WriteResponse(w, in)
 }
 
-func apiListCouponItemType(w http.ResponseWriter, r *http.Request) {
+func apiListEcardType(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -324,15 +371,15 @@ func apiListCouponItemType(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_auth")
 
 	//ssdb hgetall
-	resp, err := ssdbc.Do("hgetall", H_COUPON_ITEM_TYPE)
+	resp, err := ssdbc.Do("hgetall", H_ECARD_TYPE)
 	lwutil.CheckSsdbError(resp, err)
 
 	resp = resp[1:]
 	num := len(resp) / 2
-	ciTypes := make([]CouponItemType, 0, num)
+	ciTypes := make([]ECardType, 0, num)
 	for i := 0; i < num; i++ {
 		js := resp[i*2+1]
-		var ciType CouponItemType
+		var ciType ECardType
 		err = json.Unmarshal([]byte(js), &ciType)
 		lwutil.CheckError(err, "")
 		ciTypes = append(ciTypes, ciType)
@@ -342,7 +389,7 @@ func apiListCouponItemType(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, ciTypes)
 }
 
-func apiAddCouponItem(w http.ResponseWriter, r *http.Request) {
+func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -359,7 +406,7 @@ func apiAddCouponItem(w http.ResponseWriter, r *http.Request) {
 	checkAdmin(session)
 
 	//in
-	var in CouponItem
+	var in ECard
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
@@ -368,18 +415,18 @@ func apiAddCouponItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check type key
-	resp, err := ssdbc.Do("hget", H_COUPON_ITEM_TYPE, in.TypeKey)
+	resp, err := ssdbc.Do("hget", H_ECARD_TYPE, in.TypeKey)
 	lwutil.CheckSsdbError(resp, err)
 	if len(resp) < 2 {
 		lwutil.SendError("err_not_exist", "key not exist")
 	}
-	var itemType CouponItemType
-	err = json.Unmarshal([]byte(resp[1]), &itemType)
+	var cardType ECardType
+	err = json.Unmarshal([]byte(resp[1]), &cardType)
 	lwutil.CheckError(err, "")
 
 	//check code exist
-	codeSubkey := makeCouponCodeSubkey(itemType.Provider, in.CouponCode)
-	resp, err = ssdbc.Do("hexists", H_COUPON_CODE, codeSubkey)
+	codeSubkey := makeEcardCodeSubkey(cardType.Provider, in.CouponCode)
+	resp, err = ssdbc.Do("hexists", H_ECARD_CODE, codeSubkey)
 	lwutil.CheckSsdbError(resp, err)
 	if ssdbCheckExists(resp) {
 		lwutil.SendError("err_exists", "code exist")
@@ -389,16 +436,16 @@ func apiAddCouponItem(w http.ResponseWriter, r *http.Request) {
 	in.Id = GenSerial(ssdbc, "COUPON_ITEM_SERIAL")
 	js, err := json.Marshal(in)
 	lwutil.CheckError(err, "")
-	resp, err = ssdbc.Do("hset", H_COUPON_ITEM, in.Id, js)
+	resp, err = ssdbc.Do("hset", H_ECARD, in.Id, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//qpush_back
-	qkey := makeCouponItemQueueKey(in.TypeKey)
+	qkey := makeEcardQueueKey(in.TypeKey)
 	resp, err = ssdbc.Do("qpush_back", qkey, in.Id)
 	lwutil.CheckSsdbError(resp, err)
 
 	//add to H_COUPON_CODE
-	resp, err = ssdbc.Do("hset", H_COUPON_CODE, codeSubkey, in.Id)
+	resp, err = ssdbc.Do("hset", H_ECARD_CODE, codeSubkey, in.Id)
 	lwutil.CheckSsdbError(resp, err)
 
 	//update num
@@ -406,17 +453,17 @@ func apiAddCouponItem(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
-	itemType.Num = num
-	js, err = json.Marshal(itemType)
+	cardType.Num = num
+	js, err = json.Marshal(cardType)
 	lwutil.CheckError(err, "")
-	resp, err = ssdbc.Do("hset", H_COUPON_ITEM_TYPE, in.TypeKey, js)
+	resp, err = ssdbc.Do("hset", H_ECARD_TYPE, in.TypeKey, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
 	lwutil.WriteResponse(w, in)
 }
 
-func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
+func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -437,16 +484,16 @@ func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check item type
-	resp, err := ssdbc.Do("hget", H_COUPON_ITEM_TYPE, in.TypeKey)
+	resp, err := ssdbc.Do("hget", H_ECARD_TYPE, in.TypeKey)
 	lwutil.CheckSsdbError(resp, err)
 	if len(resp) < 2 {
 		lwutil.SendError("err_not_exist", "key not exist")
 	}
-	var itemType CouponItemType
-	err = json.Unmarshal([]byte(resp[1]), &itemType)
+	var cardType ECardType
+	err = json.Unmarshal([]byte(resp[1]), &cardType)
 	lwutil.CheckError(err, "")
 
-	if itemType.Num == 0 {
+	if cardType.Num == 0 {
 		lwutil.SendError("err_zero", "item count = 0")
 	}
 
@@ -456,46 +503,46 @@ func apiBuyCouponItem(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	playerCoupon, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
-	if playerCoupon < itemType.CouponPrice {
+	if playerCoupon < cardType.CouponPrice {
 		lwutil.SendError("err_not_enough", "not enough coupon")
 	}
 
 	//buy, pop from coupon item queue
-	couponItemQueueKey := makeCouponItemQueueKey(in.TypeKey)
-	resp, err = ssdbc.Do("qpop_front", couponItemQueueKey)
+	ecardQueueKey := makeEcardQueueKey(in.TypeKey)
+	resp, err = ssdbc.Do("qpop_front", ecardQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	itemId, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 
 	//buy, add to player coupon zset
-	playerCouponZKey := makePlayerCouponZsetKey(session.Userid)
+	playerEcardZKey := makePlayerEcardZsetKey(session.Userid)
 	score := lwutil.GetRedisTimeUnix()
-	resp, err = ssdbc.Do("zset", playerCouponZKey, itemId, score)
+	resp, err = ssdbc.Do("zset", playerEcardZKey, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
 	//buy, sub player coupon num
-	resp, err = ssdbc.Do("hincr", playerKey, PLAYER_COUPON, -itemType.CouponPrice)
+	resp, err = ssdbc.Do("hincr", playerKey, PLAYER_COUPON, -cardType.CouponPrice)
 	lwutil.CheckSsdbError(resp, err)
 
 	//update coupon type's coupon num
-	resp, err = ssdbc.Do("qsize", couponItemQueueKey)
+	resp, err = ssdbc.Do("qsize", ecardQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
-	itemType.Num = num
-	js, err := json.Marshal(itemType)
+	cardType.Num = num
+	js, err := json.Marshal(cardType)
 	lwutil.CheckError(err, "")
-	resp, err = ssdbc.Do("hset", H_COUPON_ITEM_TYPE, in.TypeKey, js)
+	resp, err = ssdbc.Do("hset", H_ECARD_TYPE, in.TypeKey, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	//add to purchased list
-	resp, err = ssdbc.Do("zset", Z_COUPON_PURCHASED, itemId, score)
+	resp, err = ssdbc.Do("zset", Z_ECARD_PURCHASED, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
 	//out
 	out := map[string]interface{}{
 		"ItemId":       itemId,
-		"PlayerCoupon": playerCoupon - itemType.CouponPrice,
+		"PlayerCoupon": playerCoupon - cardType.CouponPrice,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -506,10 +553,11 @@ func regStore() {
 	http.Handle("/store/getIapSecret", lwutil.ReqHandler(apiGetIapSecret))
 	http.Handle("/store/buyIap", lwutil.ReqHandler(apiBuyIap))
 
-	http.Handle("/store/addCouponItemType", lwutil.ReqHandler(apiAddCouponItemType))
-	http.Handle("/store/delCouponItemType", lwutil.ReqHandler(apiDelCouponItemType))
-	http.Handle("/store/listCouponItemType", lwutil.ReqHandler(apiListCouponItemType))
+	http.Handle("/store/addEcardType", lwutil.ReqHandler(apiAddEcardType))
+	http.Handle("/store/editEcardType", lwutil.ReqHandler(apiEditEcardType))
+	http.Handle("/store/delEcardType", lwutil.ReqHandler(apiDelEcardType))
+	http.Handle("/store/listEcardType", lwutil.ReqHandler(apiListEcardType))
 
-	http.Handle("/store/addCouponItem", lwutil.ReqHandler(apiAddCouponItem))
-	http.Handle("/store/buyCouponItem", lwutil.ReqHandler(apiBuyCouponItem))
+	http.Handle("/store/addEcard", lwutil.ReqHandler(apiAddEcard))
+	http.Handle("/store/buyEcard", lwutil.ReqHandler(apiBuyEcard))
 }

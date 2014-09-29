@@ -50,43 +50,46 @@ const (
 
 const (
 	REWARD_REASON_RANK  = "排名奖励"
-	REWARD_REASON_LUCK  = "幸运奖"
+	REWARD_REASON_LUCK  = "幸运大奖"
 	REWARD_REASON_OWNER = "发布分成"
 )
 
 type RewardRecord struct {
+	Id      int64
+	MatchId int64
 	Thumb   string
 	Reason  string
-	MatchId int64
-	Num     int
+	Coupon  int
+	Rank    int
 }
 
 func makeZPlayerRewardKey(userId int64) string {
 	return fmt.Sprintf("%s, %d", Z_PLAYER_REWARD, userId)
 }
 
-func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb string, coinNum int, reason string) {
-	if coinNum == 0 {
+func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb string, coupon int, reason string, rank int) {
+	if coupon == 0 {
 		return
 	}
 	playerKey := makePlayerInfoKey(userId)
-	resp, err := ssdbc.Do("hincr", playerKey, PLAYER_COUPON_CACHE, coinNum)
+	resp, err := ssdbc.Do("hincr", playerKey, PLAYER_COUPON_CACHE, coupon)
 	lwutil.CheckSsdbError(resp, err)
 
 	var record RewardRecord
+	record.Id = GenSerial(ssdbc, SEREAL_PLAYER_REWARD)
 	record.Thumb = matchThumb
 	record.Reason = reason
 	record.MatchId = matchId
-	record.Num = coinNum
+	record.Coupon = coupon
+	record.Rank = rank
 	js, err := json.Marshal(record)
 	lwutil.CheckError(err, "")
 
-	recordId := GenSerial(ssdbc, SEREAL_PLAYER_REWARD)
-	resp, err = ssdbc.Do("hset", H_PLAYER_REWARD, recordId, js)
+	resp, err = ssdbc.Do("hset", H_PLAYER_REWARD, record.Id, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	zkey := makeZPlayerRewardKey(userId)
-	resp, err = ssdbc.Do("zset", zkey, recordId, recordId)
+	resp, err = ssdbc.Do("zset", zkey, record.Id, record.Id)
 	lwutil.CheckSsdbError(resp, err)
 }
 
@@ -334,7 +337,7 @@ func apiGetUptoken(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, &out)
 }
 
-func apiListMyCoupon(w http.ResponseWriter, r *http.Request) {
+func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -364,15 +367,15 @@ func apiListMyCoupon(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//
-	playerCouponZKey := makePlayerCouponZsetKey(session.Userid)
-	resp, err := ssdbc.Do("zrscan", playerCouponZKey, in.StartId, in.StartId, "", in.Limit)
+	playerEcardZKey := makePlayerEcardZsetKey(session.Userid)
+	resp, err := ssdbc.Do("zrscan", playerEcardZKey, in.StartId, in.StartId, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
 	itemNum := len(resp) / 2
 	cmds := make([]interface{}, itemNum+2)
 	cmds[0] = "multi_hget"
-	cmds[1] = H_COUPON_ITEM
+	cmds[1] = H_ECARD
 	for i := 0; i < itemNum; i++ {
 		cmds[i+2] = resp[i*2]
 	}
@@ -384,7 +387,7 @@ func apiListMyCoupon(w http.ResponseWriter, r *http.Request) {
 	num := len(resp) / 2
 
 	//
-	out := make([]CouponItem, num)
+	out := make([]ECard, num)
 	for i := 0; i < num; i++ {
 		err = json.Unmarshal([]byte(resp[i*2+1]), &out[i])
 		lwutil.CheckError(err, "")
@@ -408,9 +411,8 @@ func apiListMyReward(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		StartId    int64
-		StartScore int64
-		Limit      int
+		StartId int64
+		Limit   int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -428,7 +430,7 @@ func apiListMyReward(w http.ResponseWriter, r *http.Request) {
 
 	//
 	zkey := makeZPlayerRewardKey(session.Userid)
-	resp, err := ssdbc.Do("zrscan", zkey, in.StartId, in.StartScore, "", in.Limit)
+	resp, err := ssdbc.Do("zrscan", zkey, in.StartId, in.StartId, "", in.Limit)
 	lwutil.CheckError(err, "")
 	resp = resp[1:]
 	if len(resp) == 0 {
@@ -466,6 +468,6 @@ func regPlayer() {
 	http.Handle("/player/addCouponFromCache", lwutil.ReqHandler(apiAddCouponFromCache))
 	http.Handle("/player/getUptokens", lwutil.ReqHandler(apiGetUptokens))
 	http.Handle("/player/getUptoken", lwutil.ReqHandler(apiGetUptoken))
-	http.Handle("/player/listMyCoupon", lwutil.ReqHandler(apiListMyCoupon))
+	http.Handle("/player/listMyEcard", lwutil.ReqHandler(apiListMyEcard))
 	http.Handle("/player/listMyReward", lwutil.ReqHandler(apiListMyReward))
 }

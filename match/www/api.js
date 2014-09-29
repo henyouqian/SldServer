@@ -168,7 +168,11 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": ["test1.jpg", "test2.jpg"]
 				},{
-					"name": "listMyCoupon",
+					"name": "listMyEcard",
+					"method": "POST",
+					"data": {"StartId":0, "Limit":20}
+				},{
+					"name": "listMyReward",
 					"method": "POST",
 					"data": {"StartId":0, "Limit":20}
 				}
@@ -377,23 +381,27 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"ProductId":"", "Checksum":""}
 				},{
-					"name": "addCouponItemType",
+					"name": "addEcardType",
 					"method": "POST",
-					"data": {"Key":"", "Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000}
+					"data": {"Key":"", "Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000, "Thumb":""}
 				},{
-					"name": "delCouponItemType",
+					"name": "editEcardType",
+					"method": "POST",
+					"data": {"Key":"", "Name":"", "Thumb":""}
+				},{
+					"name": "delEcardType",
 					"method": "POST",
 					"data": {"Key":""}
 				},{
-					"name": "listCouponItemType",
+					"name": "listEcardType",
 					"method": "POST",
 					"data": ""
 				},{
-					"name": "addCouponItem",
+					"name": "addEcard",
 					"method": "POST",
 					"data": {"TypeKey":"", "CouponCode":"", "ExpireDate":""}
 				},{
-					"name": "buyCouponItem",
+					"name": "buyEcard",
 					"method": "POST",
 					"data": {"TypeKey":""}
 				}

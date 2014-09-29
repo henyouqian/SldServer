@@ -137,7 +137,7 @@ func matchCron() {
 						checkSsdbError(r, err)
 
 						//add player reward
-						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK)
+						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK, rank)
 
 						//add to del array
 						delMatchIds = append(delMatchIds, matchId)
@@ -147,7 +147,7 @@ func matchCron() {
 				//owner reward
 				ownerReward := int(match.OwnerRewardProportion * float32(rewardSum))
 				if ownerReward > 0 {
-					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER)
+					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER, 0)
 				}
 			} else {
 				looping = false

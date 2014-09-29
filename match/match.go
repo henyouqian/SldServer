@@ -934,8 +934,6 @@ func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("zrscan", Z_HOT_MATCH, in.StartId, in.CouponSum, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
-	glog.Info(resp, in)
-
 	if len(resp) == 1 {
 		lwutil.WriteResponse(w, out)
 		return
