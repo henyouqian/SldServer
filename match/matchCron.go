@@ -14,29 +14,26 @@ func _matchCronGlog() {
 }
 
 func initMatchCron() {
+
 	_cron.AddFunc("0 * * * * *", matchCron)
 	matchCron()
 }
 
-func calcRankReward(match *Match, rewardSum int, rank int) int {
-	fSum := float32(rewardSum)
-
-	// //owner reward
-	// ownerReward := int(match.OwnerRewardProportion * fSum)
-	// playerKey := makePlayerInfoKey(userId)
-
+func calcRankReward(match *Match, rewardSum float32, rank int) float32 {
 	rankIdx := rank - 1
 	fixRewardNum := len(match.RankRewardProportions)
 	if rankIdx < fixRewardNum {
-		return int(match.RankRewardProportions[rankIdx] * fSum)
+		return match.RankRewardProportions[rankIdx] * rewardSum
 	}
 
-	oneCoinNum := int(fSum * match.OneCoinRewardProportion)
-	if rankIdx < (fixRewardNum + oneCoinNum) {
-		return 1
+	oneCoinNum := int(rewardSum * match.OneCoinRewardProportion)
+	propNum := len(match.RankRewardProportions)
+	minReward := rewardSum * match.RankRewardProportions[propNum-1]
+	if (minReward > 1.0) && (rankIdx < (fixRewardNum + oneCoinNum)) {
+		return 1.0
 	}
 
-	return 0
+	return 0.0
 }
 
 func matchCron() {
@@ -87,7 +84,7 @@ func matchCron() {
 					extraCoupon, err = strconv.Atoi(respCoupon[1])
 					checkError(err)
 				}
-				rewardSum := match.RewardCoupon + extraCoupon
+				rewardSum := float32(match.RewardCoupon + extraCoupon)
 
 				//get ranks
 				lbKey := makeMatchLeaderboardRdsKey(matchId)
@@ -145,7 +142,7 @@ func matchCron() {
 				}
 
 				//owner reward
-				ownerReward := int(match.OwnerRewardProportion * float32(rewardSum))
+				ownerReward := match.OwnerRewardProportion * float32(rewardSum)
 				if ownerReward > 0 {
 					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER, 0)
 				}

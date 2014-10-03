@@ -29,9 +29,9 @@ type PlayerInfo struct {
 	CustomAvatarKey string
 	GravatarKey     string
 	GoldCoin        int
-	Coupon          int
-	CouponCache     int64
-	TotalCoupon     int64
+	Coupon          float32
+	CouponCache     float32
+	TotalCoupon     float32
 	Secret          string
 	CurrChallengeId int
 	BetMax          int
@@ -59,7 +59,7 @@ type RewardRecord struct {
 	MatchId int64
 	Thumb   string
 	Reason  string
-	Coupon  int
+	Coupon  float32
 	Rank    int
 }
 
@@ -67,7 +67,7 @@ func makeZPlayerRewardKey(userId int64) string {
 	return fmt.Sprintf("%s, %d", Z_PLAYER_REWARD, userId)
 }
 
-func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb string, coupon int, reason string, rank int) {
+func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb string, coupon float32, reason string, rank int) {
 	if coupon == 0 {
 		return
 	}
@@ -265,7 +265,7 @@ func apiAddCouponFromCache(w http.ResponseWriter, r *http.Request) {
 
 	//
 	key := makePlayerInfoKey(session.Userid)
-	var couponCache int64
+	var couponCache float32
 	err = ssdb.HGet(key, PLAYER_COUPON_CACHE, &couponCache)
 	lwutil.CheckError(err, "")
 	if couponCache > 0 {

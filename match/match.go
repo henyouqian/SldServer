@@ -75,7 +75,7 @@ type MatchPlay struct {
 	Secret           string
 	SecretExpire     int64
 	LuckyNums        []int64
-	Reward           int
+	Reward           float32
 }
 
 const (
@@ -209,10 +209,6 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 
 	stringLimit(&in.Title, 100)
 	stringLimit(&in.Text, 2000)
-
-	if in.RewardCoupon%100 != 0 {
-		lwutil.SendError("err_coupon_reward", "in.RewardCoupon % 100 != 0")
-	}
 
 	//check gold coin
 	playerKey := makePlayerInfoKey(session.Userid)
