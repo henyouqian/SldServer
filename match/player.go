@@ -373,6 +373,11 @@ func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 	resp = resp[1:]
 
 	itemNum := len(resp) / 2
+	if itemNum == 0 {
+		w.Write([]byte("[]"))
+		return
+	}
+
 	cmds := make([]interface{}, itemNum+2)
 	cmds[0] = "multi_hget"
 	cmds[1] = H_ECARD
@@ -387,9 +392,10 @@ func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 	num := len(resp) / 2
 
 	//
-	out := make([]ECard, num)
+	out := make([]OutEcard, num)
 	for i := 0; i < num; i++ {
-		err = json.Unmarshal([]byte(resp[i*2+1]), &out[i])
+		err = json.Unmarshal([]byte(resp[i*2+1]), &(out[i].ECard))
+		out[i].Provider = ECARD_PROVIDERS[out[i].ECard.Provider]
 		lwutil.CheckError(err, "")
 	}
 

@@ -3,9 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/golang/glog"
+	"net/http"
 	"runtime"
 	"unicode/utf8"
+
+	"github.com/golang/glog"
+	"github.com/henyouqian/lwutil"
 )
 
 func stringLimit(str *string, limit uint) {
@@ -52,4 +55,17 @@ func handleError() {
 		runtime.Stack(buf, false)
 		glog.Errorf("%s", buf)
 	}
+}
+
+func sendErrorNoLog(w http.ResponseWriter, errType string, errStr string) {
+	_, file, line, _ := runtime.Caller(1)
+	errStr = fmt.Sprintf("%s\n\t%s : %d", errStr, file, line)
+	out := struct {
+		Error       string
+		ErrorString string
+	}{
+		errType,
+		errStr,
+	}
+	lwutil.WriteResponse(w, out)
 }

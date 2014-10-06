@@ -62,7 +62,6 @@ func matchCron() {
 			break
 		}
 		resp = resp[1:]
-
 		num := len(resp) / 2
 
 		//for each match
@@ -135,9 +134,6 @@ func matchCron() {
 
 						//add player reward
 						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK, rank)
-
-						//add to del array
-						delMatchIds = append(delMatchIds, matchId)
 					}
 				}
 
@@ -146,6 +142,9 @@ func matchCron() {
 				if ownerReward > 0 {
 					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER, 0)
 				}
+
+				//add to del array
+				delMatchIds = append(delMatchIds, matchId)
 			} else {
 				looping = false
 				break

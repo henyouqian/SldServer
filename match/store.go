@@ -13,17 +13,30 @@ import (
 
 const (
 	H_ECARD_TYPE      = "H_ECARD_TYPE" //subkey:typeKey value:ecardType
-	H_ECARD           = "H_ECARD"      //subkey:itemId, value:ecardJson
+	H_ECARD           = "H_ECARD"      //subkey:id, value:ecardJson
 	Q_ECARD           = "Q_ECARD"
 	H_ECARD_CODE      = "H_ECARD_CODE"      //subkey:provider/code value:ecardId
 	Z_PLAYER_ECARD    = "Z_PLAYER_ECARD"    //key:Z_PLAYER_ECARD/playerId, subkey:ecardId, score:time
 	Z_ECARD_PURCHASED = "Z_ECARD_PURCHASED" //subkey:ecardId, score:time
 )
 
+type Provider struct {
+	RechargeUrl string
+	HelpText    string
+}
+
+const (
+	AMAZON_HELP = `1.	点击充值按钮进入充值页面。
+2.	该注册注册，该登录登录。
+3.	按照提示输入充值码（可直接粘贴，充值码已自动拷贝至剪贴板）。
+4.	在结算过程中，礼品卡金额将被自动用于支付有效订单。
+5.	当您的礼品卡余额不足以支付订单时，您需要同时选择其它支付方式支付订单的差额部分。
+您也可以在结算过程中按照提示输入您的礼品卡充值码。选择“一键下单”服务时，您需要先将礼品卡充值至我的账户。`
+)
+
 var (
-	COUPON_ITME_PROVIDERS = map[string]bool{
-		"amazon": true,
-		"jd":     true,
+	ECARD_PROVIDERS = map[string]Provider{
+		"amazon": Provider{"https://www.amazon.cn/gp/css/gc/payment/ref=gc_lp_cc", AMAZON_HELP},
 	}
 )
 
@@ -50,6 +63,13 @@ type ECard struct {
 	GenDate     string
 	UserGetDate string
 	OwnerId     int64
+	Title       string
+	Provider    string
+}
+
+type OutEcard struct {
+	ECard
+	Provider
 }
 
 var (
@@ -78,16 +98,27 @@ var (
 		// "com.lw.pin.goldcoin2998": 150000,
 		// "com.lw.pin.goldcoin5898": 300000,
 
-		"com.lw.pin.gc6":    30,
-		"com.lw.pin.gc18":   90,
-		"com.lw.pin.gc25":   125,
-		"com.lw.pin.gc60":   300,
-		"com.lw.pin.gc188":  1000,
-		"com.lw.pin.gc388":  2000,
-		"com.lw.pin.gc588":  3000,
-		"com.lw.pin.gc998":  5000,
-		"com.lw.pin.gc2998": 15000,
-		"com.lw.pin.gc5898": 30000,
+		// "com.lw.pin.gc6":    30,
+		// "com.lw.pin.gc18":   90,
+		// "com.lw.pin.gc25":   125,
+		// "com.lw.pin.gc60":   300,
+		// "com.lw.pin.gc188":  1000,
+		// "com.lw.pin.gc388":  2000,
+		// "com.lw.pin.gc588":  3000,
+		// "com.lw.pin.gc998":  5000,
+		// "com.lw.pin.gc2998": 15000,
+		// "com.lw.pin.gc5898": 30000,
+
+		"com.lw.mpin.goldcoin6":   30,
+		"com.lw.mpin.goldcoin12":  60,
+		"com.lw.mpin.goldcoin25":  125,
+		"com.lw.mpin.goldcoin50":  250,
+		"com.lw.mpin.goldcoin98":  500,
+		"com.lw.mpin.goldcoin198": 1000,
+		"com.lw.mpin.goldcoin298": 1500,
+		"com.lw.mpin.goldcoin388": 2000,
+		"com.lw.mpin.goldcoin488": 2500,
+		"com.lw.mpin.goldcoin588": 3000,
 	}
 )
 
@@ -246,7 +277,8 @@ func apiAddEcardType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check provider
-	if !COUPON_ITME_PROVIDERS[in.Provider] {
+	_, ok := ECARD_PROVIDERS[in.Provider]
+	if !ok {
 		lwutil.SendError("err_provider", "invalid provider")
 	}
 
@@ -432,6 +464,14 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_exists", "code exist")
 	}
 
+	//set gen time
+	now := lwutil.GetRedisTime()
+	in.GenDate = now.Format("2006-01-02 15:04:05")
+
+	//set title
+	in.Title = cardType.Name
+	in.Provider = cardType.Provider
+
 	//hset
 	in.Id = GenSerial(ssdbc, "COUPON_ITEM_SERIAL")
 	js, err := json.Marshal(in)
@@ -494,7 +534,8 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	if cardType.Num == 0 {
-		lwutil.SendError("err_zero", "item count = 0")
+		sendErrorNoLog(w, "err_zero", "item count = 0")
+		return
 	}
 
 	//check player coupon
@@ -539,9 +580,31 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", Z_ECARD_PURCHASED, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
+	//get item
+	resp, err = ssdbc.Do("hget", H_ECARD, itemId)
+	lwutil.CheckSsdbError(resp, err)
+
+	var ecard ECard
+	err = json.Unmarshal([]byte(resp[1]), &ecard)
+	lwutil.CheckError(err, "")
+
+	//update ecard
+	now := lwutil.GetRedisTime()
+	ecard.UserGetDate = now.Format("2006-01-02 15:04:05")
+	ecard.OwnerId = session.Userid
+
+	js, err = json.Marshal(ecard)
+	lwutil.CheckError(err, "")
+	resp, err = ssdbc.Do("hset", H_ECARD, itemId, js)
+	lwutil.CheckSsdbError(resp, err)
+
 	//out
+	var outEcard OutEcard
+	outEcard.ECard = ecard
+	outEcard.Provider = ECARD_PROVIDERS[cardType.Provider]
+
 	out := map[string]interface{}{
-		"ItemId":       itemId,
+		"Ecard":        ecard,
 		"PlayerCoupon": playerCoupon - cardType.CouponPrice,
 	}
 	lwutil.WriteResponse(w, out)
