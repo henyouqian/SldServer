@@ -170,7 +170,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "listMyEcard",
 					"method": "POST",
-					"data": {"StartId":0, "Limit":20}
+					"data": {"StartId":0, "LastScore":0, "Limit":20}
 				},{
 					"name": "listMyReward",
 					"method": "POST",

@@ -352,14 +352,18 @@ func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		StartId int64
-		Limit   int
+		StartId   int64
+		LastScore int64
+		Limit     int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
 	if in.StartId <= 0 {
-		in.StartId = math.MaxInt32
+		in.StartId = math.MaxInt64
+	}
+	if in.LastScore <= 0 {
+		in.LastScore = math.MaxInt64
 	}
 
 	if in.Limit > 50 {
@@ -367,22 +371,32 @@ func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//
+	out := struct {
+		Ecards    []OutEcard
+		LastScore int64
+	}{}
+	out.Ecards = make([]OutEcard, 0)
+
+	//
 	playerEcardZKey := makePlayerEcardZsetKey(session.Userid)
-	resp, err := ssdbc.Do("zrscan", playerEcardZKey, in.StartId, in.StartId, "", in.Limit)
+	resp, err := ssdbc.Do("zrscan", playerEcardZKey, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
 	itemNum := len(resp) / 2
 	if itemNum == 0 {
-		w.Write([]byte("[]"))
+		lwutil.WriteResponse(w, out)
 		return
 	}
 
 	cmds := make([]interface{}, itemNum+2)
 	cmds[0] = "multi_hget"
 	cmds[1] = H_ECARD
+	lastScore := int64(0)
 	for i := 0; i < itemNum; i++ {
 		cmds[i+2] = resp[i*2]
+		lastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+		lwutil.CheckError(err, "")
 	}
 
 	//
@@ -392,10 +406,11 @@ func apiListMyEcard(w http.ResponseWriter, r *http.Request) {
 	num := len(resp) / 2
 
 	//
-	out := make([]OutEcard, num)
+	out.LastScore = lastScore
+	out.Ecards = make([]OutEcard, num)
 	for i := 0; i < num; i++ {
-		err = json.Unmarshal([]byte(resp[i*2+1]), &(out[i].ECard))
-		out[i].Provider = ECARD_PROVIDERS[out[i].ECard.Provider]
+		err = json.Unmarshal([]byte(resp[i*2+1]), &(out.Ecards[i].ECard))
+		out.Ecards[i].Provider = ECARD_PROVIDERS[out.Ecards[i].ECard.Provider]
 		lwutil.CheckError(err, "")
 	}
 
