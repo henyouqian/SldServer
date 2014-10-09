@@ -26,7 +26,7 @@ type Provider struct {
 }
 
 const (
-	AMAZON_HELP = `1.	点击充值按钮进入充值页面。
+	AMAZON_HELP = `1.	点击“充值到我的账户”按钮进入充值页面。
 2.	该注册注册，该登录登录。
 3.	按照提示输入充值码（可直接粘贴，充值码已自动拷贝至剪贴板）。
 4.	在结算过程中，礼品卡金额将被自动用于支付有效订单。
@@ -540,11 +540,8 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 
 	//check player coupon
 	playerKey := makePlayerInfoKey(session.Userid)
-	resp, err = ssdbc.Do("hget", playerKey, PLAYER_COUPON)
-	lwutil.CheckSsdbError(resp, err)
-	playerCoupon, err := strconv.Atoi(resp[1])
-	lwutil.CheckError(err, "")
-	if playerCoupon < cardType.CouponPrice {
+	playerCoupon := getCoupon(ssdbc, playerKey)
+	if playerCoupon < float32(cardType.CouponPrice) {
 		lwutil.SendError("err_not_enough", "not enough coupon")
 	}
 
@@ -562,8 +559,7 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//buy, sub player coupon num
-	resp, err = ssdbc.Do("hincr", playerKey, PLAYER_COUPON, -cardType.CouponPrice)
-	lwutil.CheckSsdbError(resp, err)
+	addCoupon(ssdbc, playerKey, float32(-cardType.CouponPrice))
 
 	//update coupon type's coupon num
 	resp, err = ssdbc.Do("qsize", ecardQueueKey)
@@ -604,8 +600,8 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	outEcard.Provider = ECARD_PROVIDERS[cardType.Provider]
 
 	out := map[string]interface{}{
-		"Ecard":        ecard,
-		"PlayerCoupon": playerCoupon - cardType.CouponPrice,
+		"Ecard":        outEcard,
+		"PlayerCoupon": playerCoupon - float32(cardType.CouponPrice),
 	}
 	lwutil.WriteResponse(w, out)
 }

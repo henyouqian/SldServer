@@ -68,12 +68,11 @@ func makeZPlayerRewardKey(userId int64) string {
 }
 
 func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb string, coupon float32, reason string, rank int) {
-	if coupon == 0 {
+	if coupon < 0.01 {
 		return
 	}
 	playerKey := makePlayerInfoKey(userId)
-	resp, err := ssdbc.Do("hincr", playerKey, PLAYER_COUPON_CACHE, coupon)
-	lwutil.CheckSsdbError(resp, err)
+	addCouponCache(ssdbc, playerKey, coupon)
 
 	var record RewardRecord
 	record.Id = GenSerial(ssdbc, SEREAL_PLAYER_REWARD)
@@ -85,7 +84,7 @@ func addCouponToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThum
 	js, err := json.Marshal(record)
 	lwutil.CheckError(err, "")
 
-	resp, err = ssdbc.Do("hset", H_PLAYER_REWARD, record.Id, js)
+	resp, err := ssdbc.Do("hset", H_PLAYER_REWARD, record.Id, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	zkey := makeZPlayerRewardKey(userId)
@@ -119,6 +118,10 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 		ssdb.HSet(key, PLAYER_CURR_CHALLENGE_ID, 1)
 	}
 
+	playerInfo.Coupon *= 0.01
+	playerInfo.CouponCache *= 0.01
+	playerInfo.TotalCoupon *= 0.01
+
 	return &playerInfo, err
 }
 
@@ -141,13 +144,49 @@ func getPlayerGoldCoin(ssc *ssdb.Client, playerKey string) (rNum int) {
 	return num
 }
 
-func addPlayerCoupon(ssc *ssdb.Client, playerKey string, addCoupon int) (rCoupon int) {
-	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON, addCoupon)
+func getCoupon(ssc *ssdb.Client, playerKey string) float32 {
+	var coupon float32
+	err := ssc.HGet(playerKey, PLAYER_COUPON, &coupon)
+	lwutil.CheckError(err, "")
+	return coupon * 0.01
+}
+
+func addCoupon(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON, addCoupon*100.0)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
+	return float32(num) * 0.01
+}
 
-	return num
+func getCouponCache(ssc *ssdb.Client, playerKey string) float32 {
+	var couponCache float32
+	err := ssc.HGet(playerKey, PLAYER_COUPON_CACHE, &couponCache)
+	lwutil.CheckError(err, "")
+	return couponCache * 0.01
+}
+
+func addCouponCache(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON_CACHE, addCoupon*100.0)
+	lwutil.CheckSsdbError(resp, err)
+	num, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "")
+	return float32(num) * 0.01
+}
+
+func getCouponTotal(ssc *ssdb.Client, playerKey string) float32 {
+	var coupon float32
+	err := ssc.HGet(playerKey, PLAYER_TOTAL_COUPON, &coupon)
+	lwutil.CheckError(err, "")
+	return coupon * 0.01
+}
+
+func addCouponTotal(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	resp, err := ssc.Do("hincr", playerKey, PLAYER_TOTAL_COUPON, addCoupon*100.0)
+	lwutil.CheckSsdbError(resp, err)
+	num, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "")
+	return float32(num) * 0.01
 }
 
 func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
@@ -265,13 +304,12 @@ func apiAddCouponFromCache(w http.ResponseWriter, r *http.Request) {
 
 	//
 	key := makePlayerInfoKey(session.Userid)
-	var couponCache float32
-	err = ssdb.HGet(key, PLAYER_COUPON_CACHE, &couponCache)
+	couponCache := getCouponCache(ssdb, key)
 	lwutil.CheckError(err, "")
 	if couponCache > 0 {
-		ssdb.Do("hincr", key, PLAYER_COUPON_CACHE, -couponCache)
-		ssdb.Do("hincr", key, PLAYER_COUPON, couponCache)
-		ssdb.Do("hincr", key, PLAYER_TOTAL_COUPON, couponCache)
+		addCoupon(ssdb, key, couponCache)
+		addCouponTotal(ssdb, key, couponCache)
+		addCouponCache(ssdb, key, -couponCache)
 	}
 
 	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
@@ -483,6 +521,32 @@ func apiListMyReward(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiGetCouponCache(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//
+	key := makePlayerInfoKey(session.Userid)
+	couponCache := getCouponCache(ssdbc, key)
+
+	//out
+	out := struct {
+		CouponCache float32
+	}{
+		couponCache,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
 func regPlayer() {
 	http.Handle("/player/getInfo", lwutil.ReqHandler(apiGetPlayerInfo))
 	http.Handle("/player/setInfo", lwutil.ReqHandler(apiSetPlayerInfo))
@@ -491,4 +555,5 @@ func regPlayer() {
 	http.Handle("/player/getUptoken", lwutil.ReqHandler(apiGetUptoken))
 	http.Handle("/player/listMyEcard", lwutil.ReqHandler(apiListMyEcard))
 	http.Handle("/player/listMyReward", lwutil.ReqHandler(apiListMyReward))
+	http.Handle("/player/getCouponCache", lwutil.ReqHandler(apiGetCouponCache))
 }

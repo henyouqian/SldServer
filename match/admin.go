@@ -127,7 +127,7 @@ func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := makePlayerInfoKey(userId)
-	addPlayerCoupon(ssdbc, key, in.AddCoupon)
+	addCoupon(ssdbc, key, float32(in.AddCoupon))
 
 	var playerInfo PlayerInfo
 	ssdbc.HGetStruct(key, &playerInfo)

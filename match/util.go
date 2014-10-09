@@ -67,5 +67,6 @@ func sendErrorNoLog(w http.ResponseWriter, errType string, errStr string) {
 		errType,
 		errStr,
 	}
+	w.WriteHeader(http.StatusBadRequest)
 	lwutil.WriteResponse(w, out)
 }

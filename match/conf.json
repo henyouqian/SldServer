@@ -3,7 +3,7 @@
 	"RedisHost": 		"localhost:6379",
 	"SsdbAuthPort" :	9875,
 	"SsdbMatchPort" :	9876,
-	"AppName": "national",
+	"AppName": "mpin",
 	"EventPublishInfoes_": [
 		{"PublishTime":[1, 10], "BeginTime":[5, 0], "EndTime":[13, 0], "EventNum":1},
 		{"PublishTime":[1, 10], "BeginTime":[13, 0], "EndTime":[19, 0], "EventNum":1},

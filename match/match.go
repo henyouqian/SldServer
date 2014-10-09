@@ -33,6 +33,7 @@ const (
 
 	FREE_TRY_NUM             = 3
 	MATCH_TRY_EXPIRE_SECONDS = 600
+	MATCH_TIME_SEC           = 60 * 5
 )
 
 type Match struct {
@@ -143,7 +144,11 @@ func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
 		play.FreeTries = FREE_TRY_NUM
 
 		playerInfo, err := getPlayerInfo(ssdbc, userId)
-		lwutil.CheckError(err, "")
+		if err != nil {
+			glog.Errorf("no playerInfo:userId=%d", userId)
+			return nil
+		}
+
 		play.Team = playerInfo.TeamName
 		play.PlayerName = playerInfo.NickName
 		play.GravatarKey = playerInfo.GravatarKey
@@ -237,7 +242,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		beginTime := lwutil.GetRedisTime()
 		beginTimeUnix = beginTime.Unix()
 		beginTimeStr = beginTime.Format("2006-01-02T15:04:05")
-		endTimeUnix = beginTime.Add(24 * time.Hour).Unix()
+		endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
 		isPublishNow = true
 	} else {
 		beginTime, err := time.Parse("2006-01-02T15:04:05", in.BeginTimeStr)
@@ -246,7 +251,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 			lwutil.SendError("err_time", "begin time must later than now")
 		}
 		beginTimeUnix = beginTime.Unix()
-		endTimeUnix = beginTime.Add(24 * time.Hour).Unix()
+		endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
 	}
 
 	match := Match{
