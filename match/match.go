@@ -23,7 +23,6 @@ const (
 	H_MATCH_PLAY            = "H_MATCH_PLAY"            //key:H_MATCH_PLAY subkey:matchId/userId value:match json
 	H_MATCH_RANK            = "H_MATCH_RANK"            //key:H_MATCH_RANK/matchId subkey:rank value:userId
 	Z_MATCH                 = "Z_MATCH"                 //subkey:matchId score:beginTime
-	Z_REWARD_MATCH          = "Z_REWARD_MATCH"          //subkey:matchId score:beginTime
 	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
 	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
 	Z_MY_PLAYED_MATCH       = "Z_MY_PLAYED_MATCH"       //key:Z_MY_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
@@ -56,6 +55,7 @@ type Match struct {
 	ChallengeSeconds        int
 	PromoUrl                string
 	PromoImage              string
+	Private                 bool
 }
 
 type MatchExtra struct {
@@ -202,6 +202,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		ChallengeSeconds int
 		PromoUrl         string
 		PromoImage       string
+		Private          bool
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -273,6 +274,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		ChallengeSeconds:        in.ChallengeSeconds,
 		PromoUrl:                in.PromoUrl,
 		PromoImage:              in.PromoImage,
+		Private:                 in.Private,
 	}
 
 	//json
@@ -284,22 +286,18 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	if isPublishNow {
-		//add to Z_MATCH
-		resp, err = ssdbc.Do("zset", Z_MATCH, matchId, beginTimeUnix)
-		lwutil.CheckSsdbError(resp, err)
+		if !in.Private {
+			//add to Z_MATCH
+			resp, err = ssdbc.Do("zset", Z_MATCH, matchId, beginTimeUnix)
+			lwutil.CheckSsdbError(resp, err)
 
-		//Z_REWARD_MATCH
-		if in.RewardCoupon > 0 {
-			resp, err = ssdbc.Do("zset", Z_REWARD_MATCH, matchId, beginTimeUnix)
+			//Z_HOT_MATCH
+			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.RewardCoupon)
 			lwutil.CheckSsdbError(resp, err)
 		}
 
 		//Z_OPEN_MATCH
 		resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
-		lwutil.CheckSsdbError(resp, err)
-
-		//Z_HOT_MATCH
-		resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.RewardCoupon)
 		lwutil.CheckSsdbError(resp, err)
 	} else {
 		//add to Z_PENDING_MATCH
@@ -391,6 +389,7 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 		Title      string
 		PromoUrl   string
 		PromoImage string
+		Private    bool
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -401,6 +400,41 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 	//check owner
 	if match.OwnerId != session.Userid {
 		lwutil.SendError("err_owner", "not the pack's owner")
+	}
+
+	//check time
+	now := lwutil.GetRedisTimeUnix()
+	if now > match.EndTime {
+		lwutil.WriteResponse(w, match)
+		return
+	}
+
+	//private
+	if match.Private != in.Private {
+		match.Private = in.Private
+		if match.Private {
+			resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
+			lwutil.CheckSsdbError(resp, err)
+
+			resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
+			lwutil.CheckSsdbError(resp, err)
+		} else {
+			//add to Z_MATCH
+			resp, err := ssdbc.Do("zset", Z_MATCH, match.Id, match.BeginTime)
+			lwutil.CheckSsdbError(resp, err)
+
+			//Z_HOT_MATCH
+			rewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
+			resp, err = ssdbc.Do("hget", H_MATCH_EXTRA, rewardCouponKey)
+			extraCoupon := 0
+			if resp[0] == "ok" {
+				extraCoupon, err = strconv.Atoi(resp[1])
+				lwutil.CheckError(err, "")
+			}
+
+			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.RewardCoupon+extraCoupon)
+			lwutil.CheckSsdbError(resp, err)
+		}
 	}
 
 	//update match
@@ -457,117 +491,6 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 
 	//get keys
 	resp, err := ssdbc.Do("zrscan", Z_MATCH, in.StartId, in.BeginTime, "", in.Limit)
-	lwutil.CheckSsdbError(resp, err)
-
-	if len(resp) == 1 {
-		w.Write([]byte("[]"))
-		return
-	}
-	resp = resp[1:]
-
-	//get matches
-	num := len(resp) / 2
-	args := make([]interface{}, num+2)
-	args[0] = "multi_hget"
-	args[1] = H_MATCH
-	for i := 0; i < num; i++ {
-		args = append(args, resp[i*2])
-	}
-	resp, err = ssdbc.Do(args...)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-
-	type OutMatch struct {
-		Match
-		MatchExtra
-	}
-
-	matches := make([]OutMatch, len(resp)/2)
-	m := make(map[int64]int) //key:matchId, value:index
-	for i, _ := range matches {
-		packjs := resp[i*2+1]
-		err = json.Unmarshal([]byte(packjs), &matches[i])
-		lwutil.CheckError(err, "")
-		m[matches[i].Id] = i
-	}
-
-	//match extra
-	if len(matches) > 0 {
-		args = make([]interface{}, 2, len(matches)*2+2)
-		args[0] = "multi_hget"
-		args[1] = H_MATCH_EXTRA
-		for _, v := range matches {
-			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
-			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
-			args = append(args, playTimesKey, RewardCouponKey)
-		}
-		resp, err = ssdbc.Do(args...)
-		lwutil.CheckSsdbError(resp, err)
-		resp = resp[1:]
-
-		num := len(resp) / 2
-		for i := 0; i < num; i++ {
-			key := resp[i*2]
-			var matchId int64
-			var fieldKey string
-			_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
-			lwutil.CheckError(err, "")
-
-			idx := m[matchId]
-			if fieldKey == MATCH_EXTRA_PLAY_TIMES {
-				playTimes, err := strconv.Atoi(resp[i*2+1])
-				lwutil.CheckError(err, "")
-				matches[idx].PlayTimes = playTimes
-			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
-				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
-				lwutil.CheckError(err, "")
-				matches[idx].ExtraCoupon = ExtraCoupon
-			}
-		}
-	}
-
-	//out
-	lwutil.WriteResponse(w, matches)
-}
-
-func apiMatchListRewardMatch(w http.ResponseWriter, r *http.Request) {
-	lwutil.CheckMathod(r, "POST")
-	var err error
-
-	//ssdb
-	ssdbc, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbc.Close()
-
-	//session
-	_, err = findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	//in
-	var in struct {
-		StartId   int64
-		BeginTime int64
-		Limit     int
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	if in.Limit <= 0 {
-		in.Limit = 20
-	} else if in.Limit > 50 {
-		in.Limit = 50
-	}
-
-	if in.StartId == 0 {
-		in.StartId = math.MaxInt64
-	}
-
-	if in.BeginTime == 0 {
-		in.BeginTime = math.MaxInt64
-	}
-
-	//get keys
-	resp, err := ssdbc.Do("zrscan", Z_REWARD_MATCH, in.StartId, in.BeginTime, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
 	if len(resp) == 1 {
@@ -1516,7 +1439,6 @@ func regMatch() {
 	http.Handle("/match/listMine", lwutil.ReqHandler(apiMatchListMine))
 	http.Handle("/match/listMyPlayed", lwutil.ReqHandler(apiMatchListMyPlayed))
 	http.Handle("/match/listHot", lwutil.ReqHandler(apiMatchListHot))
-	http.Handle("/match/listRewardMatch", lwutil.ReqHandler(apiMatchListRewardMatch))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
