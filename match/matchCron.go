@@ -138,7 +138,7 @@ func matchCron() {
 
 						//add player reward
 						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK, rank)
-						glog.Infof("play.Reward=%f", play.Reward)
+						// glog.Infof("play.Reward=%f", play.Reward)
 					}
 				}
 
@@ -146,7 +146,7 @@ func matchCron() {
 				ownerReward := match.OwnerRewardProportion * float32(rewardSum)
 				if ownerReward > 0 {
 					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER, 0)
-					glog.Infof("ownerReward=%f", ownerReward)
+					// glog.Infof("ownerReward=%f", ownerReward)
 				}
 
 				//add to del array

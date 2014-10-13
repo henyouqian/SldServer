@@ -39,6 +39,7 @@ type Match struct {
 	Id                      int64
 	PackId                  int64
 	OwnerId                 int64
+	OwnerName               string
 	SliderNum               int
 	Thumb                   string
 	Icon                    string
@@ -123,6 +124,10 @@ func makeMatchLeaderboardRdsKey(matchId int64) string {
 
 func makeHMatchRankKey(matchId int64) string {
 	return fmt.Sprintf("%s/%d", H_MATCH_RANK, matchId)
+}
+
+func makeSecretKey(secret string) string {
+	return fmt.Sprintf("%s/%s", "MATCH_SECRET", secret)
 }
 
 func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
@@ -230,6 +235,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_gold_coin", "goldNum < in.RewardCoupon")
 	}
 
+	player, err := getPlayerInfo(ssdbc, session.Userid)
+	lwutil.CheckError(err, "")
+
 	//new pack
 	newPack(ssdbc, &in.Pack, session.Userid)
 
@@ -259,6 +267,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		Id:                      matchId,
 		PackId:                  in.Pack.Id,
 		OwnerId:                 session.Userid,
+		OwnerName:               player.NickName,
 		SliderNum:               in.SliderNum,
 		Thumb:                   in.Pack.Thumb,
 		Title:                   in.Title,
@@ -1112,6 +1121,10 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 	play.Secret = lwutil.GenUUID()
 	play.SecretExpire = lwutil.GetRedisTimeUnix() + MATCH_TRY_EXPIRE_SECONDS
 
+	secretKey := makeSecretKey(play.Secret)
+	resp, err = ssdbc.Do("setx", secretKey, in.MatchId, MATCH_TRY_EXPIRE_SECONDS)
+	lwutil.CheckSsdbError(resp, err)
+
 	//update play
 	js, err := json.Marshal(play)
 	lwutil.CheckError(err, "")
@@ -1159,6 +1172,19 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
+	//check score
+	if in.Score > -2000 {
+		glog.Errorf("invalid score:%d, userId:%d, userName:%s", in.Score, session.Userid, session.Username)
+		return
+	}
+
+	//secret
+	secretKey := makeSecretKey(in.Secret)
+	resp, err := ssdbc.Do("get", secretKey)
+	lwutil.CheckSsdbError(resp, err)
+	in.MatchId, err = strconv.ParseInt(resp[1], 10, 64)
+	lwutil.CheckError(err, "")
+
 	//checksum
 	checksum := fmt.Sprintf("%s+%d9d7a", in.Secret, in.Score+8703)
 	hasher := sha1.New()
@@ -1171,7 +1197,7 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 	//check match play
 	now := lwutil.GetRedisTimeUnix()
 	matchPlayKey := makeMatchPlaySubkey(in.MatchId, session.Userid)
-	resp, err := ssdbc.Do("hget", H_MATCH_PLAY, matchPlayKey)
+	resp, err = ssdbc.Do("hget", H_MATCH_PLAY, matchPlayKey)
 	lwutil.CheckError(err, "")
 	if resp[0] != "ok" {
 		lwutil.SendError("err_not_found", "match play not found")
