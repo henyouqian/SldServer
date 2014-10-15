@@ -22,7 +22,8 @@ _testmain.go
 *.exe
 *.test
 .DS_Store
-redis/
+redis/log
+redis/dump.rdb
 match/match
 match/sld1.2.json
 ssdb/auth/log.txt
