@@ -151,6 +151,10 @@ func matchCron() {
 
 				//add to del array
 				delMatchIds = append(delMatchIds, matchId)
+
+				//del leaderboard redis
+				_, err = rc.Do("DEL", lbKey)
+				checkError(err)
 			} else {
 				looping = false
 				break

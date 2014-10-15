@@ -1374,7 +1374,6 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 		//get ranks from redis
 		values, err := redis.Values(rc.Do("ZREVRANGE", lbKey, in.Offset, in.Offset+in.Limit-1))
 		lwutil.CheckError(err, "")
-		glog.Infof("values: %+v", values)
 
 		num := len(values)
 		if num > 0 {
@@ -1431,14 +1430,8 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 	resp = resp[1:]
 
 	if num*2 != len(resp) {
-		glog.Infof("cmds: %+v", cmds)
-		glog.Infof("resp: %+v", resp)
-		glog.Infof("num: %d", num)
-		glog.Infof("ranks: %+v", ranks)
-
 		lwutil.SendError("err_data_missing", "")
 	}
-
 	var play MatchPlay
 	for i := range ranks {
 		err = json.Unmarshal([]byte(resp[i*2+1]), &play)
