@@ -1374,6 +1374,7 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 		//get ranks from redis
 		values, err := redis.Values(rc.Do("ZREVRANGE", lbKey, in.Offset, in.Offset+in.Limit-1))
 		lwutil.CheckError(err, "")
+		glog.Infof("values: %+v", values)
 
 		num := len(values)
 		if num > 0 {
