@@ -343,6 +343,10 @@ function Controller($scope, $http) {
 			"path":"admin",
 			"apis":[
 				{
+					"name": "getUserInfo",
+					"method": "POST",
+					"data": {"UserId": 0}
+				},{
 					"name": "addGoldCoin",
 					"method": "POST",
 					"data": {"AddGoldCoin": 100}

@@ -48,6 +48,30 @@ func initAdmin() {
 	}
 }
 
+func apiGetUserInfo(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	player, err := getPlayerInfo(ssdbc, in.UserId)
+	lwutil.CheckError(err, "")
+
+	//out
+	lwutil.WriteResponse(w, player)
+}
+
 func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -224,6 +248,7 @@ func apiSetCurrChallengeId(w http.ResponseWriter, r *http.Request) {
 }
 
 func regAdmin() {
+	http.Handle("/admin/getUserInfo", lwutil.ReqHandler(apiGetUserInfo))
 	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
 	http.Handle("/admin/addCoupon", lwutil.ReqHandler(apiAddCoupon))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
