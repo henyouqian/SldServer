@@ -38,6 +38,10 @@ func html5(w http.ResponseWriter, r *http.Request) {
 	//lwutil.WriteResponse(w, url)
 }
 
+func rootTextFile(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./"+r.URL.Path[1:])
+}
+
 func backupTask() {
 	defer handleError()
 
@@ -151,6 +155,8 @@ func main() {
 
 	http.HandleFunc("/www/", staticFile)
 	http.HandleFunc("/html5/", html5)
+	http.HandleFunc("/", rootTextFile)
+
 	regAuth()
 	regPack()
 	regCollection()
