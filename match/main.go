@@ -39,7 +39,7 @@ func html5(w http.ResponseWriter, r *http.Request) {
 }
 
 func rootTextFile(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./"+r.URL.Path[1:])
+	http.ServeFile(w, r, "./root/"+r.URL.Path[1:])
 }
 
 func backupTask() {
