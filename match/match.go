@@ -32,7 +32,8 @@ const (
 
 	FREE_TRY_NUM             = 3
 	MATCH_TRY_EXPIRE_SECONDS = 600
-	MATCH_TIME_SEC           = 60 * 60 * 24
+	// MATCH_TIME_SEC           = 60 * 60 * 24
+	MATCH_TIME_SEC = 60
 )
 
 type Match struct {
@@ -451,10 +452,9 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 	match.PromoImage = in.PromoImage
 	match.PromoUrl = in.PromoUrl
 
+	//save
 	js, err := json.Marshal(match)
 	lwutil.CheckError(err, "")
-
-	//save
 	resp, err := ssdbc.Do("hset", H_MATCH, in.MatchId, js)
 	lwutil.CheckSsdbError(resp, err)
 

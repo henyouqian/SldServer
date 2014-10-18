@@ -14,7 +14,6 @@ func _matchCronGlog() {
 }
 
 func initMatchCron() {
-
 	_cron.AddFunc("0 * * * * *", matchCron)
 	matchCron()
 }
@@ -155,6 +154,13 @@ func matchCron() {
 				//del leaderboard redis
 				_, err = rc.Do("DEL", lbKey)
 				checkError(err)
+
+				//save match
+				match.HasResult = true
+				js, err := json.Marshal(match)
+				lwutil.CheckError(err, "")
+				resp, err := ssdbc.Do("hset", H_MATCH, matchId, js)
+				lwutil.CheckSsdbError(resp, err)
 			} else {
 				looping = false
 				break
