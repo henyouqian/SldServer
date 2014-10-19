@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./ssdb"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
@@ -12,12 +13,13 @@ import (
 )
 
 const (
-	H_ECARD_TYPE      = "H_ECARD_TYPE" //subkey:typeKey value:ecardType
-	H_ECARD           = "H_ECARD"      //subkey:id, value:ecardJson
-	Q_ECARD           = "Q_ECARD"
-	H_ECARD_CODE      = "H_ECARD_CODE"      //subkey:provider/code value:ecardId
-	Z_PLAYER_ECARD    = "Z_PLAYER_ECARD"    //key:Z_PLAYER_ECARD/playerId, subkey:ecardId, score:time
-	Z_ECARD_PURCHASED = "Z_ECARD_PURCHASED" //subkey:ecardId, score:time
+	H_ECARD_TYPE          = "H_ECARD_TYPE" //subkey:typeKey value:ecardType
+	H_ECARD               = "H_ECARD"      //subkey:id, value:ecardJson
+	Q_ECARD               = "Q_ECARD"
+	H_ECARD_CODE          = "H_ECARD_CODE"      //subkey:provider/code value:ecardId
+	Z_PLAYER_ECARD        = "Z_PLAYER_ECARD"    //key:Z_PLAYER_ECARD/playerId, subkey:ecardId, score:time
+	Z_ECARD_PURCHASED     = "Z_ECARD_PURCHASED" //subkey:ecardId, score:time
+	KEY_ECARD_STORE_CLOSE = "KEY_ECARD_STORE_CLOSE"
 )
 
 type Provider struct {
@@ -27,7 +29,7 @@ type Provider struct {
 
 const (
 	AMAZON_HELP = `1.	点击“充值到我的账户”按钮进入充值页面。
-2.	该注册注册，该登录登录。
+2.	已有亚马逊账号的用户请直接登录，否则请先注册亚马逊账号后再登录。
 3.	按照提示输入充值码（可直接粘贴，充值码已自动拷贝至剪贴板）。
 4.	在结算过程中，礼品卡金额将被自动用于支付有效订单。
 5.	当您的礼品卡余额不足以支付订单时，您需要同时选择其它支付方式支付订单的差额部分。
@@ -38,6 +40,7 @@ var (
 	ECARD_PROVIDERS = map[string]Provider{
 		"amazon": Provider{"https://www.amazon.cn/gp/css/gc/payment/ref=gc_lp_cc", AMAZON_HELP},
 	}
+	_ecardStoreClose = false
 )
 
 type GameCoinPack struct {
@@ -65,6 +68,7 @@ type ECard struct {
 	OwnerId     int64
 	Title       string
 	Provider    string
+	RmbPrice    int
 }
 
 type OutEcard struct {
@@ -130,12 +134,35 @@ func makeEcardCodeSubkey(provider string, code string) string {
 	return fmt.Sprintf("%s/%s", provider, code)
 }
 
+func makeEcardTypeKey(provider string, rmbPrice int) string {
+	return fmt.Sprintf("%s/%d", provider, rmbPrice)
+}
+
 func makePlayerEcardZsetKey(playerId int64) string {
 	return fmt.Sprintf("%s/%d", Z_PLAYER_ECARD, playerId)
 }
 
 func glogStore() {
 	glog.Info("")
+}
+
+func init() {
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	resp, err := ssdbc.Do("get", KEY_ECARD_STORE_CLOSE)
+	lwutil.CheckError(err, "")
+	if resp[0] == ssdb.NOT_FOUND {
+		resp, err := ssdbc.Do("set", 0)
+		lwutil.CheckSsdbError(resp, err)
+	} else {
+		if resp[1] == "1" {
+			_ecardStoreClose = true
+		} else {
+			_ecardStoreClose = false
+		}
+	}
 }
 
 func apiListGameCoinPack(w http.ResponseWriter, r *http.Request) {
@@ -269,6 +296,9 @@ func apiAddEcardType(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 	in.Num = 0
 
+	//gen key
+	in.Key = makeEcardTypeKey(in.Provider, in.RmbPrice)
+
 	//check exist
 	resp, err := ssdbc.Do("hexists", H_ECARD_TYPE, in.Key)
 	lwutil.CheckSsdbError(resp, err)
@@ -285,6 +315,11 @@ func apiAddEcardType(w http.ResponseWriter, r *http.Request) {
 	//check price
 	if in.RmbPrice*10 != in.CouponPrice {
 		lwutil.SendError("err_price", "in.RmbPrice * 10 != in.CouponPrice")
+	}
+
+	//check thumb
+	if len(in.Thumb) == 0 {
+		lwutil.SendError("err_thumb", "need thumb")
 	}
 
 	//json
@@ -446,9 +481,15 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_code", "need coupon code")
 	}
 
+	in.TypeKey = makeEcardTypeKey(in.Provider, in.RmbPrice)
+
 	//check type key
 	resp, err := ssdbc.Do("hget", H_ECARD_TYPE, in.TypeKey)
-	lwutil.CheckSsdbError(resp, err)
+	lwutil.CheckError(err, "")
+	if resp[0] == ssdb.NOT_FOUND {
+		lwutil.SendError("err_type", "")
+	}
+
 	if len(resp) < 2 {
 		lwutil.SendError("err_not_exist", "key not exist")
 	}
@@ -576,7 +617,7 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", Z_ECARD_PURCHASED, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
-	//get item
+	//get ecard
 	resp, err = ssdbc.Do("hget", H_ECARD, itemId)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -606,6 +647,56 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+// func apiGetLastEcard(w http.ResponseWriter, r *http.Request) {
+// 	var err error
+// 	lwutil.CheckMathod(r, "POST")
+
+// 	//ssdb
+// 	ssdbc, err := ssdbPool.Get()
+// 	lwutil.CheckError(err, "")
+// 	defer ssdbc.Close()
+
+// 	//session
+// 	session, err := findSession(w, r, nil)
+// 	lwutil.CheckError(err, "err_auth")
+
+// 	//
+// 	checkAdmin(session)
+
+// 	//in
+// 	var in struct {
+// 		Provider string
+// 		Price    int
+// 	}
+// 	err = lwutil.DecodeRequestBody(r, &in)
+// 	lwutil.CheckError(err, "err_decode_body")
+
+// 	typeKey := makeEcardTypeKey(in.Provider, in.Price)
+
+// 	//get
+// 	qkey := makeEcardQueueKey(typeKey)
+// 	resp, err := ssdbc.Do("qback", qkey)
+// 	lwutil.CheckSsdbError(resp, err)
+// 	ecardId, err := strconv.ParseInt(resp[1], 10, 64)
+// 	lwutil.CheckError(err, "")
+
+// 	resp, err = ssdbc.Do("hget", H_ECARD, ecardId)
+// 	lwutil.CheckSsdbError(resp, err)
+
+// 	var ecard ECard
+// 	err = json.Unmarshal([]byte(resp[1]), &ecard)
+// 	lwutil.CheckError(err, "")
+
+// 	//out
+// 	out := struct {
+// 		Code string
+// 	}{
+// 		ecard.CouponCode,
+// 	}
+
+// 	lwutil.WriteResponse(w, out)
+// }
+
 func regStore() {
 	http.Handle("/store/listGameCoinPack", lwutil.ReqHandler(apiListGameCoinPack))
 	http.Handle("/store/listIapProductId", lwutil.ReqHandler(apiListIapProductId))
@@ -619,4 +710,7 @@ func regStore() {
 
 	http.Handle("/store/addEcard", lwutil.ReqHandler(apiAddEcard))
 	http.Handle("/store/buyEcard", lwutil.ReqHandler(apiBuyEcard))
+
+	http.Handle("/store/setEcardStoreClose", lwutil.ReqHandler(apiSetEcardStoreClose))
+	// http.Handle("/store/getLastEcard", lwutil.ReqHandler(apiGetLastEcard))
 }

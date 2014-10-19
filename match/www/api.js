@@ -387,7 +387,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "addEcardType",
 					"method": "POST",
-					"data": {"Key":"", "Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000, "Thumb":""}
+					"data": {"Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000, "Thumb":""}
 				},{
 					"name": "editEcardType",
 					"method": "POST",
@@ -403,7 +403,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "addEcard",
 					"method": "POST",
-					"data": {"TypeKey":"", "CouponCode":"", "ExpireDate":""}
+					"data": {"Provider":"amazon", "RmbPrice":0, "CouponCode":"", "ExpireDate":""}
 				},{
 					"name": "buyEcard",
 					"method": "POST",

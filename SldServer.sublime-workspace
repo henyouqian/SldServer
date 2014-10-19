@@ -4,6 +4,34 @@
 		"selected_items":
 		[
 			[
+				"add",
+				"addCoupon	rCoupon float32 ƒ"
+			],
+			[
+				"addcoup",
+				"addCouponCache	rCoupon float32 ƒ"
+			],
+			[
+				"getcou",
+				"getCouponCache	float32 ƒ"
+			],
+			[
+				"pa",
+				"ParseFloat	f float64, err error ƒ"
+			],
+			[
+				"cou",
+				"CouponCache	float32 ν"
+			],
+			[
+				"er",
+				"Error	 ƒ"
+			],
+			[
+				"err",
+				"Errorf	 ƒ"
+			],
+			[
 				"par",
 				"ParseInt	i int64, err error ƒ"
 			],
@@ -284,10 +312,6 @@
 				"Local	*time.Location ν"
 			],
 			[
-				"err",
-				"Errorln	 ƒ"
-			],
-			[
 				"p",
 				"Println	n int, err error ƒ"
 			],
@@ -415,7 +439,7 @@
 			"file": "match/main.go",
 			"settings":
 			{
-				"buffer_size": 3600,
+				"buffer_size": 3748,
 				"line_ending": "Unix"
 			}
 		},
@@ -423,7 +447,7 @@
 			"file": "match/conf.json",
 			"settings":
 			{
-				"buffer_size": 437,
+				"buffer_size": 433,
 				"line_ending": "Unix"
 			}
 		},
@@ -455,7 +479,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 11336,
+				"buffer_size": 13055,
 				"line_ending": "Unix"
 			}
 		},
@@ -463,7 +487,7 @@
 			"file": "match/www/api.js",
 			"settings":
 			{
-				"buffer_size": 14631,
+				"buffer_size": 14717,
 				"line_ending": "Unix"
 			}
 		},
@@ -471,7 +495,7 @@
 			"file": "match/match.go",
 			"settings":
 			{
-				"buffer_size": 36460,
+				"buffer_size": 35644,
 				"line_ending": "Unix"
 			}
 		},
@@ -479,23 +503,7 @@
 			"file": "match/matchCron.go",
 			"settings":
 			{
-				"buffer_size": 4298,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "match/admin.go",
-			"settings":
-			{
-				"buffer_size": 4750,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "match/conf.go",
-			"settings":
-			{
-				"buffer_size": 1309,
+				"buffer_size": 4760,
 				"line_ending": "Unix"
 			}
 		},
@@ -503,15 +511,15 @@
 			"file": "match/store.go",
 			"settings":
 			{
-				"buffer_size": 14987,
+				"buffer_size": 14845,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "match/util.go",
+			"file": "match/admin.go",
 			"settings":
 			{
-				"buffer_size": 1326,
+				"buffer_size": 5269,
 				"line_ending": "Unix"
 			}
 		}
@@ -556,18 +564,18 @@
 	},
 	"file_history":
 	[
-		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/event.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/scorekeeper.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/store.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/userPack.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/bak/pickSide.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/match.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/event.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/scorekeeper.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/store.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/userPack.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/bak/pickSide.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/match",
@@ -629,6 +637,78 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"glog",
+			"save",
+			"getMatch",
+			"matchId",
+			"match",
+			"HasResult",
+			"apiMatchGetRanks",
+			"staticFile",
+			"rc.Do",
+			"lbKey",
+			"makeMatchLeaderboardRdsKey",
+			"RDS_Z_MATCH_LEADERBOARD",
+			"zadd",
+			"zset",
+			"makeMatchLeaderboardRdsKey",
+			"RDS_Z_MATCH_LEADERBOARD",
+			"makeMatchLeaderboardRdsKey",
+			"playtimes",
+			"newPack",
+			"lbKey",
+			"makeMatchLeaderboardRdsKey",
+			"playEnd",
+			"zadd",
+			"makeMatchLeaderboardRdsKey",
+			"apiMatchPlayEnd",
+			"scoreUpdate",
+			"zadd",
+			"5",
+			"ZADD",
+			"lbKey",
+			"makeMatchLeaderboardRdsKey",
+			"lbKey",
+			"apiMatchPlayEnd",
+			"SECRET",
+			"MATCH_TRY_EXPIRE_SECONDS",
+			"MatchId",
+			"makeMatchLeaderboardRdsKey",
+			"listMine",
+			"Z_REWARD_MATCH",
+			"apiMatchMod",
+			"Z_REWARD_MATCH",
+			"apiMatchListRewardMatch",
+			"Z_REWARD_MATCH",
+			"ECARD_PROVIDERS",
+			"RechargeUrl",
+			"HelpText",
+			"apiListMyEcard",
+			"HttpCodeBadRequest",
+			"apiBuyEcard",
+			"PLAYER_COUPON",
+			"PLAYER_COUPON_CACHE",
+			"CouponCache",
+			"apiBuyEcard",
+			"buy",
+			"play",
+			"HGetStruct",
+			"getPlayerInfo",
+			"apiGetPlayerInfo",
+			"PLAYER_COUPON",
+			"PLAYER_COUPON_CACHE",
+			"ssdb.HGet",
+			"HGet",
+			"hget",
+			"apiGetPlayerInfo",
+			"RewardRecord",
+			"listMyReward",
+			"itune",
+			"充值",
+			"MATCH_TIME_HOUR",
+			"24",
+			"endtime",
+			"en d",
 			"apiMatchNew",
 			"makePlayerEcardZsetKey",
 			"in.StartId",
@@ -684,79 +764,7 @@
 			"PLAYER_GCREWARD_CACHE",
 			"zrscan",
 			"addGcRewardToCache",
-			"RewardRecord",
-			"H_PLAYER_REWARD",
-			"apiListMyCoupon",
-			"addGcRewardToCache",
-			"matchCron",
-			"scoreKeeperMain",
-			"scoreKeeper",
-			"checkssdberror",
-			"checkssdb",
-			"MATCH_EXTRA_COUPON_REWARD",
-			"CouponReward",
-			"ExtraReward",
-			"apiMatchListHot",
-			"hot",
-			"endtime",
-			"BeginTime",
-			"Z_HOT_MATCH",
-			"apiMatchListMyPlayed",
-			"apiMatchMod",
-			"apiMatchDel",
-			"listMyPlayed",
-			"MATCH_OWNER_REWARD_PROPORTION",
-			"OwnerRewardProportion",
-			"MATCH_OWNER_REWARD_PROPORTION",
-			"OwnerRewardProportion",
-			"MATCH_OWNER_REWARD_PROPORTION",
-			"play.Tries",
-			"playbegin",
-			"getdynam",
-			"ExtraCouponReward",
-			"ExtraReward",
-			"ExtraCouponReward",
-			"MatchExtra",
-			"ExtraReward",
-			"playbegin",
-			"MATCH_EXTRA_PLAY_TIMES",
-			"strconv.Atoi(resp",
-			"makeMyPlayedMatchKey",
-			"apiMatchListMine",
-			"begin",
-			"play",
-			"MATCH_LUCKY_REWARD_PROPORTION",
-			"rewardSum",
-			"PLAYER_GOLDCOIN_CACHE",
-			"Z_HOT_MATCH",
-			"match",
-			"apiMatchPlayEnd",
-			"Z_HOT_MATCH",
-			"MATCH_RANK_REWARD_PROPORTIONS",
-			"RankRewardProportions",
-			"getMatch",
-			"MATCH_EXTRA_COUPON_REWARD",
-			"calcMatchReward",
-			"MatchExtra",
-			"glog",
-			"resp",
-			"reward",
-			"playend",
-			"ssdbc, err := ssdbPool.Get()\n	checkError(err)",
-			"ssdbc, err",
-			"ssdbc",
-			"ssdbc =",
-			"ssdbc := ",
-			"z_open",
-			"keys",
-			"Z_OPEN_MATCH",
-			"eventPublishTask",
-			"_cron",
-			"EventPublishInfoes",
-			"eventPublish",
-			"eventPublish(",
-			"eventPublish",
-			"eventPublishTask"
+			"RewardRecord"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -795,15 +803,15 @@
 					"file": "match/main.go",
 					"settings":
 					{
-						"buffer_size": 3600,
+						"buffer_size": 3748,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3377,
-								3377
+								913,
+								913
 							]
 						],
 						"settings":
@@ -812,7 +820,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3086.0,
+						"translation.y": 664.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -822,15 +830,15 @@
 					"file": "match/conf.json",
 					"settings":
 					{
-						"buffer_size": 437,
+						"buffer_size": 433,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								436,
-								436
+								430,
+								430
 							]
 						],
 						"settings":
@@ -893,7 +901,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 102.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -910,8 +918,8 @@
 						"selection":
 						[
 							[
-								837,
-								845
+								2293,
+								2300
 							]
 						],
 						"settings":
@@ -930,15 +938,15 @@
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 11336,
+						"buffer_size": 13055,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8555,
-								8555
+								9744,
+								9766
 							]
 						],
 						"settings":
@@ -947,7 +955,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 7762.0,
+						"translation.y": 8814.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -957,15 +965,15 @@
 					"file": "match/www/api.js",
 					"settings":
 					{
-						"buffer_size": 14631,
+						"buffer_size": 14717,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3523,
-								3523
+								7089,
+								7089
 							]
 						],
 						"settings":
@@ -974,7 +982,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3264.0,
+						"translation.y": 6855.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -984,24 +992,24 @@
 					"file": "match/match.go",
 					"settings":
 					{
-						"buffer_size": 36460,
+						"buffer_size": 35644,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								35613,
-								35613
+								1481,
+								1481
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"syntax": "Packages/Go/Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 31281.0,
+						"translation.y": 357.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1011,123 +1019,15 @@
 					"file": "match/matchCron.go",
 					"settings":
 					{
-						"buffer_size": 4298,
+						"buffer_size": 4760,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1246,
-								1246
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1038.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "match/admin.go",
-					"settings":
-					{
-						"buffer_size": 4750,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1514,
-								1514
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1542.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "match/conf.go",
-					"settings":
-					{
-						"buffer_size": 1309,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								86,
-								86
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 19.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 11,
-					"file": "match/store.go",
-					"settings":
-					{
-						"buffer_size": 14987,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								12901,
-								12901
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 11412.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 12,
-					"file": "match/util.go",
-					"settings":
-					{
-						"buffer_size": 1326,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								39,
-								39
+								172,
+								172
 							]
 						],
 						"settings":
@@ -1137,6 +1037,60 @@
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/store.go",
+					"settings":
+					{
+						"buffer_size": 14845,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13869,
+								13869
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 7747.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/admin.go",
+					"settings":
+					{
+						"buffer_size": 5269,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4930,
+								4941
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Go/Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4865.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1221,6 +1175,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"match",
+				"SldServer/match/match.go"
+			],
 			[
 				"store",
 				"SldServer/match/store.go"
