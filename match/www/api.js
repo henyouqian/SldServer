@@ -408,7 +408,12 @@ function Controller($scope, $http) {
 					"name": "buyEcard",
 					"method": "POST",
 					"data": {"TypeKey":""}
+				},{
+					"name": "setEcardStoreClose",
+					"method": "POST",
+					"data": {"Close":"true or false"}
 				}
+
 			]
 		},{
 			"tab":"etc",

@@ -58,6 +58,7 @@ type Match struct {
 	PromoUrl                string
 	PromoImage              string
 	Private                 bool
+	Hide                    bool
 }
 
 type MatchExtra struct {
@@ -285,6 +286,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		PromoUrl:                in.PromoUrl,
 		PromoImage:              in.PromoImage,
 		Private:                 in.Private,
+		Hide:                    false,
 	}
 
 	//json
@@ -429,21 +431,23 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 			resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
 			lwutil.CheckSsdbError(resp, err)
 		} else {
-			//add to Z_MATCH
-			resp, err := ssdbc.Do("zset", Z_MATCH, match.Id, match.BeginTime)
-			lwutil.CheckSsdbError(resp, err)
+			if !match.Hide {
+				//add to Z_MATCH
+				resp, err := ssdbc.Do("zset", Z_MATCH, match.Id, match.BeginTime)
+				lwutil.CheckSsdbError(resp, err)
 
-			//Z_HOT_MATCH
-			rewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
-			resp, err = ssdbc.Do("hget", H_MATCH_EXTRA, rewardCouponKey)
-			extraCoupon := 0
-			if resp[0] == "ok" {
-				extraCoupon, err = strconv.Atoi(resp[1])
-				lwutil.CheckError(err, "")
+				//Z_HOT_MATCH
+				rewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
+				resp, err = ssdbc.Do("hget", H_MATCH_EXTRA, rewardCouponKey)
+				extraCoupon := 0
+				if resp[0] == "ok" {
+					extraCoupon, err = strconv.Atoi(resp[1])
+					lwutil.CheckError(err, "")
+				}
+
+				resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.RewardCoupon+extraCoupon)
+				lwutil.CheckSsdbError(resp, err)
 			}
-
-			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.RewardCoupon+extraCoupon)
-			lwutil.CheckSsdbError(resp, err)
 		}
 	}
 
@@ -462,6 +466,39 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, match)
 }
 
+func apiMatchGet(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+	pack, _ := getPack(ssdbc, match.PackId)
+
+	//out
+	out := struct {
+		*Match
+		Pack *Pack
+	}{
+		match,
+		pack,
+	}
+
+	//out
+	lwutil.WriteResponse(w, out)
+}
+
 func apiMatchList(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -471,9 +508,9 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
-	//session
-	_, err = findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
+	// //session
+	// _, err = findSession(w, r, nil)
+	// lwutil.CheckError(err, "err_auth")
 
 	//in
 	var in struct {
@@ -1456,10 +1493,90 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiMatchReport(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//checkMatchExist
+	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
+	lwutil.CheckError(err, "")
+	if !ssdbCheckExists(resp) {
+		lwutil.SendError("err_match_id", "Can't find match")
+	}
+
+	//
+	resp, err = ssdbc.Do("zset", Z_REPORT, in.MatchId, lwutil.GetRedisTimeUnix())
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, &in)
+}
+
+func apiMatchHide(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+
+	//hide
+	if !match.Hide {
+		match.Hide = true
+
+		resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
+		lwutil.CheckSsdbError(resp, err)
+
+		resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
+		lwutil.CheckSsdbError(resp, err)
+	}
+
+	//save
+	js, err := json.Marshal(match)
+	lwutil.CheckError(err, "")
+	resp, err := ssdbc.Do("hset", H_MATCH, in.MatchId, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, match)
+
+}
+
 func regMatch() {
 	http.Handle("/match/new", lwutil.ReqHandler(apiMatchNew))
 	http.Handle("/match/del", lwutil.ReqHandler(apiMatchDel))
 	http.Handle("/match/mod", lwutil.ReqHandler(apiMatchMod))
+	http.Handle("/match/get", lwutil.ReqHandler(apiMatchGet))
 
 	http.Handle("/match/list", lwutil.ReqHandler(apiMatchList))
 	http.Handle("/match/listMine", lwutil.ReqHandler(apiMatchListMine))
@@ -1471,4 +1588,7 @@ func regMatch() {
 
 	http.Handle("/match/getDynamicData", lwutil.ReqHandler(apiMatchGetDynamicData))
 	http.Handle("/match/getRanks", lwutil.ReqHandler(apiMatchGetRanks))
+
+	http.Handle("/match/report", lwutil.ReqHandler(apiMatchReport))
+	http.Handle("/match/hide", lwutil.ReqHandler(apiMatchHide))
 }

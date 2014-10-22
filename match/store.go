@@ -146,7 +146,7 @@ func glogStore() {
 	glog.Info("")
 }
 
-func init() {
+func initStore() {
 	ssdbc, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
@@ -154,7 +154,7 @@ func init() {
 	resp, err := ssdbc.Do("get", KEY_ECARD_STORE_CLOSE)
 	lwutil.CheckError(err, "")
 	if resp[0] == ssdb.NOT_FOUND {
-		resp, err := ssdbc.Do("set", 0)
+		resp, err := ssdbc.Do("set", KEY_ECARD_STORE_CLOSE, 0)
 		lwutil.CheckSsdbError(resp, err)
 	} else {
 		if resp[1] == "1" {
@@ -425,6 +425,11 @@ func apiDelEcardType(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiListEcardType(w http.ResponseWriter, r *http.Request) {
+	if _ecardStoreClose {
+		w.Write([]byte("[]"))
+		return
+	}
+
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -487,7 +492,7 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("hget", H_ECARD_TYPE, in.TypeKey)
 	lwutil.CheckError(err, "")
 	if resp[0] == ssdb.NOT_FOUND {
-		lwutil.SendError("err_type", "")
+		lwutil.SendError("err_type", "type not found")
 	}
 
 	if len(resp) < 2 {
@@ -545,6 +550,10 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
+	if _ecardStoreClose {
+		lwutil.SendError("err_store_close", "暂停兑换，请稍候再来")
+	}
+
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -645,6 +654,37 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 		"PlayerCoupon": playerCoupon - float32(cardType.CouponPrice),
 	}
 	lwutil.WriteResponse(w, out)
+}
+
+func apiSetEcardStoreClose(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		Close bool
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	_ecardStoreClose = in.Close
+	resp, err := ssdbc.Do("set", KEY_ECARD_STORE_CLOSE, _ecardStoreClose)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
 }
 
 // func apiGetLastEcard(w http.ResponseWriter, r *http.Request) {

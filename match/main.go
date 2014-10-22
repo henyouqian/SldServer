@@ -33,14 +33,13 @@ func staticFile(w http.ResponseWriter, r *http.Request) {
 func html5(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%s%s", "../../delight/html5/slider/", r.URL.Path[7:])
 	glog.Info(url)
-	glog.Info(r.URL.Path[1:])
+	// glog.Info(r.URL.Path[1:])
 	http.ServeFile(w, r, url)
-	//lwutil.WriteResponse(w, url)
 }
 
-func rootTextFile(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./root/"+r.URL.Path[1:])
-}
+// func rootTextFile(w http.ResponseWriter, r *http.Request) {
+// 	http.ServeFile(w, r, "./root/"+r.URL.Path[1:])
+// }
 
 func backupTask() {
 	defer handleError()
@@ -143,6 +142,7 @@ func main() {
 	// initPickSide()
 	initAdmin()
 	initMatchCron()
+	initStore()
 
 	u, _ := user.Current()
 
@@ -155,7 +155,7 @@ func main() {
 
 	http.HandleFunc("/www/", staticFile)
 	http.HandleFunc("/html5/", html5)
-	http.HandleFunc("/", rootTextFile)
+	// http.HandleFunc("/", rootTextFile)
 
 	regAuth()
 	regPack()
