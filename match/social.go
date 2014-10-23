@@ -1,12 +1,14 @@
 package main
 
 import (
+	"./ssdb"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
 	"sort"
+	"strconv"
 )
 
 const (
@@ -164,11 +166,11 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, subkey, js)
 	lwutil.CheckSsdbError(resp, err)
 
-	//add to zset
-	zkey := makeZSocialPackKey(session.Userid)
-	score := GenSerial(ssdbc, SERIAL_SOCIAL_PACK)
-	resp, err = ssdbc.Do("zset", zkey, subkey, score)
-	lwutil.CheckSsdbError(resp, err)
+	// //add to zset
+	// zkey := makeZSocialPackKey(session.Userid)
+	// score := GenSerial(ssdbc, SERIAL_SOCIAL_PACK)
+	// resp, err = ssdbc.Do("zset", zkey, subkey, score)
+	// lwutil.CheckSsdbError(resp, err)
 
 	//out
 	out.Key = subkey
@@ -191,12 +193,41 @@ func apiSocialGetPack(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
-	lwutil.CheckSsdbError(resp, err)
-
 	socialPack := SocialPack{}
-	err = json.Unmarshal([]byte(resp[1]), &socialPack)
-	lwutil.CheckError(err, "")
+
+	id, err := strconv.ParseInt(in.Key, 10, 64)
+	if err != nil {
+		resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
+		lwutil.CheckSsdbError(resp, err)
+
+		err = json.Unmarshal([]byte(resp[1]), &socialPack)
+		lwutil.CheckError(err, "")
+	} else {
+		resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, id)
+		lwutil.CheckError(err, "")
+		if resp[0] == ssdb.NOT_FOUND {
+			match := getMatch(ssdbc, id)
+			ranks := []SocialRank{}
+
+			socialPack = SocialPack{
+				UserId:    match.OwnerId,
+				PackId:    match.PackId,
+				SliderNum: match.SliderNum,
+				PlayTimes: 0,
+				IsOwner:   true,
+				Ranks:     ranks,
+			}
+
+			//save
+			js, err := json.Marshal(socialPack)
+			lwutil.CheckError(err, "")
+			resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, id, js)
+			lwutil.CheckSsdbError(resp, err)
+		} else {
+			err = json.Unmarshal([]byte(resp[1]), &socialPack)
+			lwutil.CheckError(err, "")
+		}
+	}
 
 	//get pack
 	pack, err := getPack(ssdbc, socialPack.PackId)
