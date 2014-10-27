@@ -522,6 +522,24 @@
 				"buffer_size": 236,
 				"line_ending": "Unix"
 			}
+		},
+		{
+			"file": "match/player.go",
+			"settings":
+			{
+				"buffer_size": 13055,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "Searching 497 files for \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/main.go:\n   23  \n   24  func init() {\n   25: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   26  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   27  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go:\n   47  \n   48  func init() {\n   49: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   50  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   51  \n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go:\n   73  \n   74  func init() {\n   75: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   76  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   77  \n\n3 matches across 3 files\n",
+			"settings":
+			{
+				"buffer_size": 864,
+				"line_ending": "Unix",
+				"name": "Find Results",
+				"scratch": true
+			}
 		}
 	],
 	"build_system": "",
@@ -564,6 +582,7 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
@@ -573,7 +592,6 @@
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Desktop/aaaaaa.html",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/match.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/event.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/scorekeeper.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
@@ -627,7 +645,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 99.0,
 		"where_history":
 		[
 			""
@@ -638,6 +656,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy",
+			"rs",
+			"USER_UPLOAD_BUCKET",
+			"apiGetUptoken",
 			"Q_ECARD",
 			"buy",
 			"site",
@@ -761,11 +783,7 @@
 			"PLAYER_COUPON",
 			"PLAYER_COUPON_CACHE",
 			"ssdb.HGet",
-			"HGet",
-			"hget",
-			"apiGetPlayerInfo",
-			"RewardRecord",
-			"listMyReward"
+			"HGet"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -796,7 +814,7 @@
 	"groups":
 	[
 		{
-			"selected": 8,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -821,7 +839,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 13752.0,
+						"translation.y": 13713.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1027,8 +1045,8 @@
 						"selection":
 						[
 							[
-								63,
-								39
+								744,
+								744
 							]
 						],
 						"settings":
@@ -1037,7 +1055,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 263.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1062,6 +1080,84 @@
 						{
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/player.go",
+					"settings":
+					{
+						"buffer_size": 13055,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8533,
+								8533
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2865.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"settings":
+					{
+						"buffer_size": 864,
+						"regions":
+						{
+							"match":
+							{
+								"flags": 112,
+								"regions":
+								[
+									[
+										191,
+										231
+									],
+									[
+										451,
+										491
+									],
+									[
+										714,
+										754
+									]
+								],
+								"scope": ""
+							}
+						},
+						"selection":
+						[
+							[
+								185,
+								185
+							]
+						],
+						"settings":
+						{
+							"detect_indentation": false,
+							"output_tag": 1,
+							"result_base_dir": "",
+							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
+							"result_line_regex": "^ +([0-9]+):",
+							"scroll_past_end": true,
+							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -1150,6 +1246,18 @@
 		"selected_items":
 		[
 			[
+				"auth",
+				"SldServer/match/auth.go"
+			],
+			[
+				"conf",
+				"SldServer/match/conf.go"
+			],
+			[
+				"player",
+				"SldServer/match/player.go"
+			],
+			[
 				"main",
 				"SldServer/match/main.go"
 			],
@@ -1186,16 +1294,8 @@
 				"SldServer/match/social.go"
 			],
 			[
-				"player",
-				"SldServer/match/player.go"
-			],
-			[
 				"sto",
 				"SldServer/match/store.go"
-			],
-			[
-				"conf",
-				"SldServer/match/conf.go"
 			],
 			[
 				"match.go",

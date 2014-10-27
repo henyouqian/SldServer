@@ -302,9 +302,9 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 
 	//check type
 	snsTypes := map[string]bool{
-		"weibo":   true,
-		"tencent": true,
-		"douban":  true,
+		"weibo":  true,
+		"qzone":  true,
+		"douban": true,
 	}
 
 	if snsTypes[in.Type] == false {
