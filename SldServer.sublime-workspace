@@ -447,7 +447,7 @@
 			"file": "match/auth.go",
 			"settings":
 			{
-				"buffer_size": 16291,
+				"buffer_size": 16288,
 				"line_ending": "Unix"
 			}
 		},
@@ -511,15 +511,7 @@
 			"file": "match/main.go",
 			"settings":
 			{
-				"buffer_size": 3744,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "match/statistics.go",
-			"settings":
-			{
-				"buffer_size": 236,
+				"buffer_size": 3758,
 				"line_ending": "Unix"
 			}
 		},
@@ -532,13 +524,11 @@
 			}
 		},
 		{
-			"contents": "Searching 497 files for \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/main.go:\n   23  \n   24  func init() {\n   25: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   26  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   27  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go:\n   47  \n   48  func init() {\n   49: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   50  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   51  \n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go:\n   73  \n   74  func init() {\n   75: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   76  	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   77  \n\n3 matches across 3 files\n",
+			"file": "match/monitor.go",
 			"settings":
 			{
-				"buffer_size": 864,
-				"line_ending": "Unix",
-				"name": "Find Results",
-				"scratch": true
+				"buffer_size": 624,
+				"line_ending": "Unix"
 			}
 		}
 	],
@@ -582,6 +572,7 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/statistics.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
@@ -645,7 +636,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 99.0,
+		"height": 0.0,
 		"where_history":
 		[
 			""
@@ -656,6 +647,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"apiAuthLoginSns",
+			"apiAuthLoginInfo",
 			"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy",
 			"rs",
 			"USER_UPLOAD_BUCKET",
@@ -781,9 +774,7 @@
 			"getPlayerInfo",
 			"apiGetPlayerInfo",
 			"PLAYER_COUPON",
-			"PLAYER_COUPON_CACHE",
-			"ssdb.HGet",
-			"HGet"
+			"PLAYER_COUPON_CACHE"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -814,7 +805,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 10,
 			"sheets":
 			[
 				{
@@ -822,15 +813,15 @@
 					"file": "match/auth.go",
 					"settings":
 					{
-						"buffer_size": 16291,
+						"buffer_size": 16288,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								15645,
-								15655
+								7185,
+								7185
 							]
 						],
 						"settings":
@@ -839,7 +830,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 13713.0,
+						"translation.y": 5855.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -937,8 +928,8 @@
 						"selection":
 						[
 							[
-								32,
-								24
+								224,
+								224
 							]
 						],
 						"settings":
@@ -1018,8 +1009,8 @@
 						"selection":
 						[
 							[
-								4010,
-								4010
+								3773,
+								4093
 							]
 						],
 						"settings":
@@ -1028,7 +1019,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3836.0,
+						"translation.y": 3698.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1038,15 +1029,15 @@
 					"file": "match/main.go",
 					"settings":
 					{
-						"buffer_size": 3744,
+						"buffer_size": 3758,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								744,
-								744
+								3435,
+								3435
 							]
 						],
 						"settings":
@@ -1055,40 +1046,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 263.0,
+						"translation.y": 3205.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 9,
-					"file": "match/statistics.go",
-					"settings":
-					{
-						"buffer_size": 236,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								235,
-								235
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 10,
 					"file": "match/player.go",
 					"settings":
 					{
@@ -1115,52 +1079,28 @@
 					"type": "text"
 				},
 				{
-					"buffer": 11,
+					"buffer": 10,
+					"file": "match/monitor.go",
 					"settings":
 					{
-						"buffer_size": 864,
+						"buffer_size": 624,
 						"regions":
 						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										191,
-										231
-									],
-									[
-										451,
-										491
-									],
-									[
-										714,
-										754
-									]
-								],
-								"scope": ""
-							}
 						},
 						"selection":
 						[
 							[
-								185,
-								185
+								420,
+								420
 							]
 						],
 						"settings":
 						{
-							"detect_indentation": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 225.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1246,6 +1186,10 @@
 		"selected_items":
 		[
 			[
+				"main",
+				"SldServer/match/main.go"
+			],
+			[
 				"auth",
 				"SldServer/match/auth.go"
 			],
@@ -1256,10 +1200,6 @@
 			[
 				"player",
 				"SldServer/match/player.go"
-			],
-			[
-				"main",
-				"SldServer/match/main.go"
 			],
 			[
 				"soci",

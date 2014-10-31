@@ -35,8 +35,9 @@ func initAdmin() {
 	//load adsConf
 	resp, err := ssdbc.Do("get", ADS_CONF_KEY)
 	checkError(err)
+	glog.Info(resp)
 
-	if len(resp) < 2 {
+	if resp[0] == "NOT_FOUND" {
 		//save
 		js, err := json.Marshal(_adsConf)
 		lwutil.CheckError(err, "")
