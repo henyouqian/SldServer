@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./ssdb"
 	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
@@ -37,8 +38,12 @@ func initAdmin() {
 	checkError(err)
 	glog.Info(resp)
 
-	if resp[0] == "NOT_FOUND" {
+	if resp[0] == ssdb.NOT_FOUND {
 		//save
+		_adsConf.ShowPercent = 1
+		_adsConf.DelayPercent = 0
+		_adsConf.DelaySec = 0.5
+
 		js, err := json.Marshal(_adsConf)
 		lwutil.CheckError(err, "")
 		resp, err := ssdbc.Do("set", ADS_CONF_KEY, js)
