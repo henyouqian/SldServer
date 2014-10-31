@@ -18,6 +18,7 @@ sudo make install
 
 - 安装git
 sudo apt-get install git
+git config --global credential.helper 'cache --timeout 36000'
 
 - 安装tmux
 sudo apt-get install tmux
