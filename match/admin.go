@@ -36,7 +36,6 @@ func initAdmin() {
 	//load adsConf
 	resp, err := ssdbc.Do("get", ADS_CONF_KEY)
 	checkError(err)
-	glog.Info(resp)
 
 	if resp[0] == ssdb.NOT_FOUND {
 		//save

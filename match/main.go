@@ -22,8 +22,8 @@ var (
 )
 
 func init() {
-	qiniuconf.ACCESS_KEY = "zkDlO9eqB8oyXqv7CLhy5qmzjkirdwZZjpNjCkbm"
-	qiniuconf.SECRET_KEY = "E-ptuzmtK5gzuMmeLttndkNxqIhnhJFfXOGo7HD-"
+	qiniuconf.ACCESS_KEY = QINIU_KEY
+	qiniuconf.SECRET_KEY = QINIU_SEC
 }
 
 func staticFile(w http.ResponseWriter, r *http.Request) {

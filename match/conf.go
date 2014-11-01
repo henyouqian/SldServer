@@ -12,6 +12,8 @@ const (
 	// APP_STORE_URL = "https://itunes.apple.com/cn/app/pin-pin-pin-pin-pin/id904649492?l=zh&ls=1&mt=8"
 	APP_STORE_URL = "https://itunes.apple.com/cn/app/man-pin-de/id923531990?l=zh&ls=1&mt=8"
 	BACKUP_BUCKET = "pintubackup"
+	QINIU_KEY     = "zkDlO9eqB8oyXqv7CLhy5qmzjkirdwZZjpNjCkbm"
+	QINIU_SEC     = "E-ptuzmtK5gzuMmeLttndkNxqIhnhJFfXOGo7HD-"
 )
 
 type Conf struct {
