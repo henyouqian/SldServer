@@ -33,7 +33,7 @@
 
     if (window["WebSocket"]) {
 
-        conn = new WebSocket("ws://"{{$}}"/ws");
+        conn = new WebSocket("ws://{{$}}/ws");
         conn.onclose = function(evt) {
             appendLog($("<div><b>Connection closed.</b></div>"))
         }
@@ -87,7 +87,7 @@ body {
 <div id="log"></div>
 <form id="form">
     <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64"/>
+    <input type="text" id="msg" size="640"/>
 </form>
 </body>
 </html>

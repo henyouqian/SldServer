@@ -6,6 +6,7 @@ package main
 
 import (
 	"flag"
+	"github.com/golang/glog"
 	"log"
 	"net/http"
 	"text/template"
@@ -24,12 +25,14 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// homeTempl.Execute(w, r.Host)
-	http.ServeFile(w, r, "home.html")
+	homeTempl.Execute(w, r.Host)
+	// http.ServeFile(w, r, "home.html")
 }
 
 func main() {
 	flag.Parse()
+	glog.Info("Running----------")
+	regBattle()
 	go h.run()
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", serveWs)

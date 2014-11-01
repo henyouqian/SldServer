@@ -5,10 +5,24 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/golang/glog"
+	"github.com/gorilla/websocket"
+)
+
+func _connlog() {
+	glog.Info("")
+}
+
+type MsgHandler func(conn *Connection)
+
+var (
+	_msgHandlerMap map[string]MsgHandler
 )
 
 const (
@@ -26,21 +40,35 @@ const (
 )
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+	ReadBufferSize:  128,
+	WriteBufferSize: 128,
 }
 
 // connection is an middleman between the websocket connection and the hub.
-type connection struct {
+type Connection struct {
 	// The websocket connection.
 	ws *websocket.Conn
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	foe    *Connection
+	battle *Battle
+
+	//player info
+	nickName string
+}
+
+func init() {
+	_msgHandlerMap = make(map[string]MsgHandler)
+}
+
+func regHandler(msgType string, handler MsgHandler) {
+	_msgHandlerMap[msgType] = handler
 }
 
 // readPump pumps messages from the websocket connection to the hub.
-func (c *connection) readPump() {
+func (c *Connection) readPump() {
 	defer func() {
 		h.unregister <- c
 		c.ws.Close()
@@ -53,18 +81,44 @@ func (c *connection) readPump() {
 		if err != nil {
 			break
 		}
-		h.broadcast <- message
+		msg := struct {
+			Type string
+		}{}
+
+		err = json.Unmarshal(message, &msg)
+		if err != nil || msg.Type == "" {
+			break
+		}
+
+		if msg.Type == "pair" {
+			if h.pair(c, message) != nil {
+				break
+			}
+		} else {
+			handler, e := _msgHandlerMap[msg.Type]
+			if e {
+				handler(c)
+			} else {
+				break
+			}
+		}
+
+		// if c.foe != nil {
+		// 	c.foe.send <- message
+		// }
+
+		// h.broadcast <- message
 	}
 }
 
 // write writes a message with the given message type and payload.
-func (c *connection) write(mt int, payload []byte) error {
+func (c *Connection) write(mt int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
 }
 
 // writePump pumps messages from the hub to the websocket connection.
-func (c *connection) writePump() {
+func (c *Connection) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -88,6 +142,16 @@ func (c *connection) writePump() {
 	}
 }
 
+func (c *Connection) sendOk(str string) {
+	msg := fmt.Sprintf(`{"Type":"ok", "String":%s}`, str)
+	c.send <- []byte(msg)
+}
+
+func (c *Connection) sendErr(str string) {
+	msg := fmt.Sprintf(`{"Type":"err", "String":%s}`, str)
+	c.send <- []byte(msg)
+}
+
 // serverWs handles websocket requests from the peer.
 func serveWs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -99,7 +163,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	c := &connection{send: make(chan []byte, 256), ws: ws}
+	c := &Connection{send: make(chan []byte, 256), ws: ws}
 	h.register <- c
 	go c.writePump()
 	c.readPump()
