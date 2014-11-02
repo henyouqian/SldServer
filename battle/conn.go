@@ -19,7 +19,7 @@ func _connlog() {
 	glog.Info("")
 }
 
-type MsgHandler func(conn *Connection)
+type MsgHandler func(conn *Connection, msg []byte)
 
 var (
 	_msgHandlerMap map[string]MsgHandler
@@ -97,7 +97,7 @@ func (c *Connection) readPump() {
 		} else {
 			handler, e := _msgHandlerMap[msg.Type]
 			if e {
-				handler(c)
+				handler(c, message)
 			} else {
 				break
 			}
@@ -142,14 +142,19 @@ func (c *Connection) writePump() {
 	}
 }
 
-func (c *Connection) sendOk(str string) {
-	msg := fmt.Sprintf(`{"Type":"ok", "String":%s}`, str)
-	c.send <- []byte(msg)
-}
-
 func (c *Connection) sendErr(str string) {
 	msg := fmt.Sprintf(`{"Type":"err", "String":%s}`, str)
 	c.send <- []byte(msg)
+}
+
+func (c *Connection) sendMsg(msg interface{}) {
+	js, _ := json.Marshal(msg)
+	c.send <- js
+}
+
+func (c *Connection) sendType(tp string) {
+	js := fmt.Sprintf(`{"Type":"%s"}`, tp)
+	c.send <- []byte(js)
 }
 
 // serverWs handles websocket requests from the peer.

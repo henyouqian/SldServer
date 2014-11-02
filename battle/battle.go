@@ -5,7 +5,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/golang/glog"
 )
 
@@ -32,31 +32,64 @@ func makeBattle() *Battle {
 	return battle
 }
 
-func battleReady(conn *Connection) {
+func battleReady(conn *Connection, msg []byte) {
 	battle := conn.battle
 	if battle.state != DOWNLOADING {
 		conn.sendErr("error state")
 		return
 	}
 	if battle.readyConn == nil {
-		conn.battle.readyConn = conn
-		conn.sendOk("battle ready")
-	} else if conn.battle.readyConn == conn.foe {
-		conn.battle.state = MATCHING
-		msg := []byte(`{"Type":"battleStart"}`)
+		battle.readyConn = conn
+		conn.sendType("ready")
+	} else if battle.readyConn == conn.foe {
+		battle.state = MATCHING
+		msg := []byte(`{"Type":"start"}`)
 		conn.send <- msg
 		conn.foe.send <- msg
 	}
 }
 
-func test(conn *Connection) {
-	str := fmt.Sprintf("%s: test send", conn.nickName)
-	conn.send <- []byte(str)
-	str = fmt.Sprintf("%s: test recv", conn.foe.nickName)
-	conn.foe.send <- []byte(str)
+func battleProgress(conn *Connection, msg []byte) {
+	if conn.battle == nil {
+		conn.sendErr("need pair")
+		return
+	}
+	if conn.battle.state != MATCHING {
+		conn.sendErr("battle state error")
+		return
+	}
+
+	var in struct {
+		CompleteNum int
+	}
+
+	err := json.Unmarshal(msg, &in)
+	if err != nil {
+		conn.sendErr("json error")
+		return
+	}
+
+	if in.CompleteNum <= 0 {
+		conn.sendErr("in.CompleteNum")
+		return
+	}
+
+	conn.foe.send <- msg
+}
+
+func battleEnd(conn *Connection, msg []byte) {
+	if conn.battle == nil {
+		conn.sendErr("need pair")
+		return
+	}
+	if conn.battle.state != MATCHING {
+		conn.sendErr("battle state error")
+		return
+	}
 }
 
 func regBattle() {
-	regHandler("test", MsgHandler(test))
-	regHandler("battleReady", MsgHandler(battleReady))
+	regHandler("ready", MsgHandler(battleReady))
+	regHandler("progress", MsgHandler(battleProgress))
+	regHandler("end", MsgHandler(battleEnd))
 }

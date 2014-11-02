@@ -45,10 +45,10 @@ func (h *Hub) run() {
 		select {
 		case c := <-h.register:
 			h.connections[c] = true
-			c.send <- []byte("register")
+			c.sendType("connected")
 		case c := <-h.unregister:
 			if c.foe != nil {
-				c.foe.send <- []byte("foe disconnect")
+				c.foe.sendType("foeDisconnect")
 				c.foe.foe = nil
 			}
 			if _, ok := h.connections[c]; ok {
@@ -77,8 +77,6 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 		return nil
 	}
 
-	glog.Info("pair")
-
 	in := struct {
 		NickName string
 	}{}
@@ -93,16 +91,27 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 	if h.pendingConn != nil {
 		c.foe = h.pendingConn
 		h.pendingConn.foe = c
-		c.send <- []byte("paired")
-		c.foe.send <- []byte("paired")
 		h.pendingConn = nil
 
 		battle := makeBattle()
 		c.battle = battle
 		c.foe.battle = battle
+
+		//
+		out := struct {
+			Type    string
+			FoeName string
+		}{
+			"paired",
+			c.foe.nickName,
+		}
+		c.sendMsg(out)
+
+		out.FoeName = c.nickName
+		c.foe.sendMsg(out)
 	} else {
 		h.pendingConn = c
-		c.send <- []byte("pairing...")
+		c.sendType("pairing")
 	}
 
 	return nil
