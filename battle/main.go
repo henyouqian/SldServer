@@ -6,10 +6,17 @@ package main
 
 import (
 	"flag"
-	"github.com/golang/glog"
 	"log"
 	"net/http"
 	"text/template"
+
+	"github.com/golang/glog"
+	"github.com/henyouqian/ssdbgo"
+)
+
+const (
+	SSDB_AUTH_PORT  = 9875
+	SSDB_MATCH_PORT = 9876
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
@@ -32,6 +39,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 	glog.Info("Running----------")
+	initSsdb()
 	regBattle()
 	go h.run()
 	http.HandleFunc("/", serveHome)
@@ -40,4 +48,14 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+}
+
+var (
+	ssdbMatchPool *ssdbgo.Pool
+	ssdbAuthPool  *ssdbgo.Pool
+)
+
+func initSsdb() {
+	ssdbAuthPool = ssdbgo.NewPool("localhost", SSDB_AUTH_PORT, 10, 60)
+	ssdbMatchPool = ssdbgo.NewPool("localhost", SSDB_MATCH_PORT, 10, 60)
 }

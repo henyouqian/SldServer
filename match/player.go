@@ -29,9 +29,9 @@ type PlayerInfo struct {
 	CustomAvatarKey string
 	GravatarKey     string
 	GoldCoin        int
-	Coupon          float32
-	CouponCache     float32
-	TotalCoupon     float32
+	Coupon          float32 //*100 in ssdb
+	CouponCache     float32 //*100 in ssdb
+	TotalCoupon     float32 //*100 in ssdb
 	Secret          string
 	CurrChallengeId int
 	BetMax          int

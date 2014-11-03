@@ -23,12 +23,14 @@ const (
 type Battle struct {
 	state     BattleState
 	readyConn *Connection
+	results   map[int64]int64 //[userId]msec
 }
 
 func makeBattle() *Battle {
 	battle := new(Battle)
 	battle.state = DOWNLOADING
 	battle.readyConn = nil
+	battle.results = make(map[int64]int64)
 	return battle
 }
 

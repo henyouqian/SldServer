@@ -6,12 +6,32 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/golang/glog"
+	"github.com/henyouqian/ssdbgo"
 )
 
 func _hublog() {
 	glog.Info("")
+}
+
+const (
+	H_SESSION     = "H_SESSION"     //key:token, value:session
+	H_PLAYER_INFO = "H_PLAYER_INFO" //key:H_PLAYER_INFO/<userId> subkey:property
+)
+
+type Session struct {
+	Userid int64
+}
+
+type PlayerInfo struct {
+	UserId          int64
+	NickName        string
+	TeamName        string
+	Gender          int
+	CustomAvatarKey string
+	GravatarKey     string
 }
 
 // hub maintains the set of active connections and broadcasts messages to the
@@ -73,22 +93,58 @@ func (h *Hub) run() {
 }
 
 func (h *Hub) pair(c *Connection, msg []byte) error {
-	if len(c.nickName) > 0 {
-		return nil
+	//ssdb
+	authdb, err := ssdbAuthPool.Get()
+	if err != nil {
+		return err
+	}
+	defer authdb.Close()
+
+	matchdb, err := ssdbMatchPool.Get()
+	if err != nil {
+		return err
+	}
+	defer matchdb.Close()
+
+	//
+	in := struct {
+		Token string
+	}{}
+	if err = json.Unmarshal(msg, &in); err != nil {
+		return err
 	}
 
-	in := struct {
-		NickName string
-	}{}
-	err := json.Unmarshal(msg, &in)
+	//
+	sessionKey := fmt.Sprintf("%s/%s", H_SESSION, in.Token)
+	resp, err := authdb.Do("get", sessionKey)
+	if err != nil {
+		return err
+	}
+	if resp[0] != "ok" {
+		return fmt.Errorf("ssdb err:%s", resp[0])
+	}
+
+	var session Session
+	err = json.Unmarshal([]byte(resp[1]), &session)
 	if err != nil {
 		return err
 	}
 
-	c.nickName = in.NickName
+	//
+	c.playerInfo, err = getPlayerInfo(matchdb, session.Userid)
+	if err != nil {
+		return err
+	}
+	c.playerInfo.UserId = session.Userid
 
 	//
 	if h.pendingConn != nil {
+		//check userId
+		if h.pendingConn.playerInfo.UserId == session.Userid {
+			return fmt.Errorf("same user")
+		}
+
+		//
 		c.foe = h.pendingConn
 		h.pendingConn.foe = c
 		h.pendingConn = nil
@@ -103,11 +159,11 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 			FoeName string
 		}{
 			"paired",
-			c.foe.nickName,
+			c.foe.playerInfo.NickName,
 		}
 		c.sendMsg(out)
 
-		out.FoeName = c.nickName
+		out.FoeName = c.playerInfo.NickName
 		c.foe.sendMsg(out)
 	} else {
 		h.pendingConn = c
@@ -115,4 +171,20 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 	}
 
 	return nil
+}
+
+func makePlayerInfoKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", H_PLAYER_INFO, userId)
+}
+
+func getPlayerInfo(ssdbc *ssdbgo.Client, userId int64) (*PlayerInfo, error) {
+	key := makePlayerInfoKey(userId)
+
+	var playerInfo PlayerInfo
+	err := ssdbc.HGetStruct(key, &playerInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &playerInfo, nil
 }

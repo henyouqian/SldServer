@@ -45,6 +45,7 @@ type Pack struct {
 	CoverBlur string
 	Images    []Image
 	Tags      []string
+	SizeMb    float32
 }
 
 const (

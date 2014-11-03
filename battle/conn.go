@@ -56,7 +56,9 @@ type Connection struct {
 	battle *Battle
 
 	//player info
-	nickName string
+	nickName   string
+	userId     int64
+	playerInfo *PlayerInfo
 }
 
 func init() {
@@ -91,15 +93,17 @@ func (c *Connection) readPump() {
 		}
 
 		if msg.Type == "pair" {
-			if h.pair(c, message) != nil {
-				break
+			err = h.pair(c, message)
+			if err != nil {
+				c.sendErr(err.Error())
+				// break
 			}
 		} else {
 			handler, e := _msgHandlerMap[msg.Type]
 			if e {
 				handler(c, message)
 			} else {
-				break
+				// break
 			}
 		}
 
