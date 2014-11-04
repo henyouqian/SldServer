@@ -19,6 +19,7 @@ func _hublog() {
 const (
 	H_SESSION     = "H_SESSION"     //key:token, value:session
 	H_PLAYER_INFO = "H_PLAYER_INFO" //key:H_PLAYER_INFO/<userId> subkey:property
+	H_PACK        = "H_PACK"        //subkey:packId value:packJson
 )
 
 type Session struct {
@@ -32,6 +33,19 @@ type PlayerInfo struct {
 	Gender          int
 	CustomAvatarKey string
 	GravatarKey     string
+}
+
+type Image struct {
+	Key string
+}
+
+type Pack struct {
+	Id       int64
+	AuthorId int64
+	Title    string
+	Text     string
+	Thumb    string
+	Images   []Image
 }
 
 // hub maintains the set of active connections and broadcasts messages to the
@@ -153,13 +167,24 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 		c.battle = battle
 		c.foe.battle = battle
 
+		c.index = 1
+		c.foe.index = 0
+
+		//get pack, fixme
+		pack, err := getPack(matchdb, 2)
+		if err != nil {
+			return err
+		}
+
 		//
 		out := struct {
 			Type    string
 			FoeName string
+			Pack    *Pack
 		}{
 			"paired",
 			c.foe.playerInfo.NickName,
+			pack,
 		}
 		c.sendMsg(out)
 
@@ -187,4 +212,22 @@ func getPlayerInfo(ssdbc *ssdbgo.Client, userId int64) (*PlayerInfo, error) {
 	}
 
 	return &playerInfo, nil
+}
+
+func getPack(ssdbc *ssdbgo.Client, packId int64) (*Pack, error) {
+	var pack Pack
+	resp, err := ssdbc.Do("hget", H_PACK, packId)
+	if err != nil {
+		return nil, err
+	}
+	if resp[0] == ssdbgo.NOT_FOUND {
+		return nil, fmt.Errorf("not_found:packId=%d", packId)
+	}
+
+	err = json.Unmarshal([]byte(resp[1]), &pack)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pack, err
 }

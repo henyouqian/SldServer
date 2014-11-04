@@ -262,6 +262,10 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	goldCoin, err := strconv.ParseInt(resp[1], 10, 64)
 
+	//
+	err = addEcoRecord(ssdb, session.Userid, float32(addGoldCoin), ECO_FORWHAT_IAP)
+	lwutil.CheckError(err, "")
+
 	//update secret
 	err = ssdb.HSet(playerKey, PLAYER_IAP_SECRET, "")
 	lwutil.CheckError(err, "")
@@ -610,6 +614,10 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 
 	//buy, sub player coupon num
 	addCoupon(ssdbc, playerKey, float32(-cardType.CouponPrice))
+
+	//eco record
+	err = addEcoRecord(ssdbc, session.Userid, float32(cardType.CouponPrice), ECO_FORWHAT_BUYECARD)
+	lwutil.CheckError(err, "")
 
 	//update coupon type's coupon num
 	resp, err = ssdbc.Do("qsize", ecardQueueKey)

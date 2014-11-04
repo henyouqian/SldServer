@@ -32,8 +32,8 @@ const (
 
 	FREE_TRY_NUM             = 3
 	MATCH_TRY_EXPIRE_SECONDS = 600
-	MATCH_TIME_SEC           = 60 * 60 * 24
-	// MATCH_TIME_SEC = 60
+	// MATCH_TIME_SEC           = 60 * 60 * 24
+	MATCH_TIME_SEC = 60
 )
 
 type Match struct {
@@ -1129,6 +1129,8 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 			addPlayerGoldCoin(ssdbc, playerKey, -1)
 			goldCoin--
 			autoPaging = true
+			err = addEcoRecord(ssdbc, session.Userid, 1, ECO_FORWHAT_MATCHBEGIN)
+			lwutil.CheckError(err, "")
 
 			RewardCouponKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_REWARD_COUPON)
 			resp, err = ssdbc.Do("hincr", H_MATCH_EXTRA, RewardCouponKey, 1)

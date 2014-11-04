@@ -23,14 +23,14 @@ const (
 type Battle struct {
 	state     BattleState
 	readyConn *Connection
-	results   map[int64]int64 //[userId]msec
+	results   map[int]int //[index]msec
 }
 
 func makeBattle() *Battle {
 	battle := new(Battle)
 	battle.state = DOWNLOADING
 	battle.readyConn = nil
-	battle.results = make(map[int64]int64)
+	battle.results = make(map[int]int)
 	return battle
 }
 
@@ -87,6 +87,61 @@ func battleEnd(conn *Connection, msg []byte) {
 	if conn.battle.state != MATCHING {
 		conn.sendErr("battle state error")
 		return
+	}
+
+	//in
+	var in struct {
+		Msec int
+	}
+
+	err := json.Unmarshal(msg, &in)
+	if err != nil {
+		conn.sendErr("json error")
+		return
+	}
+
+	results := conn.battle.results
+
+	//check exist
+	_, e := results[conn.index]
+	if e {
+		conn.sendErr("result exist")
+		return
+	}
+	results[conn.index] = in.Msec
+
+	//end
+	if len(results) == 2 {
+		myMsec := results[conn.index]
+		foeMsec := results[conn.foe.index]
+
+		out := struct {
+			Result  string //win, lose, draw
+			FoeMsec int
+		}{
+			"",
+			foeMsec,
+		}
+
+		if myMsec < foeMsec { //win
+			out.Result = "win"
+		} else if myMsec > foeMsec { //lose
+			out.Result = "lose"
+		} else { //draw
+			out.Result = "draw"
+		}
+		conn.sendMsg(out)
+
+		//foe
+		if myMsec < foeMsec {
+			out.Result = "lose"
+		} else if myMsec > foeMsec {
+			out.Result = "win"
+		}
+		out.FoeMsec = myMsec
+		conn.foe.sendMsg(out)
+	} else {
+		conn.sendType("end")
 	}
 }
 

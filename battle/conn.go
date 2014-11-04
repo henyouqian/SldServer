@@ -59,6 +59,7 @@ type Connection struct {
 	nickName   string
 	userId     int64
 	playerInfo *PlayerInfo
+	index      int
 }
 
 func init() {
