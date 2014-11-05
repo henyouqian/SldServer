@@ -3,6 +3,7 @@ package main
 import (
 	"./ssdb"
 	"encoding/json"
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
@@ -57,24 +58,48 @@ func apiGetUserInfo(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
-	//ssdb
-	ssdbc, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbc.Close()
-
 	//in
 	var in struct {
 		UserId int64
+		Email  string
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
 	//
-	player, err := getPlayerInfo(ssdbc, in.UserId)
+	matchDb, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
+	defer matchDb.Close()
 
-	//out
-	lwutil.WriteResponse(w, player)
+	//
+	if in.UserId > 0 {
+		player, err := getPlayerInfo(matchDb, in.UserId)
+		lwutil.CheckError(err, "")
+		lwutil.WriteResponse(w, player)
+	} else if in.Email != "" {
+		authDb, err := ssdbAuthPool.Get()
+		lwutil.CheckError(err, "")
+		defer authDb.Close()
+
+		resp, err := authDb.Do("hget", H_NAME_ACCONT, in.Email)
+		lwutil.CheckError(err, "")
+		if resp[0] != "ok" {
+			lwutil.SendError("err_not_found", "email error")
+		}
+		userId, err := strconv.ParseInt(resp[1], 10, 64)
+		lwutil.CheckError(err, "")
+
+		out := struct {
+			*PlayerInfo
+			UserId int64
+		}{}
+		out.PlayerInfo, err = getPlayerInfo(matchDb, userId)
+		lwutil.CheckError(err, fmt.Sprintf("userId:%d", userId))
+		out.UserId = userId
+
+		lwutil.WriteResponse(w, out)
+	}
+
 }
 
 func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {

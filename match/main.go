@@ -166,7 +166,7 @@ func main() {
 	regStore()
 	regEtc()
 	regSocial()
-	regMonitor()
+	regEcoMonitor()
 	// regEvent()
 	// regChallenge()
 	// regUserPack()

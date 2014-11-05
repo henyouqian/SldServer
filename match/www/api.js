@@ -345,7 +345,7 @@ function Controller($scope, $http) {
 				{
 					"name": "getUserInfo",
 					"method": "POST",
-					"data": {"UserId": 0}
+					"data": {"UserId": 0, "Email":""}
 				},{
 					"name": "addGoldCoin",
 					"method": "POST",
@@ -511,6 +511,20 @@ function Controller($scope, $http) {
 					"data": {"MatchId": 0}
 				}
 
+			]
+		},{
+			"tab":"ecoMonitor",
+			"path":"ecoMonitor",
+			"apis":[
+				{
+					"name": "ecoPlayerList",
+					"method": "POST",
+					"data": {"UserId": 0, "StartId":0, "Limit":20, "Time":""}
+				},{
+					"name": "ecoDailyCount",
+					"method": "POST",
+					"data":{"Date": "2006-01-02"}
+				}
 			]
 		}
 	]

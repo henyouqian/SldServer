@@ -1,8 +1,10 @@
 package main
 
 import (
+	"./ssdb"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"runtime"
 	"unicode/utf8"
@@ -69,4 +71,40 @@ func sendErrorNoLog(w http.ResponseWriter, errType string, errStr string) {
 	}
 	w.WriteHeader(http.StatusBadRequest)
 	lwutil.WriteResponse(w, out)
+}
+
+func zrscanGet(ssdbc *ssdb.Client, zkey string, zSubkeyStart, zScoreStart interface{}, limit int, hkey string) (out []string, err error) {
+	out = make([]string, 0)
+
+	//zrscan
+	if zSubkeyStart == 0 {
+		zSubkeyStart = math.MaxInt64
+	}
+	resp, err := ssdbc.Do("zrscan", zkey, zSubkeyStart, zScoreStart, "", limit)
+	if err != nil {
+		return
+	}
+
+	resp = resp[1:]
+	if len(resp) == 0 {
+		return
+	}
+
+	//multi_hget
+	num := len(resp) / 2
+	cmds := make([]interface{}, 2)
+	cmds[0] = "multi_hget"
+	cmds[1] = hkey
+
+	for i := 0; i < num; i++ {
+		cmds = append(cmds, resp[2*i])
+	}
+
+	resp, err = ssdbc.Do(cmds...)
+	if err != nil {
+		return
+	}
+	out = resp[1:]
+
+	return
 }

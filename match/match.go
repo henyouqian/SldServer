@@ -256,7 +256,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
 		isPublishNow = true
 	} else {
-		beginTime, err := time.Parse("2006-01-02T15:04:05", in.BeginTimeStr)
+		beginTime, err := time.ParseInLocation("2006-01-02T15:04:05", in.BeginTimeStr, time.Local)
 		lwutil.CheckError(err, "")
 		if beginTime.Before(lwutil.GetRedisTime()) {
 			lwutil.SendError("err_time", "begin time must later than now")
