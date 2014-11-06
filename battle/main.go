@@ -23,8 +23,9 @@ var addr = flag.String("addr", ":8080", "http service address")
 var homeTempl = template.Must(template.ParseFiles("home.html"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.URL.Path != "/" {
-		http.Error(w, "Not found", 404)
+		http.ServeFile(w, r, r.URL.Path[1:])
 		return
 	}
 	if r.Method != "GET" {

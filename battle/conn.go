@@ -7,7 +7,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -42,6 +41,7 @@ const (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  128,
 	WriteBufferSize: 128,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 // connection is an middleman between the websocket connection and the hub.
@@ -60,6 +60,7 @@ type Connection struct {
 	userId     int64
 	playerInfo *PlayerInfo
 	index      int
+	roomName   string
 }
 
 func init() {
@@ -93,8 +94,14 @@ func (c *Connection) readPump() {
 			break
 		}
 
-		if msg.Type == "pair" {
-			err = h.pair(c, message)
+		if msg.Type == "authPair" {
+			err = h.authPair(c, message, "authRoom")
+			if err != nil {
+				c.sendErr(err.Error())
+				// break
+			}
+		} else if msg.Type == "simplePair" {
+			err = h.simplePair(c, message, "simpleRoom")
 			if err != nil {
 				c.sendErr(err.Error())
 				// break
@@ -143,12 +150,15 @@ func (c *Connection) writePump() {
 			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
+			// default:
+			// 	glog.Info("default")
+			// 	return
 		}
 	}
 }
 
 func (c *Connection) sendErr(str string) {
-	msg := fmt.Sprintf(`{"Type":"err", "String":%s}`, str)
+	msg := fmt.Sprintf(`{"Type":"err", "String":"%s"}`, str)
 	c.send <- []byte(msg)
 }
 
@@ -168,11 +178,13 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		glog.Error(err)
 		return
 	}
+
 	c := &Connection{send: make(chan []byte, 256), ws: ws}
 	h.register <- c
 	go c.writePump()

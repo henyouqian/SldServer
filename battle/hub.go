@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/golang/glog"
 	"github.com/henyouqian/ssdbgo"
@@ -40,12 +41,13 @@ type Image struct {
 }
 
 type Pack struct {
-	Id       int64
-	AuthorId int64
-	Title    string
-	Text     string
-	Thumb    string
-	Images   []Image
+	Id        int64
+	AuthorId  int64
+	Title     string
+	Text      string
+	Thumb     string
+	CoverBlur string
+	Images    []Image
 }
 
 // hub maintains the set of active connections and broadcasts messages to the
@@ -63,15 +65,16 @@ type Hub struct {
 	// Unregister requests from connections.
 	unregister chan *Connection
 
-	pendingConn *Connection
+	pendingConnMap map[string]*Connection
+	pendingConnMu  sync.Mutex
 }
 
 var h = Hub{
-	broadcast:   make(chan []byte),
-	register:    make(chan *Connection),
-	unregister:  make(chan *Connection),
-	connections: make(map[*Connection]bool),
-	pendingConn: nil,
+	broadcast:      make(chan []byte),
+	register:       make(chan *Connection),
+	unregister:     make(chan *Connection),
+	connections:    make(map[*Connection]bool),
+	pendingConnMap: make(map[string]*Connection),
 }
 
 func (h *Hub) run() {
@@ -89,9 +92,13 @@ func (h *Hub) run() {
 				delete(h.connections, c)
 				close(c.send)
 			}
-			if c == h.pendingConn {
-				h.pendingConn = nil
+
+			h.pendingConnMu.Lock()
+			if c == h.pendingConnMap[c.roomName] {
+				h.pendingConnMap[c.roomName] = nil
 			}
+			h.pendingConnMu.Unlock()
+
 			// case m := <-h.broadcast:
 
 			// 	for c := range h.connections {
@@ -106,7 +113,77 @@ func (h *Hub) run() {
 	}
 }
 
-func (h *Hub) pair(c *Connection, msg []byte) error {
+func (h *Hub) simplePair(c *Connection, msg []byte, roomName string) error {
+	//
+	in := struct {
+		NickName string
+	}{}
+	if err := json.Unmarshal(msg, &in); err != nil {
+		return err
+	}
+
+	h.pendingConnMu.Lock()
+
+	pendingConn := h.pendingConnMap[roomName]
+	if pendingConn != nil {
+		if pendingConn == c {
+			h.pendingConnMu.Unlock()
+			return fmt.Errorf("same user")
+		}
+
+		h.pendingConnMap[roomName] = nil
+		h.pendingConnMu.Unlock()
+
+		c.foe = pendingConn
+		pendingConn.foe = c
+
+		battle := makeBattle()
+		c.battle = battle
+		c.foe.battle = battle
+
+		c.index = 1
+		c.foe.index = 0
+
+		//
+		matchdb, err := ssdbMatchPool.Get()
+		if err != nil {
+			return err
+		}
+		defer matchdb.Close()
+
+		//get pack, fixme
+		pack, err := getPack(matchdb, 2)
+		if err != nil {
+			return err
+		}
+
+		//
+		out := struct {
+			Type    string
+			FoeName string
+			Pack    *Pack
+		}{
+			"paired",
+			c.foe.nickName,
+			pack,
+		}
+		c.sendMsg(out)
+
+		out.FoeName = c.nickName
+		c.foe.sendMsg(out)
+	} else {
+		h.pendingConnMap[roomName] = c
+		h.pendingConnMu.Unlock()
+
+		c.sendType("pairing")
+	}
+
+	c.roomName = roomName
+
+	return nil
+}
+
+func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 	//ssdb
 	authdb, err := ssdbAuthPool.Get()
 	if err != nil {
@@ -152,16 +229,20 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 	c.playerInfo.UserId = session.Userid
 
 	//
-	if h.pendingConn != nil {
+	h.pendingConnMu.Lock()
+	pendingConn := h.pendingConnMap[roomName]
+	if pendingConn != nil {
+		h.pendingConnMap[roomName] = nil
+		h.pendingConnMu.Unlock()
+
 		//check userId
-		if h.pendingConn.playerInfo.UserId == session.Userid {
+		if pendingConn.playerInfo.UserId == session.Userid {
 			return fmt.Errorf("same user")
 		}
 
 		//
-		c.foe = h.pendingConn
-		h.pendingConn.foe = c
-		h.pendingConn = nil
+		c.foe = pendingConn
+		pendingConn.foe = c
 
 		battle := makeBattle()
 		c.battle = battle
@@ -191,9 +272,13 @@ func (h *Hub) pair(c *Connection, msg []byte) error {
 		out.FoeName = c.playerInfo.NickName
 		c.foe.sendMsg(out)
 	} else {
-		h.pendingConn = c
+		h.pendingConnMap[roomName] = c
+		h.pendingConnMu.Unlock()
+
 		c.sendType("pairing")
 	}
+
+	c.roomName = roomName
 
 	return nil
 }

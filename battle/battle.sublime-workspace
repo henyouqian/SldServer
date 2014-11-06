@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"s",
+				"sendOk	 ƒ"
+			],
+			[
 				"inl",
 				"inline-block"
 			],
@@ -244,10 +248,6 @@
 				"PickSideQuestion	struct ʈ"
 			],
 			[
-				"s",
-				"SsdbAuthPort	int ν"
-			],
-			[
 				"makez",
 				"makeZSocialPackKey	string ƒ"
 			],
@@ -459,7 +459,7 @@
 			"file": "home.html",
 			"settings":
 			{
-				"buffer_size": 1847,
+				"buffer_size": 1889,
 				"line_ending": "Unix"
 			}
 		},
@@ -467,7 +467,15 @@
 			"file": "conn.go",
 			"settings":
 			{
-				"buffer_size": 2486,
+				"buffer_size": 3713,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "battle.go",
+			"settings":
+			{
+				"buffer_size": 2658,
 				"line_ending": "Unix"
 			}
 		},
@@ -475,7 +483,7 @@
 			"file": "hub.go",
 			"settings":
 			{
-				"buffer_size": 1196,
+				"buffer_size": 4308,
 				"line_ending": "Unix"
 			}
 		},
@@ -483,8 +491,17 @@
 			"file": "main.go",
 			"settings":
 			{
-				"buffer_size": 916,
+				"buffer_size": 1372,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"}\n{\"Type\":\"pair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}",
+			"settings":
+			{
+				"buffer_size": 187,
+				"line_ending": "Unix",
+				"name": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\""
 			}
 		}
 	],
@@ -528,6 +545,9 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/battle/hub.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/ssdbgo/ssdb.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/battle/r",
 		"/Users/liwei/Documents/projects/2014/SldServer/battle/br",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
@@ -562,7 +582,6 @@
 		"/Users/liwei/Documents/projects/2014/SldServer/ssdb/match/ssdb.conf",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/auth.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/confServer.json",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/robot/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/ssdb/match/log.txt",
 		"/Users/liwei/Documents/projects/2014/SldServer/ssh henyouqian@173.255.215.104",
@@ -604,6 +623,31 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"sendErr",
+			"addr",
+			"getpac",
+			"H_PACK",
+			"pair",
+			"getPlayerInfo",
+			"getPlayerInfo\n",
+			"battle",
+			"makeBattle",
+			"			// 	}\n	nickName string\n	nickName string\n	nickName string\nmakeBattle",
+			"	nickName string\n	nickName string\n	nickName string\nmakeBattle",
+			"	nickName string\n	nickName string\nmakeBattle",
+			"	nickName string\nmakeBattle",
+			"makeBattle",
+			"battlestart",
+			"sendok",
+			"regHandler",
+			"mh",
+			"j son",
+			"close",
+			"send",
+			"maxMessageSize",
+			"upgrader",
+			"ReadBufferSize",
+			"connection",
 			"write",
 			"maxMessageSize",
 			"pingPeriod",
@@ -706,32 +750,7 @@
 			"lbKey",
 			"makeMatchLeaderboardRdsKey",
 			"playEnd",
-			"zadd",
-			"makeMatchLeaderboardRdsKey",
-			"apiMatchPlayEnd",
-			"scoreUpdate",
-			"zadd",
-			"5",
-			"ZADD",
-			"lbKey",
-			"makeMatchLeaderboardRdsKey",
-			"lbKey",
-			"apiMatchPlayEnd",
-			"SECRET",
-			"MATCH_TRY_EXPIRE_SECONDS",
-			"MatchId",
-			"makeMatchLeaderboardRdsKey",
-			"listMine",
-			"Z_REWARD_MATCH",
-			"apiMatchMod",
-			"Z_REWARD_MATCH",
-			"apiMatchListRewardMatch",
-			"Z_REWARD_MATCH",
-			"ECARD_PROVIDERS",
-			"RechargeUrl",
-			"HelpText",
-			"apiListMyEcard",
-			"HttpCodeBadRequest"
+			"zadd"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -762,7 +781,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -770,15 +789,15 @@
 					"file": "home.html",
 					"settings":
 					{
-						"buffer_size": 1847,
+						"buffer_size": 1889,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1822,
-								1822
+								39,
+								39
 							]
 						],
 						"settings":
@@ -788,7 +807,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 891.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -798,15 +817,42 @@
 					"file": "conn.go",
 					"settings":
 					{
-						"buffer_size": 2486,
+						"buffer_size": 3713,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								189,
-								197
+								2991,
+								2991
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2823.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "battle.go",
+					"settings":
+					{
+						"buffer_size": 2658,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2467,
+								2467
 							]
 						],
 						"settings":
@@ -821,19 +867,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 2,
+					"buffer": 3,
 					"file": "hub.go",
 					"settings":
 					{
-						"buffer_size": 1196,
+						"buffer_size": 4308,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								780,
-								780
+								2103,
+								2107
 							]
 						],
 						"settings":
@@ -842,31 +888,57 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 495.0,
+						"translation.y": 2148.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 4,
 					"file": "main.go",
 					"settings":
 					{
-						"buffer_size": 916,
+						"buffer_size": 1372,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								803,
-								805
+								400,
+								400
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 403.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"settings":
+					{
+						"buffer_size": 187,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								51
+							]
+						],
+						"settings":
+						{
+							"auto_name": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -911,6 +983,10 @@
 	"output.9o:///Users/liwei/Documents/go/src/github.com/henyouqian/lwutil":
 	{
 		"height": 124.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/battle":
+	{
+		"height": 136.0
 	},
 	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/match":
 	{
