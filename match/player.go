@@ -28,6 +28,7 @@ type PlayerInfo struct {
 	Gender          int
 	CustomAvatarKey string
 	GravatarKey     string
+	Email           string
 	GoldCoin        int
 	Coupon          float32 //*100 in ssdb
 	CouponCache     float32 //*100 in ssdb
@@ -245,6 +246,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	stringLimit(&in.GravatarKey, 20)
 	stringLimit(&in.CustomAvatarKey, 40)
 	stringLimit(&in.TeamName, 40)
+	stringLimit(&in.Email, 40)
 
 	//check playerInfo
 	if in.NickName == "" || in.TeamName == "" || (in.GravatarKey == "" && in.CustomAvatarKey == "") {
@@ -273,6 +275,9 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 			playerInfo.TeamName = in.TeamName
 		}
 		playerInfo.Gender = in.Gender
+		if len(in.Email) > 0 {
+			playerInfo.Email = in.Email
+		}
 	}
 
 	//save

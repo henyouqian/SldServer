@@ -486,7 +486,7 @@ func apiForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		Email string
+		UserName string
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -496,21 +496,34 @@ func apiForgotPassword(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
+	matchDb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer matchDb.Close()
+
 	//check account exist
-	resp, err := ssdb.Do("hget", H_NAME_ACCONT, in.Email)
+	resp, err := ssdb.Do("hget", H_NAME_ACCONT, in.UserName)
 	lwutil.CheckError(err, "")
 	if resp[0] != "ok" {
 		lwutil.SendError("err_not_exist", "account not exist")
+	}
+	userId, err := strconv.ParseInt(resp[1], 10, 64)
+	lwutil.CheckError(err, "")
+
+	player, err := getPlayerInfo(matchDb, userId)
+	lwutil.CheckError(err, fmt.Sprintf("Player info not exist, userId:%d", userId))
+	toEmail := player.Email
+	if len(toEmail) == 0 {
+		lwutil.SendError("err_no_email", "")
 	}
 
 	//gen reset key
 	resetKey := lwutil.GenUUID()
 	key := fmt.Sprintf("K_RESET_PASSWORD/%s", resetKey)
-	resp, err = ssdb.Do("setx", key, in.Email, RESET_PASSWORD_TTL)
+	resp, err = ssdb.Do("setx", key, in.UserName, RESET_PASSWORD_TTL)
 	lwutil.CheckSsdbError(resp, err)
 
 	//
-	body := fmt.Sprintf("请进入以下网址重设《全国拼图大奖赛》密码. \nhttp://sld.pintugame.com/www/resetpassword.html?key=%s", resetKey)
+	body := fmt.Sprintf("请进入以下网址重设《蛮拼的》密码. \nhttp://sld.pintugame.com/www/resetpassword.html?key=%s", resetKey)
 
 	//email
 	b64 := base64.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
@@ -521,15 +534,14 @@ func apiForgotPassword(w http.ResponseWriter, r *http.Request) {
 	host := "localhost"
 	fromEmail := "resetpassword@pintugame.com"
 	password := "Nmmgb808313"
-	toEmail := in.Email
 
-	from := mail.Address{"全国拼图大奖赛", fromEmail}
-	to := mail.Address{"亲爱的《全国拼图大奖赛》用户", toEmail}
+	from := mail.Address{"蛮拼的", fromEmail}
+	to := mail.Address{"亲爱的《蛮拼的》用户", toEmail}
 
 	header := make(map[string]string)
 	header["From"] = from.String()
 	header["To"] = to.String()
-	header["Subject"] = fmt.Sprintf("=?UTF-8?B?%s?=", b64.EncodeToString([]byte("《全国拼图大奖赛》密码重设")))
+	header["Subject"] = fmt.Sprintf("=?UTF-8?B?%s?=", b64.EncodeToString([]byte("《蛮拼的》密码重设")))
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/html; charset=UTF-8"
 	header["Content-Transfer-Encoding"] = "base64"
@@ -609,13 +621,13 @@ func apiResetPassword(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_key", "reset not found")
 	}
 	lwutil.CheckSsdbError(resp, err)
-	email := resp[1]
+	username := resp[1]
 
 	//password
 	newPassword := lwutil.Sha224(in.Password + PASSWORD_SALT)
 
 	//get account
-	resp, err = ssdb.Do("hget", H_NAME_ACCONT, email)
+	resp, err = ssdb.Do("hget", H_NAME_ACCONT, username)
 	lwutil.CheckError(err, "")
 	if resp[0] != "ok" {
 		lwutil.SendError("err_not_match", "name and password not match")

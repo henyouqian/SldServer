@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"pendin",
+				"pendingConnMu	sync.Mutex ν"
+			],
+			[
+				"nam",
+				"roomName	string ν"
+			],
+			[
 				"s",
 				"sendOk	 ƒ"
 			],
@@ -467,7 +475,15 @@
 			"file": "conn.go",
 			"settings":
 			{
-				"buffer_size": 3713,
+				"buffer_size": 4067,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "hub.go",
+			"settings":
+			{
+				"buffer_size": 5801,
 				"line_ending": "Unix"
 			}
 		},
@@ -480,14 +496,6 @@
 			}
 		},
 		{
-			"file": "hub.go",
-			"settings":
-			{
-				"buffer_size": 4308,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "main.go",
 			"settings":
 			{
@@ -496,12 +504,22 @@
 			}
 		},
 		{
-			"contents": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"}\n{\"Type\":\"pair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}",
+			"contents": "Searching 19 files for \"serveWs\"\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/conn.go:\n  171  \n  172  // serverWs handles websocket requests from the peer.\n  173: func serveWs(w http.ResponseWriter, r *http.Request) {\n  174  	if r.Method != \"GET\" {\n  175  		http.Error(w, \"Method not allowed\", 405)\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/main.go:\n   45  	go h.run()\n   46  	http.HandleFunc(\"/\", serveHome)\n   47: 	http.HandleFunc(\"/ws\", serveWs)\n   48  	err := http.ListenAndServe(*addr, nil)\n   49  	if err != nil {\n\n2 matches across 2 files\n",
 			"settings":
 			{
-				"buffer_size": 187,
+				"buffer_size": 569,
 				"line_ending": "Unix",
-				"name": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\""
+				"name": "Find Results",
+				"scratch": true
+			}
+		},
+		{
+			"contents": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"}\n{\"Type\":\"authPair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}\n\n\n{\"Type\":\"simplePair\", \"NickName\":\"aa\"}",
+			"settings":
+			{
+				"buffer_size": 236,
+				"line_ending": "Unix",
+				"name": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68"
 			}
 		}
 	],
@@ -612,7 +630,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 99.0,
 		"where_history":
 		[
 			""
@@ -623,6 +641,29 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"battleProgress",
+			"Pack",
+			"glog.",
+			"lock",
+			"Lock",
+			"sendType",
+			"regis",
+			"upgrader",
+			"serveWs",
+			"matchdb",
+			"unlock",
+			"pendingConnMap",
+			"lock",
+			"run",
+			"go ",
+			"pendingConnMap",
+			"c.room",
+			"roomname",
+			"msg",
+			"pendingconn",
+			"m[\"a\"]",
+			"pendingconn",
+			"pendingConn",
 			"sendErr",
 			"addr",
 			"getpac",
@@ -727,30 +768,7 @@
 			"=EF=BF=A5",
 			"view-gc",
 			"ssdb.",
-			"CheckSsdbError",
-			"glog",
-			"save",
-			"getMatch",
-			"matchId",
-			"match",
-			"HasResult",
-			"apiMatchGetRanks",
-			"staticFile",
-			"rc.Do",
-			"lbKey",
-			"makeMatchLeaderboardRdsKey",
-			"RDS_Z_MATCH_LEADERBOARD",
-			"zadd",
-			"zset",
-			"makeMatchLeaderboardRdsKey",
-			"RDS_Z_MATCH_LEADERBOARD",
-			"makeMatchLeaderboardRdsKey",
-			"playtimes",
-			"newPack",
-			"lbKey",
-			"makeMatchLeaderboardRdsKey",
-			"playEnd",
-			"zadd"
+			"CheckSsdbError"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -781,7 +799,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -817,15 +835,15 @@
 					"file": "conn.go",
 					"settings":
 					{
-						"buffer_size": 3713,
+						"buffer_size": 4067,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2991,
-								2991
+								3819,
+								3819
 							]
 						],
 						"settings":
@@ -834,13 +852,40 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2823.0,
+						"translation.y": 3421.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
+					"file": "hub.go",
+					"settings":
+					{
+						"buffer_size": 5801,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3187,
+								3187
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2824.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
 					"file": "battle.go",
 					"settings":
 					{
@@ -851,8 +896,8 @@
 						"selection":
 						[
 							[
-								2467,
-								2467
+								944,
+								949
 							]
 						],
 						"settings":
@@ -861,34 +906,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "hub.go",
-					"settings":
-					{
-						"buffer_size": 4308,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2103,
-								2107
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2148.0,
+						"translation.y": 581.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -905,8 +923,8 @@
 						"selection":
 						[
 							[
-								400,
-								400
+								1040,
+								1047
 							]
 						],
 						"settings":
@@ -915,7 +933,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 403.0,
+						"translation.y": 555.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -924,20 +942,67 @@
 					"buffer": 5,
 					"settings":
 					{
-						"buffer_size": 187,
+						"buffer_size": 569,
+						"regions":
+						{
+							"match":
+							{
+								"flags": 112,
+								"regions":
+								[
+									[
+										178,
+										185
+									],
+									[
+										463,
+										470
+									]
+								],
+								"scope": ""
+							}
+						},
+						"selection":
+						[
+							[
+								181,
+								181
+							]
+						],
+						"settings":
+						{
+							"detect_indentation": false,
+							"output_tag": 1,
+							"result_base_dir": "",
+							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
+							"result_line_regex": "^ +([0-9]+):",
+							"scroll_past_end": true,
+							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"settings":
+					{
+						"buffer_size": 236,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								51
+								197,
+								197
 							]
 						],
 						"settings":
 						{
-							"auto_name": "{\"Type\":\"pair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"",
+							"auto_name": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68",
 							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
