@@ -480,21 +480,27 @@
 			}
 		},
 		{
+			"file": "match/auth.go",
+			"settings":
+			{
+				"buffer_size": 16648,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/player.go",
+			"settings":
+			{
+				"buffer_size": 13212,
+				"line_ending": "Unix"
+			}
+		},
+		{
 			"file": "match/ecoMonitor.go",
 			"settings":
 			{
 				"buffer_size": 5703,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "Searching 489 files for \"time.Parse\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/ecoMonitor.go:\n  156  	tUnix := int64(math.MaxInt64)\n  157  	if in.Time != \"\" {\n  158: 		t, err := time.ParseInLocation(\"2006-01-02T15:04:05\", in.Time, time.Local)\n  159  		lwutil.CheckError(err, \"\")\n  160  		tUnix = t.Unix()\n\n/Users/liwei/Documents/projects/2014/SldServer/match/match.go:\n  257  		isPublishNow = true\n  258  	} else {\n  259: 		beginTime, err := time.Parse(\"2006-01-02T15:04:05\", in.BeginTimeStr)\n  260  		lwutil.CheckError(err, \"\")\n  261  		if beginTime.Before(lwutil.GetRedisTime()) {\n\n/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go:\n  426  	now := lwutil.GetRedisTimeUnix()\n  427  \n  428: 	t, err := time.ParseInLocation(TIME_FORMAT, event.BeginTimeString, time.Local)\n  429  	lwutil.CheckError(err, \"\")\n  430  	event.BeginTime = t.Unix()\n  ...\n  433  	}\n  434  \n  435: 	t, err = time.ParseInLocation(TIME_FORMAT, event.EndTimeString, time.Local)\n  436  	lwutil.CheckError(err, \"\")\n  437  	event.EndTime = t.Unix()\n\n4 matches across 3 files\n",
-			"settings":
-			{
-				"buffer_size": 1077,
-				"line_ending": "Unix",
-				"name": "Find Results",
-				"scratch": true
 			}
 		},
 		{
@@ -531,14 +537,6 @@
 			}
 		},
 		{
-			"file": "match/auth.go",
-			"settings":
-			{
-				"buffer_size": 16288,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "match/main.go",
 			"settings":
 			{
@@ -547,10 +545,10 @@
 			}
 		},
 		{
-			"file": "/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+			"file": "match/pack.go",
 			"settings":
 			{
-				"buffer_size": 16355,
+				"buffer_size": 14810,
 				"line_ending": "Unix"
 			}
 		}
@@ -595,6 +593,8 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/packUploader",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/auth.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/pack.go",
@@ -603,7 +603,6 @@
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/monitor.go",
@@ -673,6 +672,12 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"K_RESET_PASSWORD",
+			"email",
+			"Email",
+			"apiGetUserInfo",
+			"apiForgotPassword",
+			"set",
 			"ReqHandler",
 			"ServeHTTP",
 			"time.Parse",
@@ -794,13 +799,7 @@
 			"playtimes",
 			"newPack",
 			"lbKey",
-			"makeMatchLeaderboardRdsKey",
-			"playEnd",
-			"zadd",
-			"makeMatchLeaderboardRdsKey",
-			"apiMatchPlayEnd",
-			"scoreUpdate",
-			"zadd"
+			"makeMatchLeaderboardRdsKey"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -831,7 +830,7 @@
 	"groups":
 	[
 		{
-			"selected": 5,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -873,8 +872,8 @@
 						"selection":
 						[
 							[
-								5686,
-								5696
+								1135,
+								1216
 							]
 						],
 						"settings":
@@ -883,13 +882,67 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5395.0,
+						"translation.y": 1135.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
+					"file": "match/auth.go",
+					"settings":
+					{
+						"buffer_size": 16648,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12423,
+								12423
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 10867.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "match/player.go",
+					"settings":
+					{
+						"buffer_size": 13212,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12470,
+								12470
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 11031.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
 					"file": "match/ecoMonitor.go",
 					"settings":
 					{
@@ -916,62 +969,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 3,
-					"settings":
-					{
-						"buffer_size": 1077,
-						"regions":
-						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										190,
-										200
-									],
-									[
-										454,
-										464
-									],
-									[
-										736,
-										746
-									],
-									[
-										916,
-										926
-									]
-								],
-								"scope": ""
-							}
-						},
-						"selection":
-						[
-							[
-								468,
-								468
-							]
-						],
-						"settings":
-						{
-							"detect_indentation": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
+					"buffer": 5,
 					"file": "match/match.go",
 					"settings":
 					{
@@ -998,7 +996,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 6,
 					"file": "match/www/api.js",
 					"settings":
 					{
@@ -1025,7 +1023,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 6,
+					"buffer": 7,
 					"file": "match/util.go",
 					"settings":
 					{
@@ -1052,7 +1050,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 8,
 					"settings":
 					{
 						"buffer_size": 4,
@@ -1073,33 +1071,6 @@
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "match/auth.go",
-					"settings":
-					{
-						"buffer_size": 16288,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4995,
-								4995
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 4245.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1133,18 +1104,18 @@
 				},
 				{
 					"buffer": 10,
-					"file": "/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+					"file": "match/pack.go",
 					"settings":
 					{
-						"buffer_size": 16355,
+						"buffer_size": 14810,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1996,
-								2046
+								720,
+								720
 							]
 						],
 						"settings":
@@ -1153,7 +1124,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2103.0,
+						"translation.y": 461.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1239,20 +1210,32 @@
 		"selected_items":
 		[
 			[
-				"main",
-				"SldServer/match/main.go"
-			],
-			[
-				"util",
-				"lwutil/util.go"
+				"admin",
+				"SldServer/match/admin.go"
 			],
 			[
 				"auth",
 				"SldServer/match/auth.go"
 			],
 			[
-				"admin",
-				"SldServer/match/admin.go"
+				"player",
+				"SldServer/match/player.go"
+			],
+			[
+				"pack.go",
+				"SldServer/match/pack.go"
+			],
+			[
+				"pack",
+				"packUploader/packUploader"
+			],
+			[
+				"main",
+				"SldServer/match/main.go"
+			],
+			[
+				"util",
+				"lwutil/util.go"
 			],
 			[
 				"store",
@@ -1277,10 +1260,6 @@
 			[
 				"ssdb",
 				"SldServer/match/ssdb/ssdb.go"
-			],
-			[
-				"player",
-				"SldServer/match/player.go"
 			],
 			[
 				"soci",
