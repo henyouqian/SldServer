@@ -19,7 +19,7 @@ const (
 	SSDB_MATCH_PORT = 9876
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var addr = flag.String("addr", ":9977", "http service address")
 var homeTempl = template.Must(template.ParseFiles("home.html"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {

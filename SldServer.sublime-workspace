@@ -830,7 +830,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 5,
 			"sheets":
 			[
 				{
@@ -980,8 +980,8 @@
 						"selection":
 						[
 							[
-								7319,
-								7319
+								223,
+								223
 							]
 						],
 						"settings":
@@ -990,7 +990,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5409.0,
+						"translation.y": 1118.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1210,6 +1210,10 @@
 		"selected_items":
 		[
 			[
+				"match",
+				"SldServer/match/match.go"
+			],
+			[
 				"admin",
 				"SldServer/match/admin.go"
 			],
@@ -1268,10 +1272,6 @@
 			[
 				"etc",
 				"SldServer/match/etc.go"
-			],
-			[
-				"match",
-				"SldServer/match/match.go"
 			],
 			[
 				"conf.json",
