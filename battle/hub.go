@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"sync"
 
 	"github.com/golang/glog"
@@ -82,7 +83,7 @@ func (h *Hub) run() {
 		select {
 		case c := <-h.register:
 			h.connections[c] = true
-			c.sendType("connected")
+			// c.sendType("connected")
 		case c := <-h.unregister:
 			if c.foe != nil {
 				c.foe.sendType("foeDisconnect")
@@ -259,13 +260,15 @@ func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 
 		//
 		out := struct {
-			Type    string
-			FoeName string
-			Pack    *Pack
+			Type      string
+			FoeName   string
+			Pack      *Pack
+			SliderNum int
 		}{
 			"paired",
 			c.foe.playerInfo.NickName,
 			pack,
+			rand.Intn(3) + 4,
 		}
 		c.sendMsg(out)
 

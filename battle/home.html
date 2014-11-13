@@ -28,6 +28,8 @@
             return false;
         }
         conn.send(msg.val());
+        
+        appendLog($("<div/>").text(">>>"+msg.val()))
         msg.val("");
         return false
     });
