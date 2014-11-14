@@ -7,7 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	// "math/rand"
 	"sync"
 
 	"github.com/golang/glog"
@@ -268,7 +268,8 @@ func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 			"paired",
 			c.foe.playerInfo.NickName,
 			pack,
-			rand.Intn(3) + 4,
+			3,
+			//rand.Intn(3) + 4, //fixme
 		}
 		c.sendMsg(out)
 
