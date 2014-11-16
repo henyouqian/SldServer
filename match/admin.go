@@ -123,13 +123,14 @@ func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
+		UserId      int64
 		AddGoldCoin int64
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
 	//
-	key := makePlayerInfoKey(session.Userid)
+	key := makePlayerInfoKey(in.UserId)
 	resp, err := ssdb.Do("hincr", key, PLAYER_GOLD_COIN, in.AddGoldCoin)
 	lwutil.CheckSsdbError(resp, err)
 

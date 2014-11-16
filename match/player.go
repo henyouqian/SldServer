@@ -153,6 +153,7 @@ func getCoupon(ssc *ssdb.Client, playerKey string) float32 {
 }
 
 func addCoupon(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	glog.Info("addCouon:", addCoupon*100.0)
 	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON, addCoupon*100.0)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
@@ -168,6 +169,7 @@ func getCouponCache(ssc *ssdb.Client, playerKey string) float32 {
 }
 
 func addCouponCache(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	glog.Info("addCouonCache:", addCoupon*100.0)
 	resp, err := ssc.Do("hincr", playerKey, PLAYER_COUPON_CACHE, addCoupon*100.0)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
@@ -183,6 +185,7 @@ func getCouponTotal(ssc *ssdb.Client, playerKey string) float32 {
 }
 
 func addCouponTotal(ssc *ssdb.Client, playerKey string, addCoupon float32) (rCoupon float32) {
+	glog.Info("addCouonTotal:", addCoupon*100.0)
 	resp, err := ssc.Do("hincr", playerKey, PLAYER_TOTAL_COUPON, addCoupon*100.0)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
@@ -310,6 +313,7 @@ func apiAddCouponFromCache(w http.ResponseWriter, r *http.Request) {
 	//
 	key := makePlayerInfoKey(session.Userid)
 	couponCache := getCouponCache(ssdb, key)
+	glog.Info(couponCache)
 	lwutil.CheckError(err, "")
 	if couponCache > 0 {
 		addCoupon(ssdb, key, couponCache)

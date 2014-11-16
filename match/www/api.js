@@ -349,7 +349,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "addGoldCoin",
 					"method": "POST",
-					"data": {"AddGoldCoin": 100}
+					"data": {"UserId":1030, "AddGoldCoin": 100}
 				},{
 					"name": "addCoupon",
 					"method": "POST",
