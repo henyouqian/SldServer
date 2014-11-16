@@ -25,6 +25,7 @@ const (
 	Z_MATCH                 = "Z_MATCH"                 //subkey:matchId score:beginTime
 	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
 	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
+	Z_LIKE_MATCH            = "Z_LIKE_MATCH"            //key:Z_LIKE_MATCH/userId subkey:matchId score:likeSerial
 	Z_MY_PLAYED_MATCH       = "Z_MY_PLAYED_MATCH"       //key:Z_MY_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:reward(totalReward)
@@ -80,6 +81,7 @@ type MatchPlay struct {
 	SecretExpire     int64
 	LuckyNums        []int64
 	Reward           float32
+	Like             bool
 }
 
 const (
@@ -110,6 +112,9 @@ func makeHMatchExtraSubkey(matchId int64, fieldKey string) string {
 
 func makeZPlayerMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_PLAYER_MATCH, userId)
+}
+func makeZLikeMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_LIKE_MATCH, userId)
 }
 
 func makeMyPlayedMatchKey(userId int64) string {
@@ -171,6 +176,14 @@ func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
 		lwutil.CheckError(err, "")
 	}
 	return &play
+}
+
+func saveMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64, play *MatchPlay) {
+	js, err := json.Marshal(play)
+	lwutil.CheckError(err, "")
+	subkey := makeMatchPlaySubkey(matchId, userId)
+	resp, err := ssdbc.Do("hset", H_MATCH_PLAY, subkey, js)
+	lwutil.CheckSsdbError(resp, err)
 }
 
 func init() {
@@ -975,6 +988,134 @@ func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		StartId   int64
+		LastScore int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.LastScore == 0 {
+		in.LastScore = math.MaxInt64
+	}
+
+	//out struct
+	type OutMatch struct {
+		Match
+		MatchExtra
+	}
+
+	type Out struct {
+		Matches   []OutMatch
+		LastScore int64
+	}
+	out := Out{
+		[]OutMatch{},
+		0,
+	}
+
+	//get keys
+	key := makeZLikeMatchKey(session.Userid)
+	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	if len(resp) == 1 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+	resp = resp[1:]
+
+	//get matches
+	num := len(resp) / 2
+	args := make([]interface{}, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		lwutil.CheckError(err, "")
+		if i == num-1 {
+			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	matches := make([]OutMatch, len(resp)/2)
+	m := make(map[int64]int) //key:matchId, value:index
+	for i, _ := range matches {
+		packjs := resp[i*2+1]
+		err = json.Unmarshal([]byte(packjs), &matches[i])
+		lwutil.CheckError(err, "")
+		m[matches[i].Id] = i
+	}
+
+	//match extra
+	if len(matches) > 0 {
+		args = make([]interface{}, 2, len(matches)*2+2)
+		args[0] = "multi_hget"
+		args[1] = H_MATCH_EXTRA
+		for _, v := range matches {
+			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
+			RewardCouponKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_REWARD_COUPON)
+			args = append(args, playTimesKey, RewardCouponKey)
+		}
+		resp, err = ssdbc.Do(args...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			key := resp[i*2]
+			var matchId int64
+			var fieldKey string
+			_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
+			lwutil.CheckError(err, "")
+
+			idx := m[matchId]
+			if fieldKey == MATCH_EXTRA_PLAY_TIMES {
+				playTimes, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].PlayTimes = playTimes
+			} else if fieldKey == MATCH_EXTRA_REWARD_COUPON {
+				ExtraCoupon, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].ExtraCoupon = ExtraCoupon
+			}
+		}
+	}
+
+	//out
+	out.Matches = matches
+
+	lwutil.WriteResponse(w, out)
+}
+
 func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -1571,7 +1712,95 @@ func apiMatchHide(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	lwutil.WriteResponse(w, match)
+}
 
+func apiMatchLike(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check match exist
+	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
+	lwutil.CheckError(err, "")
+	if !ssdbCheckExists(resp) {
+		lwutil.SendError("err_match_id", "Can't find match")
+	}
+
+	//
+	key := makeZLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("zexists", key, in.MatchId)
+	lwutil.CheckError(err, "")
+	if ssdbCheckExists(resp) {
+		lwutil.WriteResponse(w, in)
+		return
+	}
+
+	score := GenSerial(ssdbc, "MATCH_LIKE_SERIAL")
+	resp, err = ssdbc.Do("zset", key, in.MatchId, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	//match play
+	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play.Like = true
+	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+
+	lwutil.WriteResponse(w, in)
+}
+
+func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check match exist
+	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
+	lwutil.CheckError(err, "")
+	if !ssdbCheckExists(resp) {
+		lwutil.SendError("err_match_id", "Can't find match")
+	}
+
+	//
+	key := makeZLikeMatchKey(session.Userid)
+
+	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	//match play
+	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play.Like = false
+	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+
+	lwutil.WriteResponse(w, in)
 }
 
 func regMatch() {
@@ -1584,6 +1813,7 @@ func regMatch() {
 	http.Handle("/match/listMine", lwutil.ReqHandler(apiMatchListMine))
 	http.Handle("/match/listMyPlayed", lwutil.ReqHandler(apiMatchListMyPlayed))
 	http.Handle("/match/listHot", lwutil.ReqHandler(apiMatchListHot))
+	http.Handle("/match/listLike", lwutil.ReqHandler(apiMatchListLike))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
@@ -1593,4 +1823,7 @@ func regMatch() {
 
 	http.Handle("/match/report", lwutil.ReqHandler(apiMatchReport))
 	http.Handle("/match/hide", lwutil.ReqHandler(apiMatchHide))
+
+	http.Handle("/match/like", lwutil.ReqHandler(apiMatchLike))
+	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))
 }

@@ -305,6 +305,7 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 		"weibo":  true,
 		"qzone":  true,
 		"douban": true,
+		"uuid":   true,
 	}
 
 	if snsTypes[in.Type] == false {
@@ -661,7 +662,7 @@ func apiResetPassword(w http.ResponseWriter, r *http.Request) {
 func apiSsdbTest(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
-	ssdb, err := ssdbAuthPool.Get()
+	ssdb, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 

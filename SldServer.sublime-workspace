@@ -483,7 +483,7 @@
 			"file": "match/auth.go",
 			"settings":
 			{
-				"buffer_size": 16648,
+				"buffer_size": 16666,
 				"line_ending": "Unix"
 			}
 		},
@@ -525,15 +525,6 @@
 			{
 				"buffer_size": 2035,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "1015",
-			"settings":
-			{
-				"buffer_size": 4,
-				"line_ending": "Unix",
-				"name": "1015"
 			}
 		},
 		{
@@ -672,6 +663,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"SnsKey",
+			"key",
+			"snsTypes",
+			"token",
 			"K_RESET_PASSWORD",
 			"email",
 			"Email",
@@ -795,10 +790,6 @@
 			"zset",
 			"makeMatchLeaderboardRdsKey",
 			"RDS_Z_MATCH_LEADERBOARD",
-			"makeMatchLeaderboardRdsKey",
-			"playtimes",
-			"newPack",
-			"lbKey",
 			"makeMatchLeaderboardRdsKey"
 		],
 		"highlight": true,
@@ -882,7 +873,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1135.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -892,15 +883,15 @@
 					"file": "match/auth.go",
 					"settings":
 					{
-						"buffer_size": 16648,
+						"buffer_size": 16666,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								12423,
-								12423
+								7911,
+								7911
 							]
 						],
 						"settings":
@@ -909,7 +900,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 10867.0,
+						"translation.y": 6762.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -963,7 +954,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3071.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -990,7 +981,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1118.0,
+						"translation.y": 32870.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1044,39 +1035,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1496.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"settings":
-					{
-						"buffer_size": 4,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4,
-								4
-							]
-						],
-						"settings":
-						{
-							"auto_name": "1015",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 9,
+					"buffer": 8,
 					"file": "match/main.go",
 					"settings":
 					{
@@ -1103,7 +1068,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 9,
 					"file": "match/pack.go",
 					"settings":
 					{
@@ -1124,7 +1089,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 461.0,
+						"translation.y": 186.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1214,12 +1179,12 @@
 				"SldServer/match/match.go"
 			],
 			[
-				"admin",
-				"SldServer/match/admin.go"
-			],
-			[
 				"auth",
 				"SldServer/match/auth.go"
+			],
+			[
+				"admin",
+				"SldServer/match/admin.go"
 			],
 			[
 				"player",
