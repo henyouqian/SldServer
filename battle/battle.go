@@ -145,8 +145,24 @@ func battleEnd(conn *Connection, msg []byte) {
 	}
 }
 
+func talk(conn *Connection, msg []byte) {
+	var in struct {
+		Text string
+	}
+
+	err := json.Unmarshal(msg, &in)
+	if err != nil {
+		conn.sendErr("json error")
+		return
+	}
+	if len(in.Text) > 0 && conn.foe != nil {
+		conn.foe.send <- msg
+	}
+}
+
 func regBattle() {
 	regHandler("ready", MsgHandler(battleReady))
 	regHandler("progress", MsgHandler(battleProgress))
 	regHandler("end", MsgHandler(battleEnd))
+	regHandler("talk", MsgHandler(talk))
 }
