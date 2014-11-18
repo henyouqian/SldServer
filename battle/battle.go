@@ -18,6 +18,8 @@ type BattleState int
 const (
 	DOWNLOADING BattleState = iota
 	MATCHING
+	MATCHED
+	ONELEFT
 )
 
 type Battle struct {
@@ -41,6 +43,7 @@ func battleReady(conn *Connection, msg []byte) {
 		return
 	}
 	if battle.readyConn == nil {
+		battle.state = MATCHED
 		battle.readyConn = conn
 		conn.sendType("ready")
 	} else if battle.readyConn == conn.foe {

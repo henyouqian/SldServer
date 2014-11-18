@@ -95,7 +95,7 @@ func (c *Connection) readPump() {
 		}
 
 		if msg.Type == "authPair" {
-			err = h.authPair(c, message, "authRoom")
+			err = h.authPair(c, message)
 			if err != nil {
 				c.sendErr(err.Error())
 				// break

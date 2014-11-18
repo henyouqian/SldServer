@@ -88,6 +88,7 @@ func (h *Hub) run() {
 			if c.foe != nil {
 				c.foe.sendType("foeDisconnect")
 				c.foe.foe = nil
+				c.battle.state = ONELEFT
 			}
 			if _, ok := h.connections[c]; ok {
 				delete(h.connections, c)
@@ -184,7 +185,7 @@ func (h *Hub) simplePair(c *Connection, msg []byte, roomName string) error {
 	return nil
 }
 
-func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
+func (h *Hub) authPair(c *Connection, msg []byte) error {
 	//ssdb
 	authdb, err := ssdbAuthPool.Get()
 	if err != nil {
@@ -200,7 +201,8 @@ func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 
 	//
 	in := struct {
-		Token string
+		Token    string
+		RoomName string
 	}{}
 	if err = json.Unmarshal(msg, &in); err != nil {
 		return err
@@ -231,9 +233,9 @@ func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 
 	//
 	h.pendingConnMu.Lock()
-	pendingConn := h.pendingConnMap[roomName]
+	pendingConn := h.pendingConnMap[in.RoomName]
 	if pendingConn != nil {
-		h.pendingConnMap[roomName] = nil
+		h.pendingConnMap[in.RoomName] = nil
 		h.pendingConnMu.Unlock()
 
 		//check userId
@@ -276,13 +278,13 @@ func (h *Hub) authPair(c *Connection, msg []byte, roomName string) error {
 		out.FoeName = c.playerInfo.NickName
 		c.foe.sendMsg(out)
 	} else {
-		h.pendingConnMap[roomName] = c
+		h.pendingConnMap[in.RoomName] = c
 		h.pendingConnMu.Unlock()
 
 		c.sendType("pairing")
 	}
 
-	c.roomName = roomName
+	c.roomName = in.RoomName
 
 	return nil
 }
