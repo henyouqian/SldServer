@@ -34,19 +34,15 @@ type PlayerInfo struct {
 	CouponCache     float32 //*100 in ssdb
 	TotalCoupon     float32 //*100 in ssdb
 	Secret          string
-	CurrChallengeId int
-	BetMax          int
-	AllowSave       bool
 }
 
 //player property
 const (
-	PLAYER_GOLD_COIN         = "GoldCoin"
-	PLAYER_COUPON            = "Coupon"
-	PLAYER_COUPON_CACHE      = "CouponCache"
-	PLAYER_TOTAL_COUPON      = "TotalCoupon"
-	PLAYER_IAP_SECRET        = "IapSecret"
-	PLAYER_CURR_CHALLENGE_ID = "CurrChallengeId"
+	PLAYER_GOLD_COIN    = "GoldCoin"
+	PLAYER_COUPON       = "Coupon"
+	PLAYER_COUPON_CACHE = "CouponCache"
+	PLAYER_TOTAL_COUPON = "TotalCoupon"
+	PLAYER_IAP_SECRET   = "IapSecret"
 )
 
 const (
@@ -112,11 +108,6 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	err := ssdb.HGetStruct(key, &playerInfo)
 	if err != nil {
 		return nil, err
-	}
-
-	if playerInfo.CurrChallengeId == 0 {
-		playerInfo.CurrChallengeId = 1
-		ssdb.HSet(key, PLAYER_CURR_CHALLENGE_ID, 1)
 	}
 
 	playerInfo.Coupon *= 0.01
@@ -238,7 +229,14 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_auth")
 
 	//in
-	var in PlayerInfo
+	var in struct {
+		NickName        string
+		GravatarKey     string
+		CustomAvatarKey string
+		TeamName        string
+		Email           string
+		Gender          int
+	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 	if in.Gender > 2 {
@@ -261,31 +259,13 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
-	//check player info exist
-	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
-	if playerInfo == nil {
-		//set default value
-		playerInfo = &in
-		playerInfo.BetMax = 100
-		playerInfo.CurrChallengeId = 1
-	} else {
-		if len(in.NickName) > 0 {
-			playerInfo.NickName = in.NickName
-		}
-		playerInfo.GravatarKey = in.GravatarKey
-		playerInfo.CustomAvatarKey = in.CustomAvatarKey
-		if len(in.TeamName) > 0 {
-			playerInfo.TeamName = in.TeamName
-		}
-		playerInfo.Gender = in.Gender
-		if len(in.Email) > 0 {
-			playerInfo.Email = in.Email
-		}
-	}
-
 	//save
 	playerKey := makePlayerInfoKey(session.Userid)
-	err = ssdb.HSetStruct(playerKey, *playerInfo)
+	err = ssdb.HSetStruct(playerKey, in)
+	lwutil.CheckError(err, "")
+
+	//get player info
+	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
 	lwutil.CheckError(err, "")
 
 	//out
