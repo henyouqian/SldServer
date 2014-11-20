@@ -20,23 +20,23 @@ const (
 	Z_ECO_DAILY_MON     = "Z_ECO_DAILY_MON"     //key:Z_ECO_DAILY_MON/date subkey:goldCoinRecordId score:time
 	H_ECO_DAILY_COUNTER = "H_ECO_DAILY_COUNTER" //key:H_ECO_DAILY_COUNTER/date subkey:whatCounter value:count
 
-	ECO_FORWHAT_IAP           = "iap coin+"
-	ECO_FORWHAT_MATCHBEGIN    = "match begin coin-"
-	ECO_FORWHAT_MATCHREWARD   = "match reward coupon+"
-	ECO_FORWHAT_PUBLISHREWARD = "publish reward coupon+"
-	ECO_FORWHAT_BUYECARD      = "buy ecard coupon-"
+	ECO_FORWHAT_IAP          = "iap coin+"
+	ECO_FORWHAT_MATCHBEGIN   = "match begin coin-"
+	ECO_FORWHAT_MATCHPRIZE   = "match prize+"
+	ECO_FORWHAT_PUBLISHPRIZE = "publish prize+"
+	ECO_FORWHAT_BUYECARD     = "buy ecard prize-"
 
 	//whatCounter
-	ECO_DAILY_COUNTER_IAP           = "ECO_DAILY_COUNTER_IAP"
-	ECO_DAILY_COUNTER_MATCHBEGIN    = "ECO_DAILY_COUNTER_MATCHBEGIN"
-	ECO_DAILY_COUNTER_MATCHREWARD   = "ECO_DAILY_COUNTER_MATCHREWARD"
-	ECO_DAILY_COUNTER_PUBLISHREWARD = "ECO_DAILY_COUNTER_PUBLISHREWARD"
-	ECO_DAILY_COUNTER_BUYECARD      = "ECO_DAILY_COUNTER_BUYECARD"
+	ECO_DAILY_COUNTER_IAP          = "ECO_DAILY_COUNTER_IAP"          //count:goldCoin
+	ECO_DAILY_COUNTER_MATCHBEGIN   = "ECO_DAILY_COUNTER_MATCHBEGIN"   //count:goldCoin
+	ECO_DAILY_COUNTER_MATCHPRIZE   = "ECO_DAILY_COUNTER_MATCHPRIZE"   //count:prize
+	ECO_DAILY_COUNTER_PUBLISHPRIZE = "ECO_DAILY_COUNTER_PUBLISHPRIZE" //count:prize
+	ECO_DAILY_COUNTER_BUYECARD     = "ECO_DAILY_COUNTER_BUYECARD"     //count:prize
 )
 
 type EcoRecord struct {
 	UserId  int64
-	Count   float32
+	Count   int
 	ForWhat string
 	Time    int64
 }
@@ -44,7 +44,7 @@ type EcoRecord struct {
 type OutEcoRecord struct {
 	Id      int64
 	ForWhat string
-	Count   float32
+	Count   int
 	Time    string
 }
 
@@ -64,7 +64,7 @@ func makeEcoDailyCountKey(date string) string {
 	return fmt.Sprintf("%s/%s", H_ECO_DAILY_COUNTER, date)
 }
 
-func addEcoRecord(ssdbc *ssdb.Client, userId int64, count float32, forWhat string) (err error) {
+func addEcoRecord(ssdbc *ssdb.Client, userId int64, count int, forWhat string) (err error) {
 	id := GenSerial(ssdbc, ECO_RECORD_SERIAL)
 	now := lwutil.GetRedisTime()
 
@@ -108,10 +108,10 @@ func addEcoRecord(ssdbc *ssdb.Client, userId int64, count float32, forWhat strin
 		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_IAP, count)
 	} else if forWhat == ECO_FORWHAT_MATCHBEGIN {
 		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_MATCHBEGIN, count)
-	} else if forWhat == ECO_FORWHAT_MATCHREWARD {
-		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_MATCHREWARD, count)
-	} else if forWhat == ECO_FORWHAT_PUBLISHREWARD {
-		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_PUBLISHREWARD, count)
+	} else if forWhat == ECO_FORWHAT_MATCHPRIZE {
+		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_MATCHPRIZE, count)
+	} else if forWhat == ECO_FORWHAT_PUBLISHPRIZE {
+		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_PUBLISHPRIZE, count)
 	} else if forWhat == ECO_FORWHAT_BUYECARD {
 		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_BUYECARD, count)
 	}

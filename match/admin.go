@@ -141,7 +141,7 @@ func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, playerInfo)
 }
 
-func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
+func apiAddPrize(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
 
@@ -162,9 +162,9 @@ func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		UserId    int64
-		UserName  string
-		AddCoupon int
+		UserId   int64
+		UserName string
+		Prize    int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -182,7 +182,7 @@ func apiAddCoupon(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := makePlayerInfoKey(userId)
-	addCoupon(ssdbc, key, float32(in.AddCoupon))
+	addPrize(ssdbc, key, in.Prize)
 
 	var playerInfo PlayerInfo
 	ssdbc.HGetStruct(key, &playerInfo)
@@ -231,6 +231,6 @@ func apiSetAdsConf(w http.ResponseWriter, r *http.Request) {
 func regAdmin() {
 	http.Handle("/admin/getUserInfo", lwutil.ReqHandler(apiGetUserInfo))
 	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
-	http.Handle("/admin/addCoupon", lwutil.ReqHandler(apiAddCoupon))
+	http.Handle("/admin/addPrize", lwutil.ReqHandler(apiAddPrize))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
 }

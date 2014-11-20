@@ -18,21 +18,21 @@ func initMatchCron() {
 	matchCron()
 }
 
-func calcRankReward(match *Match, rewardSum float32, rank int) float32 {
+func calcRankPrize(match *Match, prizeSum int, rank int) int {
 	rankIdx := rank - 1
-	fixRewardNum := len(match.RankRewardProportions)
-	if rankIdx < fixRewardNum {
-		return match.RankRewardProportions[rankIdx] * rewardSum
+	fixPrizeNum := len(match.RankPrizeProportions)
+	if rankIdx < fixPrizeNum {
+		return int(match.RankPrizeProportions[rankIdx] * float32(prizeSum))
 	}
 
-	oneCoinNum := int(rewardSum * match.OneCoinRewardProportion)
-	propNum := len(match.RankRewardProportions)
-	minReward := rewardSum * match.RankRewardProportions[propNum-1]
-	if (minReward > 1.0) && (rankIdx < (fixRewardNum + oneCoinNum)) {
-		return 1.0
+	minPrizeNum := int(float32(prizeSum) * match.MinPrizeProportion / float32(MIN_PRIZE))
+	propNum := len(match.RankPrizeProportions)
+	lastPrize := float32(prizeSum) * match.RankPrizeProportions[propNum-1]
+	if (lastPrize > MIN_PRIZE) && (rankIdx < (fixPrizeNum + minPrizeNum)) {
+		return MIN_PRIZE
 	}
 
-	return 0.0
+	return 0
 }
 
 func matchCron() {
@@ -74,15 +74,15 @@ func matchCron() {
 
 				//reward sum
 				match := getMatch(ssdbc, matchId)
-				extraRewardSubkey := makeHMatchExtraSubkey(matchId, MATCH_EXTRA_REWARD_COUPON)
-				respCoupon, err := ssdbc.Do("hget", H_MATCH_EXTRA, extraRewardSubkey)
+				extraPrizeSubkey := makeHMatchExtraSubkey(matchId, MATCH_EXTRA_PRIZE)
+				respPrize, err := ssdbc.Do("hget", H_MATCH_EXTRA, extraPrizeSubkey)
 				checkError(err)
-				extraCoupon := 0
-				if len(respCoupon) == 2 {
-					extraCoupon, err = strconv.Atoi(respCoupon[1])
+				extraPrize := 0
+				if len(respPrize) == 2 {
+					extraPrize, err = strconv.Atoi(respPrize[1])
 					checkError(err)
 				}
-				rewardSum := float32(match.RewardCoupon + extraCoupon)
+				prizeSum := match.Prize + extraPrize
 
 				//get ranks
 				lbKey := makeMatchLeaderboardRdsKey(matchId)
@@ -121,7 +121,7 @@ func matchCron() {
 						play.FinalRank = rank
 
 						///get reward sum
-						play.Reward = calcRankReward(match, rewardSum, rank)
+						play.Prize = calcRankPrize(match, prizeSum, rank)
 
 						js, err := json.Marshal(play)
 						checkError(err)
@@ -135,19 +135,19 @@ func matchCron() {
 						r, err = ssdbc.Do("hset", matchRankKey, rank, userId)
 						checkSsdbError(r, err)
 
-						//add player reward
-						addCouponToCache(ssdbc, userId, matchId, match.Thumb, play.Reward, REWARD_REASON_RANK, rank)
+						//add player prize
+						addPrizeToCache(ssdbc, userId, matchId, match.Thumb, play.Prize, PRIZE_REASON_RANK, rank)
 
 						//
-						addEcoRecord(ssdbc, userId, play.Reward, ECO_FORWHAT_MATCHREWARD)
+						addEcoRecord(ssdbc, userId, play.Prize, ECO_FORWHAT_MATCHPRIZE)
 					}
 				}
 
-				//owner reward
-				ownerReward := match.OwnerRewardProportion * float32(rewardSum)
-				if ownerReward > 0 {
-					addCouponToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerReward, REWARD_REASON_OWNER, 0)
-					addEcoRecord(ssdbc, match.OwnerId, ownerReward, ECO_FORWHAT_PUBLISHREWARD)
+				//owner prize
+				ownerPrize := int(match.OwnerPrizeProportion * float32(prizeSum))
+				if ownerPrize > 0 {
+					addPrizeToCache(ssdbc, match.OwnerId, matchId, match.Thumb, ownerPrize, PRIZE_REASON_OWNER, 0)
+					addEcoRecord(ssdbc, match.OwnerId, ownerPrize, ECO_FORWHAT_PUBLISHPRIZE)
 				}
 
 				//add to del array

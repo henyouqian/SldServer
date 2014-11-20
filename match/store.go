@@ -49,19 +49,19 @@ type GameCoinPack struct {
 }
 
 type ECardType struct {
-	Key         string
-	Name        string
-	Provider    string
-	Thumb       string
-	RmbPrice    int
-	CouponPrice int
-	Num         int
+	Key       string
+	Name      string
+	Provider  string
+	Thumb     string
+	RmbPrice  int
+	NeedPrize int
+	Num       int
 }
 
 type ECard struct {
 	Id          int64
 	TypeKey     string
-	CouponCode  string
+	Code        string
 	ExpireDate  string
 	GenDate     string
 	UserGetDate string
@@ -263,7 +263,7 @@ func apiBuyIap(w http.ResponseWriter, r *http.Request) {
 	goldCoin, err := strconv.ParseInt(resp[1], 10, 64)
 
 	//
-	err = addEcoRecord(ssdb, session.Userid, float32(addGoldCoin), ECO_FORWHAT_IAP)
+	err = addEcoRecord(ssdb, session.Userid, addGoldCoin, ECO_FORWHAT_IAP)
 	lwutil.CheckError(err, "")
 
 	//update secret
@@ -317,8 +317,8 @@ func apiAddEcardType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check price
-	if in.RmbPrice*10 != in.CouponPrice {
-		lwutil.SendError("err_price", "in.RmbPrice * 10 != in.CouponPrice")
+	if in.RmbPrice*1000 != in.NeedPrize {
+		lwutil.SendError("err_price", "in.RmbPrice * 1000 != in.NeedPrize")
 	}
 
 	//check thumb
@@ -486,8 +486,8 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	if len(in.CouponCode) == 0 {
-		lwutil.SendError("err_code", "need coupon code")
+	if len(in.Code) == 0 {
+		lwutil.SendError("err_code", "need code")
 	}
 
 	in.TypeKey = makeEcardTypeKey(in.Provider, in.RmbPrice)
@@ -507,7 +507,7 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	//check code exist
-	codeSubkey := makeEcardCodeSubkey(cardType.Provider, in.CouponCode)
+	codeSubkey := makeEcardCodeSubkey(cardType.Provider, in.Code)
 	resp, err = ssdbc.Do("hexists", H_ECARD_CODE, codeSubkey)
 	lwutil.CheckSsdbError(resp, err)
 	if ssdbCheckExists(resp) {
@@ -523,7 +523,7 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	in.Provider = cardType.Provider
 
 	//hset
-	in.Id = GenSerial(ssdbc, "COUPON_ITEM_SERIAL")
+	in.Id = GenSerial(ssdbc, "ECARD_SERIAL")
 	js, err := json.Marshal(in)
 	lwutil.CheckError(err, "")
 	resp, err = ssdbc.Do("hset", H_ECARD, in.Id, js)
@@ -534,7 +534,7 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("qpush_back", qkey, in.Id)
 	lwutil.CheckSsdbError(resp, err)
 
-	//add to H_COUPON_CODE
+	//add to H_ECARD_CODE
 	resp, err = ssdbc.Do("hset", H_ECARD_CODE, codeSubkey, in.Id)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -592,34 +592,34 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check player coupon
+	//check player prize
 	playerKey := makePlayerInfoKey(session.Userid)
-	playerCoupon := getCoupon(ssdbc, playerKey)
-	if playerCoupon < float32(cardType.CouponPrice) {
-		lwutil.SendError("err_not_enough", "not enough coupon")
+	playerPrize := getPrize(ssdbc, playerKey)
+	if playerPrize < cardType.NeedPrize {
+		lwutil.SendError("err_not_enough", "not enough prize")
 	}
 
-	//buy, pop from coupon item queue
+	//buy, pop from ecard queue
 	ecardQueueKey := makeEcardQueueKey(in.TypeKey)
 	resp, err = ssdbc.Do("qpop_front", ecardQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	itemId, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "")
 
-	//buy, add to player coupon zset
+	//buy, add to player ecard zset
 	playerEcardZKey := makePlayerEcardZsetKey(session.Userid)
 	score := lwutil.GetRedisTimeUnix()
 	resp, err = ssdbc.Do("zset", playerEcardZKey, itemId, score)
 	lwutil.CheckSsdbError(resp, err)
 
-	//buy, sub player coupon num
-	addCoupon(ssdbc, playerKey, float32(-cardType.CouponPrice))
+	//buy, sub player prize num
+	addPrize(ssdbc, playerKey, -cardType.NeedPrize)
 
 	//eco record
-	err = addEcoRecord(ssdbc, session.Userid, float32(cardType.CouponPrice), ECO_FORWHAT_BUYECARD)
+	err = addEcoRecord(ssdbc, session.Userid, cardType.NeedPrize, ECO_FORWHAT_BUYECARD)
 	lwutil.CheckError(err, "")
 
-	//update coupon type's coupon num
+	//update ecard type's ecard num
 	resp, err = ssdbc.Do("qsize", ecardQueueKey)
 	lwutil.CheckSsdbError(resp, err)
 	num, err := strconv.Atoi(resp[1])
@@ -658,8 +658,8 @@ func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	outEcard.Provider = ECARD_PROVIDERS[cardType.Provider]
 
 	out := map[string]interface{}{
-		"Ecard":        outEcard,
-		"PlayerCoupon": playerCoupon - float32(cardType.CouponPrice),
+		"Ecard":       outEcard,
+		"PlayerPrize": playerPrize - cardType.NeedPrize,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -739,7 +739,7 @@ func apiSetEcardStoreClose(w http.ResponseWriter, r *http.Request) {
 // 	out := struct {
 // 		Code string
 // 	}{
-// 		ecard.CouponCode,
+// 		ecard.Code,
 // 	}
 
 // 	lwutil.WriteResponse(w, out)

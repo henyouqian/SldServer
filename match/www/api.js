@@ -156,7 +156,7 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"NickName":"", "Gender":0, "TeamName":"上海", "CustomAvatarKey":"", "GravatarKey":""}
 				},{
-					"name": "addCouponFromCache",
+					"name": "addPrizeFromCache",
 					"method": "POST",
 					"data": ""
 				},{
@@ -351,9 +351,9 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"UserId":1030, "AddGoldCoin": 100}
 				},{
-					"name": "addCoupon",
+					"name": "addPrize",
 					"method": "POST",
-					"data": {"UserId": 0, "UserName": "aa", "AddCoupon": 100}
+					"data": {"UserId": 0, "UserName": "aa", "prize": 100}
 				},{
 					"name": "setAdsConf",
 					"method": "POST",
@@ -399,7 +399,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "addEcard",
 					"method": "POST",
-					"data": {"Provider":"amazon", "RmbPrice":0, "CouponCode":"", "ExpireDate":""}
+					"data": {"Provider":"amazon", "RmbPrice":0, "Code":"", "ExpireDate":""}
 				},{
 					"name": "buyEcard",
 					"method": "POST",
@@ -500,7 +500,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "listHot",
 					"method": "POST",
-					"data": {"StartId": 0, "CouponSum": 0, "Limit":12}
+					"data": {"StartId": 0, "PrizeSum": 0, "Limit":12}
 				},{
 					"name": "getDynamicData",
 					"method": "POST",
