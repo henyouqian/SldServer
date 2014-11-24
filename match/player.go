@@ -252,8 +252,19 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
-	//save
+	//
 	playerKey := makePlayerInfoKey(session.Userid)
+
+	//check playerInfo exist
+	resp, err := ssdb.Do("hexists", playerKey, PLAYER_GOLD_COIN)
+	lwutil.CheckError(err, "")
+	if resp[1] != "1" {
+		var player PlayerInfo
+		err = ssdb.HSetStruct(playerKey, player)
+		lwutil.CheckError(err, "")
+	}
+
+	//save
 	err = ssdb.HSetStruct(playerKey, in)
 	lwutil.CheckError(err, "")
 

@@ -467,7 +467,7 @@
 			"file": "home.html",
 			"settings":
 			{
-				"buffer_size": 1889,
+				"buffer_size": 1951,
 				"line_ending": "Unix"
 			}
 		},
@@ -475,7 +475,7 @@
 			"file": "conn.go",
 			"settings":
 			{
-				"buffer_size": 4067,
+				"buffer_size": 4055,
 				"line_ending": "Unix"
 			}
 		},
@@ -483,7 +483,7 @@
 			"file": "hub.go",
 			"settings":
 			{
-				"buffer_size": 5801,
+				"buffer_size": 5925,
 				"line_ending": "Unix"
 			}
 		},
@@ -491,7 +491,7 @@
 			"file": "battle.go",
 			"settings":
 			{
-				"buffer_size": 2658,
+				"buffer_size": 2978,
 				"line_ending": "Unix"
 			}
 		},
@@ -504,22 +504,12 @@
 			}
 		},
 		{
-			"contents": "Searching 19 files for \"serveWs\"\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/conn.go:\n  171  \n  172  // serverWs handles websocket requests from the peer.\n  173: func serveWs(w http.ResponseWriter, r *http.Request) {\n  174  	if r.Method != \"GET\" {\n  175  		http.Error(w, \"Method not allowed\", 405)\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/main.go:\n   45  	go h.run()\n   46  	http.HandleFunc(\"/\", serveHome)\n   47: 	http.HandleFunc(\"/ws\", serveWs)\n   48  	err := http.ListenAndServe(*addr, nil)\n   49  	if err != nil {\n\n2 matches across 2 files\n",
+			"contents": "{\"Type\":\"authPair\", \"Token\":\"f729GpKDR0ZheJDkIN3m-A==\"}\n{\"Type\":\"authPair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}\n\n\n{\"Type\":\"simplePair\", \"NickName\":\"aa\"}\n\n{\"Type\":\"talk\", \"Text\":\"xxxx\"}",
 			"settings":
 			{
-				"buffer_size": 569,
+				"buffer_size": 268,
 				"line_ending": "Unix",
-				"name": "Find Results",
-				"scratch": true
-			}
-		},
-		{
-			"contents": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68g==\"}\n{\"Type\":\"authPair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}\n\n\n{\"Type\":\"simplePair\", \"NickName\":\"aa\"}",
-			"settings":
-			{
-				"buffer_size": 236,
-				"line_ending": "Unix",
-				"name": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68"
+				"name": "{\"Type\":\"authPair\", \"Token\":\"f729GpKDR0ZheJDkIN3m-"
 			}
 		}
 	],
@@ -630,7 +620,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 99.0,
+		"height": 0.0,
 		"where_history":
 		[
 			""
@@ -641,6 +631,13 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"unre",
+			"MATCHING",
+			"roomname",
+			"roomName",
+			"authPair",
+			"fixm",
+			"Pack",
 			"battleProgress",
 			"Pack",
 			"glog.",
@@ -761,14 +758,7 @@
 			"有效",
 			"https://www.amazon.cn/gp/css/gc/paymen=\nt/view-gc-balance?code=",
 			"code=",
-			"=EF=BF=A5",
-			"Claim code",
-			"code=",
-			"https://",
-			"=EF=BF=A5",
-			"view-gc",
-			"ssdb.",
-			"CheckSsdbError"
+			"=EF=BF=A5"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -799,7 +789,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -807,15 +797,15 @@
 					"file": "home.html",
 					"settings":
 					{
-						"buffer_size": 1889,
+						"buffer_size": 1951,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								39,
-								39
+								0,
+								0
 							]
 						],
 						"settings":
@@ -835,15 +825,15 @@
 					"file": "conn.go",
 					"settings":
 					{
-						"buffer_size": 4067,
+						"buffer_size": 4055,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3819,
-								3819
+								2039,
+								2039
 							]
 						],
 						"settings":
@@ -852,7 +842,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3421.0,
+						"translation.y": 1786.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -862,15 +852,15 @@
 					"file": "hub.go",
 					"settings":
 					{
-						"buffer_size": 5801,
+						"buffer_size": 5925,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3187,
-								3187
+								1882,
+								1882
 							]
 						],
 						"settings":
@@ -879,7 +869,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2824.0,
+						"translation.y": 1752.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -889,15 +879,15 @@
 					"file": "battle.go",
 					"settings":
 					{
-						"buffer_size": 2658,
+						"buffer_size": 2978,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								944,
-								949
+								364,
+								371
 							]
 						],
 						"settings":
@@ -906,7 +896,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 581.0,
+						"translation.y": 69.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -923,8 +913,8 @@
 						"selection":
 						[
 							[
-								1040,
-								1047
+								48,
+								48
 							]
 						],
 						"settings":
@@ -933,7 +923,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 555.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -942,67 +932,20 @@
 					"buffer": 5,
 					"settings":
 					{
-						"buffer_size": 569,
-						"regions":
-						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										178,
-										185
-									],
-									[
-										463,
-										470
-									]
-								],
-								"scope": ""
-							}
-						},
-						"selection":
-						[
-							[
-								181,
-								181
-							]
-						],
-						"settings":
-						{
-							"detect_indentation": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"settings":
-					{
-						"buffer_size": 236,
+						"buffer_size": 268,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								197,
-								197
+								268,
+								238
 							]
 						],
 						"settings":
 						{
-							"auto_name": "{\"Type\":\"authPair\", \"Token\":\"_zsWHJxqSdlRKuDV9RX68",
+							"auto_name": "{\"Type\":\"authPair\", \"Token\":\"f729GpKDR0ZheJDkIN3m-",
 							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,

@@ -31,12 +31,13 @@ const (
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:totalPrize
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 
-	PRIZE_NUM_PER_COIN       = 100
-	MIN_PRIZE                = PRIZE_NUM_PER_COIN
-	FREE_TRY_NUM             = 3
-	MATCH_TRY_EXPIRE_SECONDS = 600
-	MATCH_TIME_SEC           = 60 * 60 * 24
-	// MATCH_TIME_SEC = 60 * 2
+	PRIZE_NUM_PER_COIN         = 100
+	MIN_PRIZE                  = PRIZE_NUM_PER_COIN
+	FREE_TRY_NUM               = 3
+	MATCH_TRY_EXPIRE_SECONDS   = 600
+	MATCH_CLOSE_BEFORE_END_SEC = 60
+	// MATCH_TIME_SEC           = 60 * 60 * 24
+	MATCH_TIME_SEC = 60 * 3
 )
 
 type Match struct {
@@ -1238,6 +1239,10 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	if now < match.BeginTime || now >= match.EndTime || match.HasResult {
 		lwutil.SendError("err_time", "match out of time")
+	}
+
+	if now > match.EndTime-MATCH_CLOSE_BEFORE_END_SEC {
+		lwutil.SendError("err_end_soon", "match end soon")
 	}
 
 	//get matchPlay

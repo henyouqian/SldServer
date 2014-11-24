@@ -168,7 +168,7 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": ["test1.jpg", "test2.jpg"]
 				},{
-					"name": "listMyEcard",
+					"name": "listMyPrize",
 					"method": "POST",
 					"data": {"StartId":0, "LastScore":0, "Limit":20}
 				},{
@@ -383,7 +383,7 @@ function Controller($scope, $http) {
 				},{
 					"name": "addEcardType",
 					"method": "POST",
-					"data": {"Name":"", "Provider":"amazon", "RmbPrice":1000, "CouponPrice":10000, "Thumb":""}
+					"data": {"Name":"亚马逊电子礼品卡10元", "Provider":"amazon", "RmbPrice":10, "NeedPrize":12345, "Thumb":"lw/amazon.jpg"}
 				},{
 					"name": "editEcardType",
 					"method": "POST",
