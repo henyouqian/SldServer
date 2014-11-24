@@ -36,8 +36,8 @@ const (
 	FREE_TRY_NUM               = 3
 	MATCH_TRY_EXPIRE_SECONDS   = 600
 	MATCH_CLOSE_BEFORE_END_SEC = 60
-	// MATCH_TIME_SEC           = 60 * 60 * 24
-	MATCH_TIME_SEC = 60 * 3
+	MATCH_TIME_SEC             = 60 * 60 * 24
+	// MATCH_TIME_SEC = 60 * 3
 )
 
 type Match struct {
