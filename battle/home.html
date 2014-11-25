@@ -5,9 +5,9 @@
 <!--script src="http://lwswap.qiniudn.com/jquery.min.js"></script-->
 <script src="jquery.min.js"></script>
 <script type="text/javascript">
+    var conn;
     $(function() {
 
-    var conn;
     var msg = $("#msg");
     var log = $("#log");
 
@@ -48,6 +48,7 @@
     }
     });
 </script>
+<script src="home.js"></script>
 <style type="text/css">
 html {
     overflow: hidden;
@@ -70,7 +71,7 @@ body {
     top: 0.5em;
     left: 0.5em;
     right: 0.5em;
-    bottom: 3em;
+    bottom: 6em;
     overflow: auto;
 }
 
@@ -88,9 +89,16 @@ body {
 </head>
 <body>
 <div id="log"></div>
+
 <form id="form">
     <input type="submit" value="Send" />
     <input type="text" id="msg" size="640"/>
+
+    <button id="pair" type="button">Pair</button>
+    <button id="emoji" type="button">Emoji</button>
+    <button id="ready" type="button">Ready</button>
+    <button id="finish" type="button">Finish</button>
 </form>
+
 </body>
 </html>

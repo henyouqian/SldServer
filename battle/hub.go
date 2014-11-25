@@ -115,77 +115,14 @@ func (h *Hub) run() {
 	}
 }
 
-func (h *Hub) simplePair(c *Connection, msg []byte, roomName string) error {
-	//
-	in := struct {
-		NickName string
-	}{}
-	if err := json.Unmarshal(msg, &in); err != nil {
-		return err
-	}
-
-	h.pendingConnMu.Lock()
-
-	pendingConn := h.pendingConnMap[roomName]
-	if pendingConn != nil {
-		if pendingConn == c {
-			h.pendingConnMu.Unlock()
-			return fmt.Errorf("same user")
-		}
-
-		h.pendingConnMap[roomName] = nil
-		h.pendingConnMu.Unlock()
-
-		c.foe = pendingConn
-		pendingConn.foe = c
-
-		battle := makeBattle()
-		c.battle = battle
-		c.foe.battle = battle
-
-		c.index = 1
-		c.foe.index = 0
-
-		//
-		matchdb, err := ssdbMatchPool.Get()
-		if err != nil {
-			return err
-		}
-		defer matchdb.Close()
-
-		//get pack, fixme
-		pack, err := getPack(matchdb, 2)
-		if err != nil {
-			return err
-		}
-
-		//
-		out := struct {
-			Type    string
-			FoeName string
-			Pack    *Pack
-		}{
-			"paired",
-			c.foe.nickName,
-			pack,
-		}
-		c.sendMsg(out)
-
-		out.FoeName = c.nickName
-		c.foe.sendMsg(out)
-	} else {
-		h.pendingConnMap[roomName] = c
-		h.pendingConnMu.Unlock()
-
-		c.sendType("pairing")
-	}
-
-	c.roomName = roomName
-
-	return nil
-}
-
 func (h *Hub) authPair(c *Connection, msg []byte) error {
+	//check already pair
+	if c.playerInfo != nil {
+		if !(c.battle != nil && c.battle.state == ONELEFT) {
+			return fmt.Errorf("err_already_pair")
+		}
+	}
+
 	//ssdb
 	authdb, err := ssdbAuthPool.Get()
 	if err != nil {
@@ -240,7 +177,7 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 
 		//check userId
 		if pendingConn.playerInfo.UserId == session.Userid {
-			return fmt.Errorf("same user")
+			return fmt.Errorf("err_same_user")
 		}
 
 		//
@@ -251,9 +188,6 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		c.battle = battle
 		c.foe.battle = battle
 
-		c.index = 1
-		c.foe.index = 0
-
 		//get pack, fixme
 		pack, err := getPack(matchdb, 2)
 		if err != nil {
@@ -263,19 +197,18 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		//
 		out := struct {
 			Type      string
-			FoeName   string
 			Pack      *Pack
 			SliderNum int
+			FoePlayer *PlayerInfo
 		}{
 			"paired",
-			c.foe.playerInfo.NickName,
 			pack,
-			3,
-			//rand.Intn(3) + 4, //fixme
+			3, //rand.Intn(3) + 4, //fixme
+			c.foe.playerInfo,
 		}
 		c.sendMsg(out)
 
-		out.FoeName = c.playerInfo.NickName
+		out.FoePlayer = c.playerInfo
 		c.foe.sendMsg(out)
 	} else {
 		h.pendingConnMap[in.RoomName] = c
@@ -285,6 +218,7 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 	}
 
 	c.roomName = in.RoomName
+	c.result = 0
 
 	return nil
 }

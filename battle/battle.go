@@ -6,6 +6,8 @@ package main
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/golang/glog"
 )
 
@@ -16,34 +18,33 @@ func _battlelog() {
 type BattleState int
 
 const (
-	DOWNLOADING BattleState = iota
+	PREPARE BattleState = iota
 	MATCHING
-	MATCHED
 	ONELEFT
+	FINISH
 )
 
 type Battle struct {
 	state     BattleState
 	readyConn *Connection
-	results   map[int]int //[index]msec
+	secret    string
 }
 
 func makeBattle() *Battle {
 	battle := new(Battle)
-	battle.state = DOWNLOADING
+	battle.state = PREPARE
 	battle.readyConn = nil
-	battle.results = make(map[int]int)
+	battle.secret = genUUID()
 	return battle
 }
 
 func battleReady(conn *Connection, msg []byte) {
 	battle := conn.battle
-	if battle.state != DOWNLOADING {
-		conn.sendErr("error state")
+	if battle == nil || battle.state != PREPARE {
+		conn.sendErr("err_state")
 		return
 	}
 	if battle.readyConn == nil {
-		battle.state = MATCHED
 		battle.readyConn = conn
 		conn.sendType("ready")
 	} else if battle.readyConn == conn.foe {
@@ -59,7 +60,7 @@ func battleProgress(conn *Connection, msg []byte) {
 		conn.sendErr("need pair")
 		return
 	}
-	if conn.battle.state != MATCHING {
+	if conn.battle.state != MATCHING || conn.battle.state != FINISH {
 		conn.sendErr("battle state error")
 		return
 	}
@@ -82,9 +83,12 @@ func battleProgress(conn *Connection, msg []byte) {
 	conn.foe.send <- msg
 }
 
-func battleEnd(conn *Connection, msg []byte) {
+func battleFinish(conn *Connection, msg []byte) {
 	if conn.battle == nil {
 		conn.sendErr("need pair")
+		return
+	}
+	if conn.battle.state == FINISH {
 		return
 	}
 	if conn.battle.state != MATCHING {
@@ -103,48 +107,65 @@ func battleEnd(conn *Connection, msg []byte) {
 		return
 	}
 
-	results := conn.battle.results
-
 	//check exist
-	_, e := results[conn.index]
-	if e {
+	if conn.result != 0 {
 		conn.sendErr("result exist")
 		return
 	}
-	results[conn.index] = in.Msec
+	conn.result = in.Msec
 
 	//end
-	if len(results) == 2 {
-		myMsec := results[conn.index]
-		foeMsec := results[conn.foe.index]
+	if conn.foe.result != 0 {
+		conn.battle.state = FINISH
+		myMsec := conn.result
+		foeMsec := conn.foe.result
 
 		out := struct {
-			Result  string //win, lose, draw
+			Type    string
+			MyMsec  int
 			FoeMsec int
 		}{
-			"",
+			"result",
+			myMsec,
 			foeMsec,
 		}
 
-		if myMsec < foeMsec { //win
-			out.Result = "win"
-		} else if myMsec > foeMsec { //lose
-			out.Result = "lose"
-		} else { //draw
-			out.Result = "draw"
-		}
 		conn.sendMsg(out)
 
 		//foe
-		if myMsec < foeMsec {
-			out.Result = "lose"
-		} else if myMsec > foeMsec {
-			out.Result = "win"
-		}
 		out.FoeMsec = myMsec
+		out.MyMsec = foeMsec
 		conn.foe.sendMsg(out)
 	} else {
-		conn.sendType("end")
+		out := struct {
+			Type string
+			Msec int
+		}{
+			"foeFinish",
+			in.Msec,
+		}
+		conn.foe.sendMsg(out)
+
+		time.Sleep(5 * time.Second)
+		if conn.battle.state != FINISH {
+			conn.battle.state = FINISH
+
+			out := struct {
+				Type    string
+				MyMsec  int
+				FoeMsec int
+			}{
+				"result",
+				in.Msec,
+				-1,
+			}
+			conn.sendMsg(out)
+
+			//foe
+			out.FoeMsec = in.Msec
+			out.MyMsec = -1
+			conn.foe.sendMsg(out)
+		}
 	}
 }
 
@@ -166,6 +187,6 @@ func talk(conn *Connection, msg []byte) {
 func regBattle() {
 	regHandler("ready", MsgHandler(battleReady))
 	regHandler("progress", MsgHandler(battleProgress))
-	regHandler("end", MsgHandler(battleEnd))
+	regHandler("finish", MsgHandler(battleFinish))
 	regHandler("talk", MsgHandler(talk))
 }

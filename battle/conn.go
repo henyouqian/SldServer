@@ -55,12 +55,9 @@ type Connection struct {
 	foe    *Connection
 	battle *Battle
 
-	//player info
-	nickName   string
-	userId     int64
 	playerInfo *PlayerInfo
-	index      int
 	roomName   string
+	result     int
 }
 
 func init() {
@@ -96,12 +93,6 @@ func (c *Connection) readPump() {
 
 		if msg.Type == "authPair" {
 			err = h.authPair(c, message)
-			if err != nil {
-				c.sendErr(err.Error())
-				// break
-			}
-		} else if msg.Type == "simplePair" {
-			err = h.simplePair(c, message, "simpleRoom")
 			if err != nil {
 				c.sendErr(err.Error())
 				// break
