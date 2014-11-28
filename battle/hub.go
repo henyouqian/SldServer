@@ -9,6 +9,7 @@ import (
 	"fmt"
 	// "math/rand"
 	"sync"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/henyouqian/ssdbgo"
@@ -19,9 +20,8 @@ func _hublog() {
 }
 
 const (
-	H_SESSION     = "H_SESSION"     //key:token, value:session
-	H_PLAYER_INFO = "H_PLAYER_INFO" //key:H_PLAYER_INFO/<userId> subkey:property
-	H_PACK        = "H_PACK"        //subkey:packId value:packJson
+	H_SESSION = "H_SESSION" //key:token, value:session
+	H_PACK    = "H_PACK"    //subkey:packId value:packJson
 )
 
 type Session struct {
@@ -35,6 +35,7 @@ type PlayerInfo struct {
 	Gender          int
 	CustomAvatarKey string
 	GravatarKey     string
+	GoldCoin        int
 }
 
 type Image struct {
@@ -85,11 +86,18 @@ func (h *Hub) run() {
 			h.connections[c] = true
 			// c.sendType("connected")
 		case c := <-h.unregister:
+			if c.battle != nil && c.battle.state == MATCHING {
+				makeBattleResult(c, true)
+			}
+
 			if c.foe != nil {
 				c.foe.sendType("foeDisconnect")
 				c.foe.foe = nil
 				c.battle.state = ONELEFT
 			}
+			c.foe = nil
+			c.battle = nil
+
 			if _, ok := h.connections[c]; ok {
 				delete(h.connections, c)
 				close(c.send)
@@ -169,16 +177,30 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 	c.playerInfo.UserId = session.Userid
 
 	//
+	room, exist := BATTLE_ROOM_MAP[in.RoomName]
+	if !exist {
+		c.playerInfo = nil
+		return fmt.Errorf("err_room_name")
+	}
+
+	//check coin
+	if c.playerInfo.GoldCoin < room.EnterCoin {
+		glog.Info(c.playerInfo.UserId)
+		c.playerInfo = nil
+		return fmt.Errorf("err_coin")
+	}
+
+	//
 	h.pendingConnMu.Lock()
 	pendingConn := h.pendingConnMap[in.RoomName]
 	if pendingConn != nil {
-		h.pendingConnMap[in.RoomName] = nil
-		h.pendingConnMu.Unlock()
-
 		//check userId
 		if pendingConn.playerInfo.UserId == session.Userid {
 			return fmt.Errorf("err_same_user")
 		}
+
+		h.pendingConnMap[in.RoomName] = nil
+		h.pendingConnMu.Unlock()
 
 		//
 		c.foe = pendingConn
@@ -187,6 +209,7 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		battle := makeBattle()
 		c.battle = battle
 		c.foe.battle = battle
+		battle.room = room
 
 		//get pack, fixme
 		pack, err := getPack(matchdb, 2)
@@ -200,16 +223,27 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 			Pack      *Pack
 			SliderNum int
 			FoePlayer *PlayerInfo
+			Secret    string
 		}{
 			"paired",
 			pack,
 			3, //rand.Intn(3) + 4, //fixme
 			c.foe.playerInfo,
+			battle.secret,
 		}
 		c.sendMsg(out)
 
 		out.FoePlayer = c.playerInfo
 		c.foe.sendMsg(out)
+
+		//timeout
+		go func() {
+			time.Sleep(20 * time.Second)
+			if c.battle != nil && c.battle.state == PREPARE {
+				c.sendErr("err_timeout")
+				c.foe.sendErr("err_timeout")
+			}
+		}()
 	} else {
 		h.pendingConnMap[in.RoomName] = c
 		h.pendingConnMu.Unlock()
@@ -221,10 +255,6 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 	c.result = 0
 
 	return nil
-}
-
-func makePlayerInfoKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", H_PLAYER_INFO, userId)
 }
 
 func getPlayerInfo(ssdbc *ssdbgo.Client, userId int64) (*PlayerInfo, error) {

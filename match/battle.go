@@ -11,19 +11,19 @@ func battleGlog() {
 }
 
 type BattleRoom struct {
-	Name       string
-	RewardCoin int
-	EnterCoin  int
+	Name      string
+	BetCoin   int
+	PlayerNum int
 }
 
 var (
 	BATTLE_ROOM_LIST = []BattleRoom{
 		{"free", 0, 0},
-		{"coin1", 1, 2},
-		{"coin2", 2, 4},
-		{"coin5", 5, 10},
-		{"coin10", 10, 20},
-		{"coin20", 20, 40},
+		{"coin1", 1, 0},
+		{"coin2", 2, 0},
+		{"coin5", 5, 0},
+		{"coin10", 10, 0},
+		{"coin20", 20, 0},
 	}
 )
 

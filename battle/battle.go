@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -24,17 +25,49 @@ const (
 	FINISH
 )
 
+const (
+	WAIT_TIME_SEC = 5
+)
+
 type Battle struct {
-	state     BattleState
-	readyConn *Connection
-	secret    string
+	state      BattleState
+	readyConn  *Connection
+	secret     string
+	createTime time.Time
+	room       BattleRoom
 }
+
+type BattleRoom struct {
+	Name    string
+	BetCoin int
+}
+
+type BattleResult struct {
+	Type       string
+	Result     string //win, lose, draw
+	MyMsec     int
+	FoeMsec    int
+	RewardCoin int
+	TotalCoin  int
+}
+
+var (
+	BATTLE_ROOM_MAP = map[string]BattleRoom{
+		"free":   {"free", 0},
+		"coin1":  {"coin1", 1},
+		"coin2":  {"coin2", 2},
+		"coin5":  {"coin5", 5},
+		"coin10": {"coin10", 10},
+		"coin20": {"coin20", 20},
+	}
+)
 
 func makeBattle() *Battle {
 	battle := new(Battle)
 	battle.state = PREPARE
 	battle.readyConn = nil
 	battle.secret = genUUID()
+	battle.createTime = time.Now()
 	return battle
 }
 
@@ -48,10 +81,22 @@ func battleReady(conn *Connection, msg []byte) {
 		battle.readyConn = conn
 		conn.sendType("ready")
 	} else if battle.readyConn == conn.foe {
-		battle.state = MATCHING
-		msg := []byte(`{"Type":"start"}`)
-		conn.send <- msg
-		conn.foe.send <- msg
+		dt := time.Now().Sub(battle.createTime)
+		waitTime := WAIT_TIME_SEC * time.Second
+		startMatch := func() {
+			battle.state = MATCHING
+			msg := []byte(`{"Type":"start"}`)
+			conn.send <- msg
+			conn.foe.send <- msg
+		}
+		if dt < waitTime {
+			go func() {
+				time.Sleep(waitTime - dt)
+				startMatch()
+			}()
+		} else {
+			startMatch()
+		}
 	}
 }
 
@@ -60,7 +105,7 @@ func battleProgress(conn *Connection, msg []byte) {
 		conn.sendErr("need pair")
 		return
 	}
-	if conn.battle.state != MATCHING || conn.battle.state != FINISH {
+	if conn.battle.state != MATCHING && conn.battle.state != FINISH {
 		conn.sendErr("battle state error")
 		return
 	}
@@ -116,26 +161,10 @@ func battleFinish(conn *Connection, msg []byte) {
 
 	//end
 	if conn.foe.result != 0 {
-		conn.battle.state = FINISH
-		myMsec := conn.result
-		foeMsec := conn.foe.result
-
-		out := struct {
-			Type    string
-			MyMsec  int
-			FoeMsec int
-		}{
-			"result",
-			myMsec,
-			foeMsec,
+		errstr := makeBattleResult(conn, false)
+		if errstr != "" {
+			conn.sendErr(errstr)
 		}
-
-		conn.sendMsg(out)
-
-		//foe
-		out.FoeMsec = myMsec
-		out.MyMsec = foeMsec
-		conn.foe.sendMsg(out)
 	} else {
 		out := struct {
 			Type string
@@ -146,27 +175,122 @@ func battleFinish(conn *Connection, msg []byte) {
 		}
 		conn.foe.sendMsg(out)
 
-		time.Sleep(5 * time.Second)
-		if conn.battle.state != FINISH {
-			conn.battle.state = FINISH
-
-			out := struct {
-				Type    string
-				MyMsec  int
-				FoeMsec int
-			}{
-				"result",
-				in.Msec,
-				-1,
+		go func() {
+			time.Sleep(5 * time.Second)
+			if conn.battle != nil && conn.battle.state != FINISH {
+				errstr := makeBattleResult(conn, false)
+				if errstr != "" {
+					conn.sendErr(errstr)
+				}
 			}
-			conn.sendMsg(out)
+		}()
+	}
+}
 
-			//foe
-			out.FoeMsec = in.Msec
-			out.MyMsec = -1
-			conn.foe.sendMsg(out)
+func makeBattleResult(conn *Connection, isDisconnect bool) string {
+	if conn.battle == nil {
+		return "err_no_battle"
+	}
+	if conn.foe == nil {
+		return "err_no_foe"
+	}
+	if conn.battle.state == FINISH {
+		return "err_already_finish"
+	}
+	conn.battle.state = FINISH
+
+	//ssdb
+	ssdbc, err := ssdbMatchPool.Get()
+	if err != nil {
+		return "err_ssdb_pool"
+	}
+	defer ssdbc.Close()
+
+	//
+	myMsec := conn.result
+	foeMsec := conn.foe.result
+
+	betCoin := conn.battle.room.BetCoin
+
+	result := "lose"
+
+	if isDisconnect { //lose
+		result = "lose"
+	} else {
+		if myMsec == 0 {
+			result = "lose"
+		} else if foeMsec == 0 || myMsec < foeMsec {
+			result = "win"
+		} else if myMsec != 0 && foeMsec != 0 && myMsec == foeMsec {
+			result = "draw"
+			rewardCoin /= 2
 		}
 	}
+
+	getCoin := 0
+	if result == "win" {
+		getCoin = rewardCoin
+	} else if result == "draw" {
+		getCoin = 0
+	} else {
+		getCoin = -rewardCoin
+	}
+
+	out := BattleResult{
+		"result",
+		result,
+		myMsec,
+		foeMsec,
+		getCoin,
+		0,
+	}
+
+	//add coin to ssdb
+	key := makePlayerInfoKey(conn.playerInfo.UserId)
+	resp, err := ssdbc.Do("hincr", key, PLAYER_GOLD_COIN, out.RewardCoin)
+	if err != nil || resp[0] != "ok" {
+		return "err_ssdb"
+	}
+
+	coinNum, err := strconv.Atoi(resp[1])
+	if err != nil {
+		return "err_strconv"
+	}
+	out.TotalCoin = coinNum
+
+	//send to me
+	conn.sendMsg(out)
+
+	//foe
+	if result == "win" {
+		out.Result = "lose"
+		out.RewardCoin = -rewardCoin
+	} else if result == "lose" {
+		out.Result = "win"
+		out.RewardCoin = rewardCoin
+	} else if result == "draw" {
+		out.RewardCoin = 0
+	}
+	out.FoeMsec = myMsec
+	out.MyMsec = foeMsec
+
+	//ssdb
+	key = makePlayerInfoKey(conn.foe.playerInfo.UserId)
+	resp, err = ssdbc.Do("hincr", key, PLAYER_GOLD_COIN, out.RewardCoin)
+	if err != nil || resp[0] != "ok" {
+		return "err_ssdb"
+	}
+
+	coinNum, err = strconv.Atoi(resp[1])
+	if err != nil {
+		return "err_strconv"
+	}
+	out.TotalCoin = coinNum
+
+	//send to foe
+	conn.foe.sendMsg(out)
+
+	return ""
 }
 
 func talk(conn *Connection, msg []byte) {
