@@ -51,7 +51,6 @@ func main() {
 	// initEvent()
 	// initPickSide()
 	initAdmin()
-	initMatchCron()
 	initStore()
 
 	u, _ := user.Current()
@@ -83,9 +82,9 @@ func main() {
 	// regPickSide()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// go scoreKeeperMain()
-
 	glog.Infof("Server running: cpu=%d, port=%d", runtime.NumCPU(), _conf.Port)
+
+	runMatchCron()
+
 	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", _conf.Port), nil))
 }

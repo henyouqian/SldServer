@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
@@ -13,9 +14,23 @@ func _matchCronGlog() {
 	glog.Info("")
 }
 
-func initMatchCron() {
-	_cron.AddFunc("0 * * * * *", matchCron)
-	matchCron()
+func runMatchCron() {
+	// _cron.AddFunc("0 * * * * *", matchCron)
+
+	go func() {
+		for true {
+			matchCron()
+
+			now := lwutil.GetRedisTime()
+			s := 60 - now.Second() + 1
+			if s < 10 {
+				s += 60
+			}
+			time.Sleep(time.Duration(s) * time.Second)
+
+		}
+	}()
+
 }
 
 func calcRankPrize(match *Match, prizeSum int, rank int) int {

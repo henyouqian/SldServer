@@ -223,17 +223,16 @@ func makeBattleResult(conn *Connection, isDisconnect bool) string {
 			result = "win"
 		} else if myMsec != 0 && foeMsec != 0 && myMsec == foeMsec {
 			result = "draw"
-			rewardCoin /= 2
 		}
 	}
 
 	getCoin := 0
 	if result == "win" {
-		getCoin = rewardCoin
+		getCoin = betCoin
 	} else if result == "draw" {
 		getCoin = 0
 	} else {
-		getCoin = -rewardCoin
+		getCoin = -betCoin
 	}
 
 	out := BattleResult{
@@ -264,10 +263,10 @@ func makeBattleResult(conn *Connection, isDisconnect bool) string {
 	//foe
 	if result == "win" {
 		out.Result = "lose"
-		out.RewardCoin = -rewardCoin
+		out.RewardCoin = -betCoin
 	} else if result == "lose" {
 		out.Result = "win"
-		out.RewardCoin = rewardCoin
+		out.RewardCoin = betCoin
 	} else if result == "draw" {
 		out.RewardCoin = 0
 	}

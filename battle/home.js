@@ -1,6 +1,6 @@
 $(function() {
     $("#pair").click(function() {
-        var msg = '{"Type":"authPair", "Token":"aRP18J_ETzpTZqA0CFnVFg==", "RoomName":"coin1"}'
+        var msg = '{"Type":"authPair", "Token":"5UeGteZ_TDd1BhiC8Ce_5A==", "RoomName":"coin1"}'
         conn.send(msg)
     })
     $("#emoji").click(function() {

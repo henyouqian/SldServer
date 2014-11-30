@@ -23,18 +23,60 @@ const (
 )
 
 type PlayerInfo struct {
-	NickName        string
-	TeamName        string
-	Gender          int
-	CustomAvatarKey string
-	GravatarKey     string
-	Email           string
-	GoldCoin        int
-	Prize           int
-	PrizeCache      int
-	TotalPrize      int
-	Secret          string
+	NickName           string
+	TeamName           string
+	Gender             int
+	CustomAvatarKey    string
+	GravatarKey        string
+	Email              string
+	GoldCoin           int
+	Prize              int
+	PrizeCache         int
+	TotalPrize         int
+	Secret             string
+	BattlePoint        int
+	BattleWinStreak    int
+	BattleWinStreakMax int
 }
+
+type PlayerBattleLevel struct {
+	Level      int
+	Title      string
+	StartPoint int
+}
+
+var (
+	PLAYER_BATTLE_LEVELS = []PlayerBattleLevel{
+		{1, "🚶", 0},
+		{2, "🚣", 10},
+		{3, "🚲", 30},
+		{4, "🚜", 60},
+		{5, "🚛", 100},
+		{6, "🚚", 150},
+		{7, "🚗", 200},
+		{8, "🚙", 250},
+		{9, "🚌", 300},
+		{10, "🚃", 400},
+		{11, "🚤", 500},
+		{12, "🚈", 600},
+		{13, "🚄", 700},
+		{14, "🚁", 800},
+		{15, "✈️", 900},
+		{16, "🚀", 1000},
+		{17, "🐭", 1100},
+		{18, "🐮", 1200},
+		{19, "🐯", 1300},
+		{20, "🐰", 1400},
+		{21, "🐲", 1500},
+		{22, "🐍", 1600},
+		{23, "🐴", 1700},
+		{24, "🐑", 1800},
+		{25, "🐵", 1900},
+		{26, "🐔", 2000},
+		{27, "🐶", 2100},
+		{28, "🐷", 2200},
+	}
+)
 
 //player property
 const (
@@ -43,6 +85,7 @@ const (
 	PLAYER_PRIZE_CACHE = "PrizeCache"
 	PLAYER_TOTAL_PRIZE = "TotalPrize"
 	PLAYER_IAP_SECRET  = "IapSecret"
+	BattlePoint        = "BattlePoint"
 )
 
 const (
@@ -91,6 +134,20 @@ func addPrizeToCache(ssdbc *ssdb.Client, userId int64, matchId int64, matchThumb
 
 func init() {
 	glog.Info("")
+
+	//check player battle levels
+	currLv := 1
+	currPt := -1
+	for _, v := range PLAYER_BATTLE_LEVELS {
+		if v.Level != currLv {
+			panic("v.Level != currLv")
+		}
+		if v.StartPoint <= currPt {
+			panic("v.StartPoint <= currPt")
+		}
+		currLv++
+		currPt = v.StartPoint
+	}
 }
 
 func makePlayerInfoKey(userId int64) string {
@@ -202,6 +259,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		AdsConf              AdsConf
 		ClientConf           map[string]string
 		OwnerPrizeProportion float32
+		BattleLevels         []PlayerBattleLevel
 	}{
 		playerInfo,
 		session.Userid,
@@ -209,6 +267,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		_adsConf,
 		_clientConf,
 		MATCH_OWNER_PRIZE_PROPORTION,
+		PLAYER_BATTLE_LEVELS,
 	}
 	lwutil.WriteResponse(w, out)
 }

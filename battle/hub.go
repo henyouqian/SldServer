@@ -184,7 +184,7 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 	}
 
 	//check coin
-	if c.playerInfo.GoldCoin < room.EnterCoin {
+	if c.playerInfo.GoldCoin < room.BetCoin {
 		glog.Info(c.playerInfo.UserId)
 		c.playerInfo = nil
 		return fmt.Errorf("err_coin")
