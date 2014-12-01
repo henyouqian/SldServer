@@ -20,24 +20,40 @@ const (
 	H_PLAYER_PRIZE_RECORD      = "H_PLAYER_PRIZE_RECORD" //key:H_PLAYER_PRIZE_RECORD subkey:prizeRecordId value prizeRecordJson
 	Z_PLAYER_PRIZE_RECORD      = "Z_PLAYER_PRIZE_RECORD" //key:Z_PLAYER_PRIZE_RECORD/userId subkey:prizeRecordId score:timeUnix
 	SEREAL_PLAYER_PRIZE_RECORD = "SEREAL_PLAYER_PRIZE_RECORD"
+	BATTLE_HEART_TOTAL         = 10
+	BATTLE_HEART_ADD_SEC       = 60 * 5
 )
 
 type PlayerInfo struct {
-	NickName           string
-	TeamName           string
-	Gender             int
-	CustomAvatarKey    string
-	GravatarKey        string
-	Email              string
-	GoldCoin           int
-	Prize              int
-	PrizeCache         int
-	TotalPrize         int
-	Secret             string
-	BattlePoint        int
-	BattleWinStreak    int
-	BattleWinStreakMax int
+	NickName            string
+	TeamName            string
+	Gender              int
+	CustomAvatarKey     string
+	GravatarKey         string
+	Email               string
+	GoldCoin            int
+	Prize               int
+	PrizeCache          int
+	TotalPrize          int
+	Secret              string
+	BattlePoint         int
+	BattleWinStreak     int
+	BattleWinStreakMax  int
+	BattleHeartZeroTime int64
 }
+
+//player property
+const (
+	PLAYER_GOLD_COIN              = "GoldCoin"
+	PLAYER_PRIZE                  = "Prize"
+	PLAYER_PRIZE_CACHE            = "PrizeCache"
+	PLAYER_TOTAL_PRIZE            = "TotalPrize"
+	PLAYER_IAP_SECRET             = "IapSecret"
+	PLAYER_BATTLE_POINT           = "BattlePoint"
+	PLAYER_BATTLE_WIN_STREAK      = "BattleWinStreak"
+	PLAYER_BATTLE_WIN_STREAK_MAX  = "BattleWinStreakMax"
+	PLAYER_BATTLE_HEART_ZERO_TIME = "BattleHeartZeroTime"
+)
 
 type PlayerBattleLevel struct {
 	Level      int
@@ -45,47 +61,80 @@ type PlayerBattleLevel struct {
 	StartPoint int
 }
 
-var (
-	PLAYER_BATTLE_LEVELS = []PlayerBattleLevel{
-		{1, "🚶", 0},
-		{2, "🚣", 10},
-		{3, "🚲", 30},
-		{4, "🚜", 60},
-		{5, "🚛", 100},
-		{6, "🚚", 150},
-		{7, "🚗", 200},
-		{8, "🚙", 250},
-		{9, "🚌", 300},
-		{10, "🚃", 400},
-		{11, "🚤", 500},
-		{12, "🚈", 600},
-		{13, "🚄", 700},
-		{14, "🚁", 800},
-		{15, "✈️", 900},
-		{16, "🚀", 1000},
-		{17, "🐭", 1100},
-		{18, "🐮", 1200},
-		{19, "🐯", 1300},
-		{20, "🐰", 1400},
-		{21, "🐲", 1500},
-		{22, "🐍", 1600},
-		{23, "🐴", 1700},
-		{24, "🐑", 1800},
-		{25, "🐵", 1900},
-		{26, "🐔", 2000},
-		{27, "🐶", 2100},
-		{28, "🐷", 2200},
-	}
+const (
+	BATTLE_HELP_TEXT = `✦ 赢了加分加金币，输了不扣分扣金币。
+
+✦ 赢了的话，连胜几场就加几分。
+
+✦ 在使用金币的场次下（除了第一个免费场外），终结了对手连胜纪录的话，额外获得等于对手连胜场次的积分。
+
+✦ 所以想要得高分就尽可能保持连胜，或者凭运气碰到高连胜对手并取得胜利（金币场次）。
+
+✦ 第一个免费场不会赢也不会输掉金币，但每玩一次会消耗一颗心。
+
+✦ 积分与等级的对应关系如下：
+`
 )
 
-//player property
-const (
-	PLAYER_GOLD_COIN   = "GoldCoin"
-	PLAYER_PRIZE       = "Prize"
-	PLAYER_PRIZE_CACHE = "PrizeCache"
-	PLAYER_TOTAL_PRIZE = "TotalPrize"
-	PLAYER_IAP_SECRET  = "IapSecret"
-	BattlePoint        = "BattlePoint"
+var (
+	PLAYER_BATTLE_LEVELS = []PlayerBattleLevel{
+		// {1, "🚶", 0},
+		// {2, "🚣", 10},
+		// {3, "🚲", 30},
+		// {4, "🚜", 60},
+		// {5, "🚛", 100},
+		// {6, "🚚", 150},
+		// {7, "🚗", 200},
+		// {8, "🚙", 250},
+		// {9, "🚌", 300},
+		// {10, "🚃", 400},
+		// {11, "🚤", 500},
+		// {12, "🚈", 600},
+		// {13, "🚄", 700},
+		// {14, "🚁", 800},
+		// {15, "✈️", 900},
+		// {16, "🚀", 1000},
+		// {17, "🐭", 1100},
+		// {18, "🐮", 1200},
+		// {19, "🐯", 1300},
+		// {20, "🐰", 1400},
+		// {21, "🐲", 1500},
+		// {22, "🐍", 1600},
+		// {23, "🐴", 1700},
+		// {24, "🐑", 1800},
+		// {25, "🐵", 1900},
+		// {26, "🐔", 2000},
+		// {27, "🐶", 2100},
+		// {28, "🐷", 2200},
+		{1, "🐭", 0},
+		{2, "🐮", 10},
+		{3, "🐯", 30},
+		{4, "🐰", 60},
+		{5, "🐲", 100},
+		{6, "🐍", 150},
+		{7, "🐴", 200},
+		{8, "🐑", 250},
+		{9, "🐵", 300},
+		{10, "🐔", 350},
+		{11, "🐶", 400},
+		{12, "🐷", 450},
+		{13, "🚶", 500},
+		{14, "🚣", 600},
+		{15, "🚲", 700},
+		{16, "🚜", 800},
+		{17, "🚛", 900},
+		{18, "🚚", 1000},
+		{19, "🚗", 1100},
+		{20, "🚙", 1200},
+		{21, "🚌", 1300},
+		{22, "🚃", 1400},
+		{23, "🚤", 1500},
+		{24, "🚈", 1600},
+		{25, "🚄", 1700},
+		{26, "🚁", 1800},
+		{27, "✈️", 1900},
+		{28, "🚀", 2000},
+	}
 )
 
 const (
@@ -143,6 +192,7 @@ func init() {
 			panic("v.Level != currLv")
 		}
 		if v.StartPoint <= currPt {
+			glog.Error(v.StartPoint, currPt)
 			panic("v.StartPoint <= currPt")
 		}
 		currLv++
@@ -260,6 +310,8 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		ClientConf           map[string]string
 		OwnerPrizeProportion float32
 		BattleLevels         []PlayerBattleLevel
+		BattleHelpText       string
+		BattleHeartAddSec    int
 	}{
 		playerInfo,
 		session.Userid,
@@ -268,8 +320,19 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		_clientConf,
 		MATCH_OWNER_PRIZE_PROPORTION,
 		PLAYER_BATTLE_LEVELS,
+		BATTLE_HELP_TEXT,
+		BATTLE_HEART_ADD_SEC,
 	}
 	lwutil.WriteResponse(w, out)
+}
+
+func getBattleHeartNum(playerInfo *PlayerInfo) int {
+	dt := lwutil.GetRedisTimeUnix() - playerInfo.BattleHeartZeroTime
+	heartNum := int(dt) / BATTLE_HEART_ADD_SEC
+	if heartNum > BATTLE_HEART_TOTAL {
+		heartNum = BATTLE_HEART_TOTAL
+	}
+	return heartNum
 }
 
 func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {

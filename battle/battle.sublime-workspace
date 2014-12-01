@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"mak",
+				"makeBattleResult	 ƒ"
+			],
+			[
+				"send",
+				"sendMsg	 ƒ"
+			],
+			[
 				"pendin",
 				"pendingConnMu	sync.Mutex ν"
 			],
@@ -467,15 +475,23 @@
 			"file": "home.html",
 			"settings":
 			{
-				"buffer_size": 1951,
+				"buffer_size": 2194,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "home.js",
+			"settings":
+			{
+				"buffer_size": 509,
+				"line_ending": "Windows"
 			}
 		},
 		{
 			"file": "conn.go",
 			"settings":
 			{
-				"buffer_size": 4055,
+				"buffer_size": 3852,
 				"line_ending": "Unix"
 			}
 		},
@@ -483,7 +499,7 @@
 			"file": "hub.go",
 			"settings":
 			{
-				"buffer_size": 5925,
+				"buffer_size": 5413,
 				"line_ending": "Unix"
 			}
 		},
@@ -491,7 +507,7 @@
 			"file": "battle.go",
 			"settings":
 			{
-				"buffer_size": 2978,
+				"buffer_size": 5533,
 				"line_ending": "Unix"
 			}
 		},
@@ -504,12 +520,20 @@
 			}
 		},
 		{
-			"contents": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgErw==\"}\n{\"Type\":\"authPair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"end\", \"Msec\":1000}\n\n\n{\"Type\":\"simplePair\", \"NickName\":\"aa\"}\n\n{\"Type\":\"talk\", \"Text\":\"xxxx\"}",
+			"contents": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgErw==\"}\n{\"Type\":\"authPair\", \"Token\":\"5DZeUuHNSgB388QgKG2uSw==\"}\n\n\n{\"Type\":\"ready\"}\n{\"Type\":\"progress\", \"CompleteNum\":1}\n{\"Type\":\"finish\", \"Msec\":1000}\n\n\n{\"Type\":\"simplePair\", \"NickName\":\"aa\"}\n\n{\"Type\":\"talk\", \"Text\":\"xxxx\"}",
 			"settings":
 			{
-				"buffer_size": 268,
+				"buffer_size": 271,
 				"line_ending": "Unix",
 				"name": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgEr"
+			}
+		},
+		{
+			"file": "util.go",
+			"settings":
+			{
+				"buffer_size": 407,
+				"line_ending": "Unix"
 			}
 		}
 	],
@@ -553,6 +577,8 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/battle/home.js",
+		"/Users/liwei/Documents/projects/2014/SldServer/battle/battle.js",
 		"/Users/liwei/Documents/projects/2014/SldServer/battle/hub.go",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/ssdbgo/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
@@ -620,7 +646,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 99.0,
 		"where_history":
 		[
 			""
@@ -631,6 +657,85 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"make",
+			"ssdbc",
+			"battle.room",
+			"betCoin",
+			"rewardCoin",
+			"BATTLE_ROOM_MAP",
+			"\"result",
+			"unregister",
+			"unregis",
+			"sendErr",
+			"unregis",
+			"Sleep",
+			"paired",
+			"ssdb err",
+			"c.playerInfo = nil",
+			"ssdb err",
+			"ssdb_err",
+			"getPlayerInfo",
+			"authdb",
+			"auth",
+			"H_PLAYER_INFO",
+			"BattleResult",
+			"strc",
+			"strcon",
+			"ssdb",
+			"makeBattleResult",
+			"BattleResult\nBattleResult",
+			"BattleResult",
+			"\"result",
+			"BattleResult",
+			"\"result\"",
+			"BattleResult",
+			"\"result\"",
+			"talk",
+			"unregi",
+			"sleep",
+			"c.send",
+			"ssdb err",
+			"ssdb",
+			"glog.in",
+			"roomname",
+			"room",
+			"makeBattle",
+			"sleep",
+			"authPair",
+			"authpair",
+			"RoomName",
+			"paired",
+			"= FINISH",
+			"FINISH",
+			"battleProgress",
+			"STATE = ",
+			"auth",
+			"\"paired\"",
+			"paired",
+			"playerinfo",
+			"battleFinish",
+			"sendMsg",
+			"battleEnd",
+			"break",
+			"_msgHandlerMap",
+			"MsgHandler",
+			"battleReady",
+			"MATCHED",
+			"MATCHING",
+			"battleReady",
+			"MATCHED",
+			"MATCHING",
+			"battleReady",
+			"MATCHING",
+			"makeBattle",
+			"MATCHED",
+			"glog",
+			"DOWNLOADING",
+			"error st",
+			"emoji",
+			"conn",
+			"send",
+			"Send",
 			"cou po n",
 			"Connection",
 			"unre",
@@ -679,86 +784,7 @@
 			"makeBattle",
 			"battlestart",
 			"sendok",
-			"regHandler",
-			"mh",
-			"j son",
-			"close",
-			"send",
-			"maxMessageSize",
-			"upgrader",
-			"ReadBufferSize",
-			"connection",
-			"write",
-			"maxMessageSize",
-			"pingPeriod",
-			"send",
-			"appendLog",
-			"pongWait",
-			"maxMessageSize",
-			"register",
-			"Upgrader",
-			"homeTempl",
-			"addr",
-			"document.location.href",
-			"MATCH_LIST_URL",
-			"document.location.href",
-			"matchlist",
-			"app store",
-			"_startView",
-			"start",
-			"g_key",
-			"g_sldNum",
-			"apiMatchmod",
-			"g_",
-			"g_socialPack",
-			"data",
-			"g_key",
-			"app",
-			"pack",
-			"reses",
-			"g_imageUrls",
-			"HOST",
-			"post",
-			"HandleFunc",
-			"Access-Control-Allow-Origin",
-			"rootTextFile",
-			"rootTextFile\n",
-			"mod",
-			"apiEtcReport",
-			"hide",
-			"//out",
-			"apiSetEcardStoreClose",
-			"apibuyec",
-			"w.Write(",
-			"apilistecar",
-			"_ecardStoreClose",
-			"KEY_ECARD_STORE_CLOSE",
-			"apiSetEcardStoreClose",
-			"getLastEcard",
-			"addecardt",
-			"ad d",
-			"addecardt",
-			"typeKey",
-			"addecard",
-			"makeEcardTypeKey",
-			"addecard",
-			"ECard",
-			"apiAddEcard",
-			"RmbPrice",
-			"RmbPrice\nRmbPrice",
-			"RmbPrice",
-			"price\nrmbprice",
-			"price\nprice",
-			"price",
-			"addecardt",
-			"ad d",
-			"GenDate",
-			"2017-",
-			"20172017-10-18",
-			"2017-10-18",
-			"有",
-			"有效",
-			"https://www.amazon.cn/gp/css/gc/paymen=\nt/view-gc-balance?code="
+			"regHandler"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -789,7 +815,7 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -797,20 +823,48 @@
 					"file": "home.html",
 					"settings":
 					{
-						"buffer_size": 1951,
+						"buffer_size": 2194,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								2176,
+								2176
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1653.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "home.js",
+					"settings":
+					{
+						"buffer_size": 509,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								121,
+								121
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
@@ -821,100 +875,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 1,
+					"buffer": 2,
 					"file": "conn.go",
 					"settings":
 					{
-						"buffer_size": 4055,
+						"buffer_size": 3852,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								872,
-								872
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 819.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "hub.go",
-					"settings":
-					{
-						"buffer_size": 5925,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1257,
-								1257
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 967.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "battle.go",
-					"settings":
-					{
-						"buffer_size": 2978,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								662,
-								672
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 492.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "main.go",
-					"settings":
-					{
-						"buffer_size": 1372,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								188,
-								188
+								221,
+								221
 							]
 						],
 						"settings":
@@ -929,10 +902,65 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 3,
+					"file": "hub.go",
 					"settings":
 					{
-						"buffer_size": 268,
+						"buffer_size": 5413,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1559,
+								1559
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1589.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "battle.go",
+					"settings":
+					{
+						"buffer_size": 5533,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3183,
+								3183
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3855.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "main.go",
+					"settings":
+					{
+						"buffer_size": 1372,
 						"regions":
 						{
 						},
@@ -945,8 +973,61 @@
 						],
 						"settings":
 						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 113.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"settings":
+					{
+						"buffer_size": 271,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								167,
+								167
+							]
+						],
+						"settings":
+						{
 							"auto_name": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgEr",
 							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "util.go",
+					"settings":
+					{
+						"buffer_size": 407,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								169,
+								169
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,

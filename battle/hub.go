@@ -29,13 +29,17 @@ type Session struct {
 }
 
 type PlayerInfo struct {
-	UserId          int64
-	NickName        string
-	TeamName        string
-	Gender          int
-	CustomAvatarKey string
-	GravatarKey     string
-	GoldCoin        int
+	UserId              int64
+	NickName            string
+	TeamName            string
+	Gender              int
+	CustomAvatarKey     string
+	GravatarKey         string
+	GoldCoin            int
+	BattlePoint         int
+	BattleWinStreak     int
+	BattleWinStreakMax  int
+	BattleHeartZeroTime int64
 }
 
 type Image struct {
@@ -183,6 +187,14 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		return fmt.Errorf("err_room_name")
 	}
 
+	//check heart
+	if room.BetCoin == 0 {
+		heartNum := getBattleHeartNum(c.playerInfo)
+		if heartNum == 0 {
+			return fmt.Errorf("err_heart")
+		}
+	}
+
 	//check coin
 	if c.playerInfo.GoldCoin < room.BetCoin {
 		glog.Info(c.playerInfo.UserId)
@@ -217,23 +229,52 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 			return err
 		}
 
+		//heart
+		if room.BetCoin == 0 {
+			heartNum := getBattleHeartNum(c.playerInfo)
+			if heartNum == BATTLE_HEART_TOTAL {
+				c.playerInfo.BattleHeartZeroTime = time.Now().Unix() - BATTLE_HEART_ADD_SEC*(BATTLE_HEART_TOTAL-1)
+			} else {
+				c.playerInfo.BattleHeartZeroTime += BATTLE_HEART_ADD_SEC
+			}
+			playerKey := makePlayerInfoKey(c.playerInfo.UserId)
+			matchdb.Do("hset", playerKey, PLAYER_BATTLE_HEART_ZERO_TIME, c.playerInfo.BattleHeartZeroTime)
+		}
+
 		//
 		out := struct {
-			Type      string
-			Pack      *Pack
-			SliderNum int
-			FoePlayer *PlayerInfo
-			Secret    string
+			Type          string
+			Pack          *Pack
+			SliderNum     int
+			FoePlayer     *PlayerInfo
+			Secret        string
+			HeartZeroTime int64
 		}{
 			"paired",
 			pack,
 			3, //rand.Intn(3) + 4, //fixme
 			c.foe.playerInfo,
 			battle.secret,
+			c.playerInfo.BattleHeartZeroTime,
 		}
 		c.sendMsg(out)
 
+		//foe
 		out.FoePlayer = c.playerInfo
+
+		//heart
+		if room.BetCoin == 0 {
+			heartNum := getBattleHeartNum(c.foe.playerInfo)
+			if heartNum == BATTLE_HEART_TOTAL {
+				c.foe.playerInfo.BattleHeartZeroTime = time.Now().Unix() - BATTLE_HEART_ADD_SEC*(BATTLE_HEART_TOTAL-1)
+			} else {
+				c.foe.playerInfo.BattleHeartZeroTime += BATTLE_HEART_ADD_SEC
+			}
+			playerKey := makePlayerInfoKey(c.foe.playerInfo.UserId)
+			matchdb.Do("hset", playerKey, PLAYER_BATTLE_HEART_ZERO_TIME, c.foe.playerInfo.BattleHeartZeroTime)
+		}
+
+		out.HeartZeroTime = c.foe.playerInfo.BattleHeartZeroTime
 		c.foe.sendMsg(out)
 
 		//timeout

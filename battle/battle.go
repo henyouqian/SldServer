@@ -43,12 +43,16 @@ type BattleRoom struct {
 }
 
 type BattleResult struct {
-	Type       string
-	Result     string //win, lose, draw
-	MyMsec     int
-	FoeMsec    int
-	RewardCoin int
-	TotalCoin  int
+	Type           string
+	Result         string //win, lose, draw
+	MyMsec         int
+	FoeMsec        int
+	RewardCoin     int
+	TotalCoin      int
+	BattlePointAdd int
+	BattlePoint    int
+	WinStreak      int
+	WinstreakMax   int
 }
 
 var (
@@ -227,22 +231,22 @@ func makeBattleResult(conn *Connection, isDisconnect bool) string {
 	}
 
 	getCoin := 0
+	isWin := false
 	if result == "win" {
 		getCoin = betCoin
+		isWin = true
 	} else if result == "draw" {
 		getCoin = 0
 	} else {
 		getCoin = -betCoin
 	}
 
-	out := BattleResult{
-		"result",
-		result,
-		myMsec,
-		foeMsec,
-		getCoin,
-		0,
-	}
+	out := BattleResult{}
+	out.Type = "result"
+	out.Result = result
+	out.MyMsec = myMsec
+	out.FoeMsec = foeMsec
+	out.RewardCoin = getCoin
 
 	//add coin to ssdb
 	key := makePlayerInfoKey(conn.playerInfo.UserId)
@@ -257,24 +261,125 @@ func makeBattleResult(conn *Connection, isDisconnect bool) string {
 	}
 	out.TotalCoin = coinNum
 
+	//
+	myPlayer := conn.playerInfo
+	foePlayer := conn.foe.playerInfo
+
+	//battle point and win streak
+	winStreak := myPlayer.BattleWinStreak
+	winStreakMax := myPlayer.BattleWinStreakMax
+	battlePointAdd := 0
+	battlePoint := myPlayer.BattlePoint
+	if isWin {
+		winStreak = myPlayer.BattleWinStreak + 1
+		resp, err = ssdbc.Do("hincr", key, PLAYER_BATTLE_WIN_STREAK, 1)
+		if err != nil || resp[0] != "ok" {
+			return "err_ssdb"
+		}
+		battlePointAdd = winStreak
+		if out.RewardCoin > 0 {
+			battlePointAdd += foePlayer.BattleWinStreak
+		}
+		resp, err := ssdbc.Do("hincr", key, PLAYER_BATTLE_POINT, battlePointAdd)
+		if err != nil || resp[0] != "ok" {
+			return "err_ssdb"
+		}
+		battlePoint, err = strconv.Atoi(resp[1])
+		if err != nil {
+			return "err_strconv"
+		}
+
+		if winStreak > myPlayer.BattleWinStreakMax {
+			winStreakMax = winStreak
+			resp, err := ssdbc.Do("hset", key, PLAYER_BATTLE_WIN_STREAK_MAX, winStreak)
+			if err != nil || resp[0] != "ok" {
+				return "err_ssdb"
+			}
+		}
+	} else {
+		if myPlayer.BattleWinStreak > 0 {
+			winStreak = 0
+			resp, err := ssdbc.Do("hset", key, PLAYER_BATTLE_WIN_STREAK, 0)
+			if err != nil || resp[0] != "ok" {
+				return "err_ssdb"
+			}
+		}
+	}
+
+	out.BattlePoint = battlePoint
+	out.BattlePointAdd = battlePointAdd
+	out.WinStreak = winStreak
+	out.WinstreakMax = winStreakMax
+
 	//send to me
 	conn.sendMsg(out)
 
 	//foe
+	key = makePlayerInfoKey(foePlayer.UserId)
+
+	battlePoint = foePlayer.BattlePoint
+	battlePointAdd = 0
+	winStreak = foePlayer.BattleWinStreak
+	winStreakMax = foePlayer.BattleWinStreakMax
+
+	isWin = false
 	if result == "win" {
 		out.Result = "lose"
 		out.RewardCoin = -betCoin
 	} else if result == "lose" {
 		out.Result = "win"
 		out.RewardCoin = betCoin
+		isWin = true
 	} else if result == "draw" {
 		out.RewardCoin = 0
 	}
 	out.FoeMsec = myMsec
 	out.MyMsec = foeMsec
 
+	//battle point and winstreak
+	if isWin {
+		//
+		winStreak = foePlayer.BattleWinStreak + 1
+		resp, err = ssdbc.Do("hincr", key, PLAYER_BATTLE_WIN_STREAK, 1)
+		if err != nil || resp[0] != "ok" {
+			return "err_ssdb"
+		}
+		battlePointAdd = winStreak
+		if out.RewardCoin > 0 {
+			battlePointAdd += myPlayer.BattleWinStreak
+		}
+		resp, err := ssdbc.Do("hincr", key, PLAYER_BATTLE_POINT, battlePointAdd)
+		if err != nil || resp[0] != "ok" {
+			return "err_ssdb"
+		}
+
+		battlePoint, err = strconv.Atoi(resp[1])
+		if err != nil {
+			return "err_strconv"
+		}
+
+		if winStreak > foePlayer.BattleWinStreakMax {
+			winStreakMax = winStreak
+			resp, err := ssdbc.Do("hset", key, PLAYER_BATTLE_WIN_STREAK_MAX, winStreak)
+			if err != nil || resp[0] != "ok" {
+				return "err_ssdb"
+			}
+		}
+	} else {
+		if foePlayer.BattleWinStreak > 0 {
+			winStreak = 0
+			resp, err := ssdbc.Do("hset", key, PLAYER_BATTLE_WIN_STREAK, 0)
+			if err != nil || resp[0] != "ok" {
+				return "err_ssdb"
+			}
+		}
+	}
+	out.BattlePoint = battlePoint
+	out.BattlePointAdd = battlePointAdd
+	out.WinStreak = winStreak
+	out.WinstreakMax = winStreakMax
+
 	//ssdb
-	key = makePlayerInfoKey(conn.foe.playerInfo.UserId)
 	resp, err = ssdbc.Do("hincr", key, PLAYER_GOLD_COIN, out.RewardCoin)
 	if err != nil || resp[0] != "ok" {
 		return "err_ssdb"

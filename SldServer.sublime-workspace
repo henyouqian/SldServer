@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"no",
+				"Now	time.Time ƒ"
+			],
+			[
+				"redis",
+				"GetRedisTime	time.Time ƒ"
+			],
+			[
 				"Prize_",
 				"PRIZE_NUM_PER_COIN	 Ɩ"
 			],
@@ -126,10 +134,6 @@
 			[
 				"makematch",
 				"makeHMatchRankKey	string ƒ"
-			],
-			[
-				"redis",
-				"GetRedisTimeUnix	int64 ƒ"
 			],
 			[
 				"makehmatch",
@@ -495,7 +499,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 12590,
+				"buffer_size": 13980,
 				"line_ending": "Unix"
 			}
 		},
@@ -516,24 +520,6 @@
 			}
 		},
 		{
-			"file": "match/matchCron.go",
-			"settings":
-			{
-				"buffer_size": 4814,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "Searching 497 files for \"MIN_PRIZE\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/match.go:\n   33  \n   34  	PRIZE_NUM_PER_COIN         = 100\n   35: 	MIN_PRIZE                  = PRIZE_NUM_PER_COIN\n   36  	FREE_TRY_NUM               = 3\n   37  	MATCH_TRY_EXPIRE_SECONDS   = 600\n   ..\n   94  const (\n   95  	MATCH_LUCKY_PRIZE_PROPORTION = float32(0.00)\n   96: 	MATCH_MIN_PRIZE_PROPORTION   = float32(0.05)\n   97  	MATCH_OWNER_PRIZE_PROPORTION = float32(0.1)\n   98  )\n   ..\n  196  	}\n  197  	sum += MATCH_LUCKY_PRIZE_PROPORTION\n  198: 	sum += MATCH_MIN_PRIZE_PROPORTION\n  199  	sum += MATCH_OWNER_PRIZE_PROPORTION\n  200  	if sum > 1.0 {\n  ...\n  288  		RankPrizeProportions: MATCH_RANK_PRIZE_PROPORTIONS,\n  289  		LuckyPrizeProportion: MATCH_LUCKY_PRIZE_PROPORTION,\n  290: 		MinPrizeProportion:   MATCH_MIN_PRIZE_PROPORTION,\n  291  		OwnerPrizeProportion: MATCH_OWNER_PRIZE_PROPORTION,\n  292  		PromoUrl:             in.PromoUrl,\n\n/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go:\n   26  	}\n   27  \n   28: 	minPrizeNum := int(float32(prizeSum) * match.MinPrizeProportion / float32(MIN_PRIZE))\n   29  	propNum := len(match.RankPrizeProportions)\n   30  	lastPrize := float32(prizeSum) * match.RankPrizeProportions[propNum-1]\n   31: 	if (lastPrize > MIN_PRIZE) && (rankIdx < (fixPrizeNum + minPrizeNum)) {\n   32: 		return MIN_PRIZE\n   33  	}\n   34  \n\n7 matches across 2 files\n",
-			"settings":
-			{
-				"buffer_size": 1394,
-				"line_ending": "Unix",
-				"name": "Find Results",
-				"scratch": true
-			}
-		},
-		{
 			"file": "match/ecoMonitor.go",
 			"settings":
 			{
@@ -542,10 +528,18 @@
 			}
 		},
 		{
-			"contents": "func calcRankReward(match *Match, prizeSum int, rank int) int {\n	rankIdx := rank - 1\n	fixRewardNum := len(match.RankRewardProportions)\n	if rankIdx < fixRewardNum {\n		return int(match.RankRewardProportions[rankIdx] * prizeSum)\n	}\n\n	minPrizeNum := int(prizeSum * match.MinPrizeProportion)\n	propNum := len(match.RankRewardProportions)\n	minPrize := prizeSum * match.RankRewardProportions[propNum-1]\n	if (minReward > 1.0) && (rankIdx < (fixRewardNum + minPrizeNum)) {\n		return 1.0\n	}\n\n	return 0\n}",
+			"file": "match/battle.go",
 			"settings":
 			{
-				"buffer_size": 491,
+				"buffer_size": 1167,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/main.go",
+			"settings":
+			{
+				"buffer_size": 1644,
 				"line_ending": "Unix"
 			}
 		},
@@ -598,8 +592,10 @@
 	},
 	"file_history":
 	[
-		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/backup.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/battle.go",
@@ -608,11 +604,9 @@
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ecoMonitor.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go",
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/packUploader",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/auth.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/match.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
@@ -681,6 +675,21 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"apiGetPlayerInfo",
+			"getplayerinfo\ngetplayerinfo\ngetplayerinfo",
+			"getplayerinfo\ngetplayerinfo",
+			"getplayerinfo",
+			"PLAYER_BATTLE_LEVELS",
+			"apigetplayerinfo",
+			"matchCron",
+			"updateBattleRoomPlayerNumTask",
+			"matchCron",
+			"ssdbc",
+			"PLAYER_GOLD_COIN",
+			"addgold",
+			"makePlayerInfoKey",
+			"kv",
+			"battle",
 			"MIN_PRIZE",
 			"60",
 			"MATCH_TRY_EXPIRE_SECONDS",
@@ -793,22 +802,7 @@
 			"time",
 			"makeEcoDailyCountKey",
 			"H_ECO_DAILY_COUNTER",
-			"Z_ECO_PLAYER_MON",
-			"cmds..",
-			"cmd..",
-			"make([]interface{}",
-			"zrscan",
-			"session",
-			"addColdCoinRecord",
-			"Z_ECO_DAILY_MON",
-			"CouponPrice",
-			"buyecard",
-			"addgoldcoin",
-			"add",
-			"incr",
-			"begin",
-			"buyiap",
-			"H_PACK"
+			"Z_ECO_PLAYER_MON"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -839,7 +833,7 @@
 	"groups":
 	[
 		{
-			"selected": 4,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -881,8 +875,8 @@
 						"selection":
 						[
 							[
-								4070,
-								4074
+								2572,
+								2588
 							]
 						],
 						"settings":
@@ -891,7 +885,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 3978.0,
+						"translation.y": 2440.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -908,8 +902,8 @@
 						"selection":
 						[
 							[
-								951,
-								951
+								16204,
+								16210
 							]
 						],
 						"settings":
@@ -918,7 +912,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 429.0,
+						"translation.y": 14026.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -928,15 +922,15 @@
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 12590,
+						"buffer_size": 13980,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								12464,
-								12475
+								1386,
+								1386
 							]
 						],
 						"settings":
@@ -945,7 +939,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 10960.0,
+						"translation.y": 807.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -962,8 +956,8 @@
 						"selection":
 						[
 							[
-								1502,
-								1511
+								30783,
+								30783
 							]
 						],
 						"settings":
@@ -972,7 +966,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 408.0,
+						"translation.y": 26868.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1006,100 +1000,6 @@
 				},
 				{
 					"buffer": 6,
-					"file": "match/matchCron.go",
-					"settings":
-					{
-						"buffer_size": 4814,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								725,
-								734
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 307.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"settings":
-					{
-						"buffer_size": 1394,
-						"regions":
-						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										157,
-										166
-									],
-									[
-										373,
-										382
-									],
-									[
-										554,
-										563
-									],
-									[
-										807,
-										816
-									],
-									[
-										1102,
-										1111
-									],
-									[
-										1268,
-										1277
-									],
-									[
-										1340,
-										1349
-									]
-								],
-								"scope": ""
-							}
-						},
-						"selection":
-						[
-							[
-								192,
-								192
-							]
-						],
-						"settings":
-						{
-							"detect_indentation": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
 					"file": "match/ecoMonitor.go",
 					"settings":
 					{
@@ -1120,24 +1020,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 291.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 9,
+					"buffer": 7,
+					"file": "match/battle.go",
 					"settings":
 					{
-						"buffer_size": 491,
+						"buffer_size": 1167,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								491,
-								491
+								482,
+								482
 							]
 						],
 						"settings":
@@ -1146,13 +1047,40 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 246.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 8,
+					"file": "match/main.go",
+					"settings":
+					{
+						"buffer_size": 1644,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1438,
+								1438
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1272.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
 					"file": "match/ssdb/ssdb.go",
 					"settings":
 					{
@@ -1163,8 +1091,8 @@
 						"selection":
 						[
 							[
-								7096,
-								7096
+								6273,
+								6283
 							]
 						],
 						"settings":
@@ -1173,7 +1101,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 8322.0,
+						"translation.y": 7646.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1259,6 +1187,22 @@
 		"selected_items":
 		[
 			[
+				"auth.go",
+				"SldServer/match/auth.go"
+			],
+			[
+				"ssdb.go",
+				"SldServer/match/ssdb/ssdb.go"
+			],
+			[
+				"player.g",
+				"SldServer/match/player.go"
+			],
+			[
+				"main",
+				"SldServer/match/main.go"
+			],
+			[
 				"match.g",
 				"SldServer/match/match.go"
 			],
@@ -1305,10 +1249,6 @@
 			[
 				"battle.go",
 				"SldServer/match/battle.go"
-			],
-			[
-				"main",
-				"SldServer/match/main.go"
 			],
 			[
 				"pack.go",
