@@ -11,6 +11,11 @@ func battleGlog() {
 	glog.Info("")
 }
 
+const (
+	BATTLE_PACK_USER  = "9DA924BB-6327-4C8A-BA4D-B010765478CD"
+	BATTLE_PACKID_SET = "BATTLE_PACKID_SET"
+)
+
 type BattleRoom struct {
 	Name      string
 	Title     string

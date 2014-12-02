@@ -204,6 +204,9 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 
 	//
 	h.pendingConnMu.Lock()
+	defer func() {
+		h.pendingConnMu.Unlock()
+	}()
 	pendingConn := h.pendingConnMap[in.RoomName]
 	if pendingConn != nil {
 		//check userId
@@ -212,7 +215,6 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		}
 
 		h.pendingConnMap[in.RoomName] = nil
-		h.pendingConnMu.Unlock()
 
 		//
 		c.foe = pendingConn
@@ -287,7 +289,6 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		}()
 	} else {
 		h.pendingConnMap[in.RoomName] = c
-		h.pendingConnMu.Unlock()
 
 		c.sendType("pairing")
 	}

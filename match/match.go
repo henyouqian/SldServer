@@ -1319,6 +1319,7 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 		"GoldCoin":     goldCoin,
 		"FreeTries":    play.FreeTries,
 		"AutoPaging":   autoPaging,
+		"SliderNum":    match.SliderNum,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -1365,6 +1366,7 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 	hasher.Write([]byte(checksum))
 	checksum = hex.EncodeToString(hasher.Sum(nil))
 	if in.Checksum != checksum {
+		//fixme: cheater
 		lwutil.SendError("err_checksum", "")
 	}
 
@@ -1754,6 +1756,17 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
 	lwutil.WriteResponse(w, in)
+
+	//battle
+	if session.Username == BATTLE_PACK_USER {
+		match := getMatch(ssdbc, in.MatchId)
+
+		rc := redisPool.Get()
+		defer rc.Close()
+
+		_, err = rc.Do("SADD", BATTLE_PACKID_SET, match.PackId)
+		lwutil.CheckError(err, "")
+	}
 }
 
 func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
@@ -1795,6 +1808,17 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
 	lwutil.WriteResponse(w, in)
+
+	//battle
+	if session.Username == BATTLE_PACK_USER {
+		match := getMatch(ssdbc, in.MatchId)
+
+		rc := redisPool.Get()
+		defer rc.Close()
+
+		_, err = rc.Do("SREM", BATTLE_PACKID_SET, match.PackId)
+		lwutil.CheckError(err, "")
+	}
 }
 
 func regMatch() {
