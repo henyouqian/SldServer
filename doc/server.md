@@ -37,10 +37,12 @@ mkdir $HOME/go
 
 - 安装go packege
 go get github.com/henyouqian/lwutil
+go get github.com/henyouqian/ssdbgo
 go get github.com/golang/glog
 go get github.com/garyburd/redigo/redis
 go get github.com/robfig/cron
 go get github.com/qiniu/api/rs
+go get github.com/gorilla/websocket
 
 - 安装nginx
 sudo apt-get install nginx
@@ -52,3 +54,10 @@ sudo ufw allow 22
 sudo ufw allow 80
 sudo ufw allow 443
 sudo ufw allow 9977
+
+- ubuntu安全更新
+sudo cp /etc/apt/sources.list /etc/apt/security.sources.list
+sudo apt-get upgrade -o Dir::Etc::SourceList=/etc/apt/security.sources.list
+
+- 启动redis
+redis-server redis.conf

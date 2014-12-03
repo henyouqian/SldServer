@@ -1,8 +1,13 @@
 $(function() {
     $("#pair").click(function() {
-        var msg = '{"Type":"authPair", "Token":"5UeGteZ_TDd1BhiC8Ce_5A==", "RoomName":"free"}'
+        var token = $('#token').val()
+        var msg = '{"Type":"authPair", "Token":"'+token+'", "RoomName":"free"}'
         conn.send(msg)
+
+        localStorage.token = token
     })
+    $('#token').val(localStorage.token)
+
     $("#emoji").click(function() {
         var msg = '{"Type":"talk", "Text":"😝"}'
         conn.send(msg)
