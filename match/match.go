@@ -1767,12 +1767,6 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 		_, err = rc.Do("SADD", BATTLE_PACKID_SET, match.PackId)
 		lwutil.CheckError(err, "")
 
-		mems, err := redis.Strings(rc.Do("SMEMBERS", BATTLE_PACKID_SET))
-		lwutil.CheckError(err, "")
-		glog.Info(mems)
-
-		packId, err := redis.Int64(rc.Do("SRANDMEMBER", BATTLE_PACKID_SET))
-		glog.Info(packId)
 	}
 }
 
