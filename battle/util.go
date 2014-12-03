@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/garyburd/redigo/redis"
+	"github.com/henyouqian/ssdbgo"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -19,7 +21,35 @@ const (
 
 	BATTLE_HEART_TOTAL   = 10
 	BATTLE_HEART_ADD_SEC = 60 * 5
+
+	SSDB_AUTH_PORT  = 9875
+	SSDB_MATCH_PORT = 9876
+
+	REDIS_HOST = "localhost:6379"
 )
+
+var (
+	redisPool     *redis.Pool
+	ssdbMatchPool *ssdbgo.Pool
+	ssdbAuthPool  *ssdbgo.Pool
+)
+
+func initRedisAndSsdb() {
+	redisPool = &redis.Pool{
+		MaxIdle:     20,
+		MaxActive:   0,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", REDIS_HOST)
+			if err != nil {
+				return nil, err
+			}
+			return c, err
+		},
+	}
+	ssdbAuthPool = ssdbgo.NewPool("localhost", SSDB_AUTH_PORT, 10, 60)
+	ssdbMatchPool = ssdbgo.NewPool("localhost", SSDB_MATCH_PORT, 10, 60)
+}
 
 func genUUID() string {
 	uuid, _ := uuid.NewV4()

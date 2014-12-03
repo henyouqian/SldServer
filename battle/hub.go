@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
 	"github.com/henyouqian/ssdbgo"
 )
@@ -20,8 +21,9 @@ func _hublog() {
 }
 
 const (
-	H_SESSION = "H_SESSION" //key:token, value:session
-	H_PACK    = "H_PACK"    //subkey:packId value:packJson
+	H_SESSION         = "H_SESSION" //key:token, value:session
+	H_PACK            = "H_PACK"    //subkey:packId value:packJson
+	BATTLE_PACKID_SET = "BATTLE_PACKID_SET"
 )
 
 type Session struct {
@@ -226,7 +228,15 @@ func (h *Hub) authPair(c *Connection, msg []byte) error {
 		battle.room = room
 
 		//get pack, fixme
-		pack, err := getPack(matchdb, 2)
+		rc := redisPool.Get()
+		defer rc.Close()
+
+		packId, err := redis.Int64(rc.Do("SRANDMEMBER", BATTLE_PACKID_SET))
+		if err != nil {
+			return err
+		}
+
+		pack, err := getPack(matchdb, packId)
 		if err != nil {
 			return err
 		}
