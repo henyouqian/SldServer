@@ -124,7 +124,7 @@ func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 	//in
 	var in struct {
 		UserId      int64
-		AddGoldCoin int64
+		AddGoldCoin int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -133,6 +133,10 @@ func apiAddGoldCoin(w http.ResponseWriter, r *http.Request) {
 	key := makePlayerInfoKey(in.UserId)
 	resp, err := ssdb.Do("hincr", key, PLAYER_GOLD_COIN, in.AddGoldCoin)
 	lwutil.CheckSsdbError(resp, err)
+
+	//
+	err = addEcoRecord(ssdb, session.Userid, in.AddGoldCoin, ECO_FORWHAT_MATCHBEGIN)
+	lwutil.CheckError(err, "")
 
 	var playerInfo PlayerInfo
 	ssdb.HGetStruct(key, &playerInfo)
@@ -183,6 +187,9 @@ func apiAddPrize(w http.ResponseWriter, r *http.Request) {
 
 	key := makePlayerInfoKey(userId)
 	addPrize(ssdbc, key, in.Prize)
+
+	err = addEcoRecord(ssdbc, session.Userid, in.Prize, ECO_FORWHAT_ADMIN_PRIZE)
+	lwutil.CheckError(err, "")
 
 	var playerInfo PlayerInfo
 	ssdbc.HGetStruct(key, &playerInfo)

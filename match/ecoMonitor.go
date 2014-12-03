@@ -25,6 +25,8 @@ const (
 	ECO_FORWHAT_MATCHPRIZE   = "match prize+"
 	ECO_FORWHAT_PUBLISHPRIZE = "publish prize+"
 	ECO_FORWHAT_BUYECARD     = "buy ecard prize-"
+	ECO_FORWHAT_ADMIN_COIN   = "admin coin+"
+	ECO_FORWHAT_ADMIN_PRIZE  = "admin prize+"
 
 	//whatCounter
 	ECO_DAILY_COUNTER_IAP          = "ECO_DAILY_COUNTER_IAP"          //count:goldCoin
@@ -32,6 +34,8 @@ const (
 	ECO_DAILY_COUNTER_MATCHPRIZE   = "ECO_DAILY_COUNTER_MATCHPRIZE"   //count:prize
 	ECO_DAILY_COUNTER_PUBLISHPRIZE = "ECO_DAILY_COUNTER_PUBLISHPRIZE" //count:prize
 	ECO_DAILY_COUNTER_BUYECARD     = "ECO_DAILY_COUNTER_BUYECARD"     //count:prize
+	ECO_DAILY_COUNTER_ADMIN_COIN   = "ECO_DAILY_COUNTER_ADMIN_COIN"   //count:goldCoin
+	ECO_DAILY_COUNTER_ADMIN_PRIZE  = "ECO_DAILY_COUNTER_ADMIN_PRIZE"  //count:prize
 )
 
 type EcoRecord struct {
@@ -114,6 +118,10 @@ func addEcoRecord(ssdbc *ssdb.Client, userId int64, count int, forWhat string) (
 		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_PUBLISHPRIZE, count)
 	} else if forWhat == ECO_FORWHAT_BUYECARD {
 		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_BUYECARD, count)
+	} else if forWhat == ECO_FORWHAT_ADMIN_COIN {
+		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_ADMIN_COIN, count)
+	} else if forWhat == ECO_FORWHAT_ADMIN_PRIZE {
+		_, err = ssdbc.Do("hincr", key, ECO_DAILY_COUNTER_ADMIN_PRIZE, count)
 	}
 
 	return err
