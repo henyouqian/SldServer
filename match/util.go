@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os/user"
 	"runtime"
 	"unicode/utf8"
 
@@ -107,4 +108,9 @@ func zrscanGet(ssdbc *ssdb.Client, zkey string, zSubkeyStart, zScoreStart interf
 	out = resp[1:]
 
 	return
+}
+
+func isReleaseServer() bool {
+	u, _ := user.Current()
+	return u.Username != "liwei"
 }

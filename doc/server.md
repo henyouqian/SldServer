@@ -44,3 +44,11 @@ go get github.com/qiniu/api/rs
 
 - 安装nginx
 sudo apt-get install nginx
+
+- 配置ufw
+sudo ufw enable
+sudo ufw default deny 
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 9977

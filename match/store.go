@@ -34,11 +34,13 @@ const (
 4.	在结算过程中，礼品卡金额将被自动用于支付有效订单。
 5.	当您的礼品卡余额不足以支付订单时，您需要同时选择其它支付方式支付订单的差额部分。
 您也可以在结算过程中按照提示输入您的礼品卡充值码。选择“一键下单”服务时，您需要先将礼品卡充值至我的账户。`
+
+	PROVIDER_KEY_AMAZON = "amazon"
 )
 
 var (
 	ECARD_PROVIDERS = map[string]Provider{
-		"amazon": Provider{"https://www.amazon.cn/gp/css/gc/payment/ref=gc_lp_cc", AMAZON_HELP},
+		PROVIDER_KEY_AMAZON: Provider{"https://www.amazon.cn/gp/css/gc/payment/ref=gc_lp_cc", AMAZON_HELP},
 	}
 	_ecardStoreClose = false
 )
@@ -553,6 +555,112 @@ func apiAddEcard(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
+func checkEcardCode(provider string, code string) bool {
+	if provider == PROVIDER_KEY_AMAZON {
+		if len(code) != 16 || code[4] != '-' || code[11] != '-' {
+			return false
+		}
+	}
+	return true
+}
+
+func apiAddEcards(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//check admin
+	checkAdmin(session)
+
+	//in
+	var in []ECard
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	for _, ecard := range in {
+		if len(ecard.Code) == 0 {
+			lwutil.SendError("err_code", "need code")
+		}
+
+		//check ecard code
+		if isReleaseServer() {
+			if !checkEcardCode(ecard.Provider, ecard.Code) {
+				lwutil.SendError("err_code", fmt.Sprintf("code format error:code=%s", ecard.Code))
+			}
+		}
+
+		ecard.TypeKey = makeEcardTypeKey(ecard.Provider, ecard.RmbPrice)
+
+		//check type key
+		resp, err := ssdbc.Do("hget", H_ECARD_TYPE, ecard.TypeKey)
+		lwutil.CheckError(err, "")
+		if resp[0] == ssdb.NOT_FOUND {
+			lwutil.SendError("err_type", "type not found")
+		}
+
+		if len(resp) < 2 {
+			lwutil.SendError("err_not_exist", "key not exist")
+		}
+		var cardType ECardType
+		err = json.Unmarshal([]byte(resp[1]), &cardType)
+		lwutil.CheckError(err, "")
+
+		//check code exist
+		codeSubkey := makeEcardCodeSubkey(cardType.Provider, ecard.Code)
+		resp, err = ssdbc.Do("hexists", H_ECARD_CODE, codeSubkey)
+		lwutil.CheckSsdbError(resp, err)
+		if ssdbCheckExists(resp) {
+			lwutil.SendError("err_exists", fmt.Sprintf("code exist:", ecard.Code))
+		}
+
+		//set gen time
+		now := lwutil.GetRedisTime()
+		ecard.GenDate = now.Format("2006-01-02 15:04:05")
+
+		//set title
+		ecard.Title = cardType.Name
+		ecard.Provider = cardType.Provider
+
+		//hset
+		ecard.Id = GenSerial(ssdbc, "ECARD_SERIAL")
+		js, err := json.Marshal(ecard)
+		lwutil.CheckError(err, "")
+		resp, err = ssdbc.Do("hset", H_ECARD, ecard.Id, js)
+		lwutil.CheckSsdbError(resp, err)
+
+		//qpush_back
+		qkey := makeEcardQueueKey(ecard.TypeKey)
+		resp, err = ssdbc.Do("qpush_back", qkey, ecard.Id)
+		lwutil.CheckSsdbError(resp, err)
+
+		//add to H_ECARD_CODE
+		resp, err = ssdbc.Do("hset", H_ECARD_CODE, codeSubkey, ecard.Id)
+		lwutil.CheckSsdbError(resp, err)
+
+		//update num
+		resp, err = ssdbc.Do("qsize", qkey)
+		lwutil.CheckSsdbError(resp, err)
+		num, err := strconv.Atoi(resp[1])
+		lwutil.CheckError(err, "")
+		cardType.Num = num
+		js, err = json.Marshal(cardType)
+		lwutil.CheckError(err, "")
+		resp, err = ssdbc.Do("hset", H_ECARD_TYPE, ecard.TypeKey, js)
+		lwutil.CheckSsdbError(resp, err)
+	}
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
 func apiBuyEcard(w http.ResponseWriter, r *http.Request) {
 	if _ecardStoreClose {
 		lwutil.SendError("err_store_close", "暂停兑换，请稍候再来")
@@ -757,6 +865,7 @@ func regStore() {
 	http.Handle("/store/listEcardType", lwutil.ReqHandler(apiListEcardType))
 
 	http.Handle("/store/addEcard", lwutil.ReqHandler(apiAddEcard))
+	http.Handle("/store/addEcards", lwutil.ReqHandler(apiAddEcards))
 	http.Handle("/store/buyEcard", lwutil.ReqHandler(apiBuyEcard))
 
 	http.Handle("/store/setEcardStoreClose", lwutil.ReqHandler(apiSetEcardStoreClose))

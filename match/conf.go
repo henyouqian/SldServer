@@ -38,6 +38,7 @@ var (
 		"FlurryKey":      "2P9DTVNTFZS8YBZ36QBZ",
 		"MogoKey":        "8c0728f759464dcda07c81afb00d3bf5",
 		"UmengSocialKey": "53aeb00356240bdcb8050c26",
+		"WebSocketUrl":   "ws://173.255.215.104:9977/ws",
 	}
 )
 
@@ -55,5 +56,9 @@ func initConf(confFile string) {
 	err = decoder.Decode(&_conf)
 	if err != nil {
 		panic(err)
+	}
+
+	if !isReleaseServer() {
+		delete(_clientConf, "WebSocketUrl")
 	}
 }

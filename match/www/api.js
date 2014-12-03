@@ -401,6 +401,10 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"Provider":"amazon", "RmbPrice":0, "Code":"", "ExpireDate":""}
 				},{
+					"name": "addEcards",
+					"method": "POST",
+					"data": ""
+				},{
 					"name": "buyEcard",
 					"method": "POST",
 					"data": {"TypeKey":""}

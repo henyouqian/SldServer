@@ -8,7 +8,6 @@ import (
 	qiniuconf "github.com/qiniu/api/conf"
 	"github.com/robfig/cron"
 	"net/http"
-	"os/user"
 	"runtime"
 )
 
@@ -53,9 +52,7 @@ func main() {
 	initAdmin()
 	initStore()
 
-	u, _ := user.Current()
-
-	if u.Username != "liwei" {
+	if isReleaseServer() {
 		_cron.AddFunc("0 19 3 * * *", backupTask)
 	}
 
