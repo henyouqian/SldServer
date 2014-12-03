@@ -26,7 +26,7 @@ const (
 )
 
 const (
-	WAIT_TIME_SEC = 5
+	WAIT_TIME_SEC = 8
 )
 
 type Battle struct {
