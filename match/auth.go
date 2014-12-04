@@ -346,6 +346,14 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 		_, err = ssdbc.Do("hset", H_ACCOUNT, userId, js)
 		lwutil.CheckError(err, "")
 
+		//set player
+		playerKey := makePlayerInfoKey(userId)
+
+		matchDb, err := ssdbPool.Get()
+		lwutil.CheckError(err, "")
+		defer matchDb.Close()
+
+		addPlayerGoldCoin(matchDb, playerKey, 20)
 	} else {
 		lwutil.CheckSsdbError(resp, err)
 		userId, err = strconv.ParseInt(resp[1], 10, 64)

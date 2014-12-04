@@ -5,7 +5,10 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -147,12 +150,23 @@ func battleFinish(conn *Connection, msg []byte) {
 
 	//in
 	var in struct {
-		Msec int
+		Msec     int
+		Checksum string
 	}
 
 	err := json.Unmarshal(msg, &in)
 	if err != nil {
 		conn.sendErr("json error")
+		return
+	}
+
+	//checksum
+	checksum := fmt.Sprintf("%s+%d9d7a", conn.battle.secret, in.Msec+8703)
+	hasher := sha1.New()
+	hasher.Write([]byte(checksum))
+	checksum = hex.EncodeToString(hasher.Sum(nil))
+	if in.Checksum != checksum {
+		conn.sendErr("err_checksum")
 		return
 	}
 

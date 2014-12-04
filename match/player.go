@@ -257,7 +257,9 @@ func addPrize(ssc *ssdb.Client, playerKey string, prize int) (rPrize int) {
 func getPrizeCache(ssc *ssdb.Client, playerKey string) int {
 	var prizeCache int
 	err := ssc.HGet(playerKey, PLAYER_PRIZE_CACHE, &prizeCache)
-	lwutil.CheckError(err, "")
+	if err != nil {
+		return 0
+	}
 	return prizeCache
 }
 
@@ -299,7 +301,10 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 
 	//get info
 	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
-	lwutil.CheckError(err, "")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
 
 	//out
 	out := struct {
