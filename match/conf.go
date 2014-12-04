@@ -33,7 +33,7 @@ var (
 	_clientConf = map[string]string{
 		"DataHost":       "http://dn-pintugame.qbox.me",
 		"UploadHost":     "http://dn-pintuuserupload.qbox.me",
-		"StoreId":        "904649492",
+		"StoreId":        "923531990",
 		"Html5Url":       "http://pintuhtml5.qiniudn.com/index.html",
 		"FlurryKey":      "2P9DTVNTFZS8YBZ36QBZ",
 		"MogoKey":        "8c0728f759464dcda07c81afb00d3bf5",
