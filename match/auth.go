@@ -593,7 +593,7 @@ func apiCheckVersion(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	url := ""
-	if in.Version != CLIENT_VERSION {
+	if in.Version < CLIENT_VERSION {
 		url = APP_STORE_URL
 	}
 	out := struct {

@@ -4,6 +4,34 @@
 		"selected_items":
 		[
 			[
+				"h",
+				"Header	http.Header ƒ"
+			],
+			[
+				"addgold",
+				"addPlayerGoldCoin	rNum int ƒ"
+			],
+			[
+				"In",
+				"Info	 ƒ"
+			],
+			[
+				"string",
+				"Strings	[]string, error ƒ"
+			],
+			[
+				"ECO_FORWHAT_admin",
+				"ECO_FORWHAT_ADMIN_PRIZE	 Ɩ"
+			],
+			[
+				"r",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
+				"battl",
+				"BattleHeartLastUpdateTime	int64 ν"
+			],
+			[
 				"no",
 				"Now	time.Time ƒ"
 			],
@@ -360,10 +388,6 @@
 				"Event	struct ʈ"
 			],
 			[
-				"In",
-				"Infof	 ƒ"
-			],
-			[
 				"va",
 				"ValueOf	reflect.Value ƒ"
 			],
@@ -475,7 +499,7 @@
 			"file": "match/store.go",
 			"settings":
 			{
-				"buffer_size": 17954,
+				"buffer_size": 20770,
 				"line_ending": "Unix"
 			}
 		},
@@ -483,7 +507,7 @@
 			"file": "match/admin.go",
 			"settings":
 			{
-				"buffer_size": 4808,
+				"buffer_size": 5028,
 				"line_ending": "Unix"
 			}
 		},
@@ -491,7 +515,7 @@
 			"file": "match/auth.go",
 			"settings":
 			{
-				"buffer_size": 16662,
+				"buffer_size": 16850,
 				"line_ending": "Unix"
 			}
 		},
@@ -499,7 +523,25 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 13980,
+				"buffer_size": 15269,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "Searching 501 files for \"uuid\"\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/battle.go:\n   74  	battle.state = PREPARE\n   75  	battle.readyConn = nil\n   76: 	battle.secret = genUUID()\n   77  	battle.createTime = time.Now()\n   78  	return battle\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/util.go:\n    8  	\"github.com/garyburd/redigo/redis\"\n    9  	\"github.com/henyouqian/ssdbgo\"\n   10: 	\"github.com/nu7hatch/gouuid\"\n   11  )\n   12  \n   ..\n   52  }\n   53  \n   54: func genUUID() string {\n   55: 	uuid, _ := uuid.NewV4()\n   56: 	return base64.URLEncoding.EncodeToString(uuid[:])\n   57  }\n   58  \n\n/Users/liwei/Documents/projects/2014/SldServer/match/auth.go:\n   70  	}\n   71  \n   72: 	usertoken = lwutil.GenUUID()\n   73  	sessionKey := fmt.Sprintf(\"%s/%s\", H_SESSION, usertoken)\n   74  \n   ..\n  268  	defer ssdbc.Close()\n  269  \n  270: 	k1 := lwutil.GenUUID()\n  271  	key := fmt.Sprintf(\"snsSecret/%s\", k1)\n  272  \n  ...\n  306  		\"qzone\":  true,\n  307  		\"douban\": true,\n  308: 		\"uuid\":   true,\n  309  	}\n  310  \n  ...\n  451  // 	lwutil.CheckError(err, \"\")\n  452  \n  453: // 	secret := lwutil.GenUUID()\n  454  // 	_, err = stmt.Exec(input.Name, secret)\n  455  // 	lwutil.CheckError(err, \"err_name_exists\")\n  ...\n  527  \n  528  	//gen reset key\n  529: 	resetKey := lwutil.GenUUID()\n  530  	key := fmt.Sprintf(\"K_RESET_PASSWORD/%s\", resetKey)\n  531  	resp, err = ssdb.Do(\"setx\", key, in.UserName, RESET_PASSWORD_TTL)\n\n/Users/liwei/Documents/projects/2014/SldServer/match/battle.go:\n   13  \n   14  const (\n   15: 	BATTLE_PACK_USER  = \"uuid/9DA924BB-6327-4C8A-BA4D-B010765478CD\"\n   16  	BATTLE_PACKID_SET = \"BATTLE_PACKID_SET\"\n   17  )\n\n/Users/liwei/Documents/projects/2014/SldServer/match/match.go:\n 1293  \n 1294  	//gen secret\n 1295: 	play.Secret = lwutil.GenUUID()\n 1296  	play.SecretExpire = lwutil.GetRedisTimeUnix() + MATCH_TRY_EXPIRE_SECONDS\n 1297  \n\n/Users/liwei/Documents/projects/2014/SldServer/match/store.go:\n  204  \n  205  	//player\n  206: 	secret := lwutil.GenUUID()\n  207  	playerKey := makePlayerInfoKey(session.Userid)\n  208  	err = ssdb.HSet(playerKey, PLAYER_IAP_SECRET, secret)\n\n/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go:\n 1020  \n 1021  	//gen secret\n 1022: 	record.Secret = lwutil.GenUUID()\n 1023  	record.SecretExpire = lwutil.GetRedisTimeUnix() + TRY_EXPIRE_SECONDS\n 1024  \n\n/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/userPack.go:\n  513  \n  514  	//gen secret\n  515: 	play.Secret = lwutil.GenUUID()\n  516  	play.SecretExpire = lwutil.GetRedisTimeUnix() + TRY_EXPIRE_SECONDS\n  517  \n\n/Users/liwei/Documents/projects/2014/SldServer/ssdb/auth/log.txt:\n 19082  2014-11-15 18:45:07.348 [DEBUG] serv.cpp(358): w:0.045,p:0.177, req: setx [34] 1 60, resp: ok 1\n 19083  2014-11-15 18:45:07.655 [DEBUG] serv.cpp(327): w:0.045,p:2.489, req: exists [34], resp: ok 1\n 19084: 2014-11-15 18:45:07.661 [DEBUG] serv.cpp(327): w:0.001,p:5.481, req: hget H_SNS_ACCONT uuid/uuidtest, resp: not_found\n 19085  2014-11-15 18:45:07.682 [DEBUG] serv.cpp(358): w:0.029,p:20.605, req: hincr hSerial account 1, resp: ok 1029\n 19086: 2014-11-15 18:45:07.684 [DEBUG] serv.cpp(358): w:0.025,p:1.282, req: hset H_SNS_ACCONT uuid/uuidtest 1029, resp: ok 1\n 19087  2014-11-15 18:45:07.684 [DEBUG] serv.cpp(358): w:0.024,p:0.045, req: hset H_ACCOUNT 1029 [72], resp: ok 1\n 19088  2014-11-15 18:45:07.686 [DEBUG] serv.cpp(327): w:0.001,p:0.037, req: get H_USER_TOKEN/0/1029, resp: not_found\n .....\n 19098  2014-11-15 18:59:57.430 [DEBUG] serv.cpp(358): w:0.142,p:5.101, req: setx [34] 1 60, resp: ok 1\n 19099  2014-11-15 18:59:57.630 [DEBUG] serv.cpp(327): w:0.043,p:0.097, req: exists [34], resp: ok 1\n 19100: 2014-11-15 18:59:57.631 [DEBUG] serv.cpp(327): w:0.003,p:0.069, req: hget H_SNS_ACCONT uuid/uuidtest, resp: ok 1029\n 19101  2014-11-15 18:59:57.632 [DEBUG] serv.cpp(327): w:0.002,p:0.020, req: get H_USER_TOKEN/0/1029, resp: ok 4XXHY9LrRKFzXtBc0KMjLg==\n 19102  2014-11-15 18:59:57.632 [DEBUG] serv.cpp(358): w:0.044,p:0.064, req: del H_USER_TOKEN/0/1029, resp: ok 1\n\n/Users/liwei/Documents/projects/2014/SldServer/ssdb/match/log.txt:\n 126609  2014-11-15 21:07:00.012 [DEBUG] serv.cpp(358): w:0.083,p:0.062, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126610  2014-11-15 21:07:08.989 [DEBUG] serv.cpp(327): w:0.002,p:0.096, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok\n 126611: 2014-11-15 21:07:09.007 [DEBUG] serv.cpp(358): w:10.778,p:6.417, req: multi_hset H_PLAYER_INFO/1030 NickName uuid TeamName [25 more...], resp: ok 14\n 126612  2014-11-15 21:07:09.009 [DEBUG] ssdb-server.cpp(176): fd: 17, read: 0, delete link\n 126613  2014-11-15 21:07:09.950 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:55436, fd: 17, link_count: 2\n 126614: 2014-11-15 21:07:09.950 [DEBUG] serv.cpp(327): w:0.003,p:0.052, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126615  2014-11-15 21:07:10.024 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126616: 2014-11-15 21:07:15.695 [DEBUG] serv.cpp(327): w:0.003,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126617  2014-11-15 21:07:30.811 [DEBUG] serv.cpp(358): w:0.080,p:0.113, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 16 1415988438 14 1415197832 [26 more...]\n 126618  2014-11-15 21:07:30.831 [DEBUG] serv.cpp(327): w:0.002,p:0.484, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126619  2014-11-15 21:07:30.834 [DEBUG] serv.cpp(327): w:0.002,p:0.253, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 1 14/PlayTimes 5 [22 more...]\n 126620: 2014-11-15 21:07:34.832 [DEBUG] serv.cpp(327): w:0.003,p:0.086, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126621  2014-11-15 21:07:34.870 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126622: 2014-11-15 21:07:36.483 [DEBUG] serv.cpp(327): w:0.002,p:0.085, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126623: 2014-11-15 21:07:39.863 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126624  2014-11-15 21:08:00.004 [DEBUG] serv.cpp(358): w:0.261,p:0.411, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126625  2014-11-15 21:08:30.580 [DEBUG] serv.cpp(327): w:0.003,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n .....\n 126629  2014-11-15 21:09:09.369 [DEBUG] serv.cpp(327): w:0.002,p:0.388, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126630  2014-11-15 21:09:09.372 [DEBUG] serv.cpp(327): w:0.002,p:0.240, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 1 14/PlayTimes 5 [22 more...]\n 126631: 2014-11-15 21:09:12.765 [DEBUG] serv.cpp(327): w:0.002,p:0.080, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126632  2014-11-15 21:09:12.847 [DEBUG] serv.cpp(327): w:0.001,p:0.016, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126633  2014-11-15 21:10:00.001 [DEBUG] serv.cpp(358): w:0.032,p:0.074, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n .....\n 126637  2014-11-15 21:11:29.850 [DEBUG] serv.cpp(327): w:0.001,p:0.232, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126638  2014-11-15 21:11:29.853 [DEBUG] serv.cpp(327): w:0.002,p:0.242, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 1 14/PlayTimes 5 [22 more...]\n 126639: 2014-11-15 21:11:31.764 [DEBUG] serv.cpp(327): w:0.002,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126640  2014-11-15 21:11:31.881 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126641: 2014-11-15 21:11:34.134 [DEBUG] serv.cpp(327): w:0.001,p:0.046, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126642  2014-11-15 21:12:00.025 [DEBUG] serv.cpp(358): w:0.029,p:0.069, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126643  2014-11-15 21:12:45.372 [DEBUG] serv.cpp(358): w:0.056,p:0.262, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 16 1415988438 14 1415197832 [26 more...]\n 126644  2014-11-15 21:12:45.373 [DEBUG] serv.cpp(327): w:0.002,p:0.360, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126645  2014-11-15 21:12:45.376 [DEBUG] serv.cpp(327): w:0.001,p:0.353, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 1 14/PlayTimes 5 [22 more...]\n 126646: 2014-11-15 21:12:49.989 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126647  2014-11-15 21:12:50.016 [DEBUG] serv.cpp(327): w:0.003,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126648: 2014-11-15 21:12:53.515 [DEBUG] serv.cpp(327): w:0.002,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126649  2014-11-15 21:13:00.008 [DEBUG] serv.cpp(358): w:0.035,p:0.101, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126650: 2014-11-15 21:13:01.501 [DEBUG] serv.cpp(327): w:0.003,p:0.085, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126651  2014-11-15 21:13:44.929 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126652  2014-11-15 21:13:59.079 [INFO ] ssdb-server.cpp(215): ssdb working, links: 2\n 126653  2014-11-15 21:14:00.004 [DEBUG] serv.cpp(358): w:0.033,p:0.070, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126654: 2014-11-15 21:14:17.011 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126655: 2014-11-15 21:14:22.091 [DEBUG] serv.cpp(327): w:0.002,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126656: 2014-11-15 21:14:33.568 [DEBUG] serv.cpp(327): w:0.002,p:0.052, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126657: 2014-11-15 21:14:38.175 [DEBUG] serv.cpp(327): w:0.002,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b1\\9f\\e8\\8b\\8f [24 more...]\n 126658: 2014-11-15 21:14:38.176 [DEBUG] serv.cpp(358): w:0.058,p:0.203, req: multi_hset H_PLAYER_INFO/1030 NickName uuid TeamName [25 more...], resp: ok 0\n 126659: 2014-11-15 21:14:38.367 [DEBUG] serv.cpp(327): w:0.003,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126660: 2014-11-15 21:14:41.651 [DEBUG] serv.cpp(327): w:0.002,p:0.047, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126661  2014-11-15 21:14:46.468 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126662  2014-11-15 21:14:46.692 [DEBUG] serv.cpp(358): w:0.051,p:0.106, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 126663: 2014-11-15 21:14:48.004 [DEBUG] serv.cpp(327): w:0.001,p:0.046, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126664: 2014-11-15 21:14:52.505 [DEBUG] serv.cpp(327): w:0.003,p:0.092, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126665  2014-11-15 21:15:00.003 [DEBUG] serv.cpp(358): w:0.034,p:0.075, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126666  2014-11-15 21:15:44.948 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n .....\n 126677  2014-11-15 21:20:46.136 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126678  2014-11-15 21:21:00.001 [DEBUG] serv.cpp(358): w:0.033,p:0.071, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126679: 2014-11-15 21:21:15.415 [DEBUG] serv.cpp(327): w:0.003,p:0.137, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126680  2014-11-15 21:21:22.859 [DEBUG] serv.cpp(327): w:0.002,p:0.025, req: hget H_PACK 16, resp: ok [592]\n 126681  2014-11-15 21:21:23.150 [DEBUG] serv.cpp(327): w:0.002,p:0.056, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon, resp: ok 16/PlayTimes 1\n 126682  2014-11-15 21:21:23.151 [DEBUG] serv.cpp(327): w:0.001,p:0.025, req: hget H_MATCH_PLAY 16/1030, resp: not_found\n 126683: 2014-11-15 21:21:23.151 [DEBUG] serv.cpp(327): w:0.001,p:0.073, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126684  2014-11-15 21:21:23.152 [DEBUG] serv.cpp(358): w:0.038,p:0.129, req: hset H_MATCH_PLAY 16/1030 [205], resp: ok 1\n 126685  2014-11-15 21:21:23.152 [DEBUG] serv.cpp(327): w:0.001,p:0.018, req: hget H_MATCH 16, resp: ok [538]\n .....\n 126712  2014-11-15 21:22:07.114 [DEBUG] serv.cpp(327): w:0.003,p:0.077, req: multi_hget H_MATCH_EXTRA 7/PlayTimes 7/ExtraCoupon, resp: ok 7/PlayTimes 1\n 126713  2014-11-15 21:22:07.115 [DEBUG] serv.cpp(327): w:0.002,p:0.022, req: hget H_MATCH_PLAY 7/1030, resp: not_found\n 126714: 2014-11-15 21:22:07.115 [DEBUG] serv.cpp(327): w:0.001,p:0.074, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126715  2014-11-15 21:22:07.116 [DEBUG] serv.cpp(358): w:0.051,p:0.067, req: hset H_MATCH_PLAY 7/1030 [205], resp: ok 1\n 126716  2014-11-15 21:22:07.118 [DEBUG] serv.cpp(327): w:0.002,p:0.110, req: hget H_MATCH 7, resp: ok [518]\n .....\n 126719  2014-11-15 21:22:15.866 [DEBUG] serv.cpp(327): w:0.003,p:0.093, req: multi_hget H_MATCH_EXTRA 10/PlayTimes 10/ExtraCoupon, resp: ok 10/PlayTimes 1\n 126720  2014-11-15 21:22:15.866 [DEBUG] serv.cpp(327): w:0.001,p:0.022, req: hget H_MATCH_PLAY 10/1030, resp: not_found\n 126721: 2014-11-15 21:22:15.867 [DEBUG] serv.cpp(327): w:0.001,p:0.070, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126722  2014-11-15 21:22:15.867 [DEBUG] serv.cpp(358): w:0.048,p:0.064, req: hset H_MATCH_PLAY 10/1030 [205], resp: ok 1\n 126723  2014-11-15 21:22:15.868 [DEBUG] serv.cpp(327): w:0.001,p:0.036, req: hget H_MATCH 10, resp: ok [538]\n .....\n 126727  2014-11-15 21:22:25.070 [DEBUG] serv.cpp(327): w:0.002,p:0.075, req: multi_hget H_MATCH_EXTRA 9/PlayTimes 9/ExtraCoupon, resp: ok 9/PlayTimes 1\n 126728  2014-11-15 21:22:25.070 [DEBUG] serv.cpp(327): w:0.002,p:0.022, req: hget H_MATCH_PLAY 9/1030, resp: not_found\n 126729: 2014-11-15 21:22:25.071 [DEBUG] serv.cpp(327): w:0.001,p:0.070, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126730  2014-11-15 21:22:25.071 [DEBUG] serv.cpp(358): w:0.050,p:0.115, req: hset H_MATCH_PLAY 9/1030 [205], resp: ok 1\n 126731  2014-11-15 21:22:25.072 [DEBUG] serv.cpp(327): w:0.001,p:0.034, req: hget H_MATCH 9, resp: ok [531]\n .....\n 126735  2014-11-15 21:22:32.342 [DEBUG] serv.cpp(327): w:0.002,p:0.081, req: multi_hget H_MATCH_EXTRA 6/PlayTimes 6/ExtraCoupon, resp: ok 6/PlayTimes 1\n 126736  2014-11-15 21:22:32.343 [DEBUG] serv.cpp(327): w:0.001,p:0.023, req: hget H_MATCH_PLAY 6/1030, resp: not_found\n 126737: 2014-11-15 21:22:32.343 [DEBUG] serv.cpp(327): w:0.001,p:0.073, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126738  2014-11-15 21:22:32.344 [DEBUG] serv.cpp(358): w:0.046,p:0.132, req: hset H_MATCH_PLAY 6/1030 [205], resp: ok 1\n 126739  2014-11-15 21:22:32.345 [DEBUG] serv.cpp(327): w:0.001,p:0.042, req: hget H_MATCH 6, resp: ok [519]\n .....\n 126742  2014-11-15 21:22:42.168 [DEBUG] serv.cpp(327): w:0.002,p:0.057, req: multi_hget H_MATCH_EXTRA 1/PlayTimes 1/ExtraCoupon, resp: ok\n 126743  2014-11-15 21:22:42.168 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_MATCH_PLAY 1/1030, resp: not_found\n 126744: 2014-11-15 21:22:42.168 [DEBUG] serv.cpp(327): w:0.001,p:0.072, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126745  2014-11-15 21:22:42.169 [DEBUG] serv.cpp(358): w:0.037,p:0.059, req: hset H_MATCH_PLAY 1/1030 [205], resp: ok 1\n 126746  2014-11-15 21:22:42.169 [DEBUG] serv.cpp(327): w:0.000,p:0.040, req: hget H_MATCH 1, resp: ok [519]\n .....\n 126748  2014-11-15 21:23:00.009 [DEBUG] serv.cpp(358): w:0.035,p:0.084, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838\n 126749  2014-11-15 21:23:21.041 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 0\n 126750: 2014-11-15 21:23:21.042 [DEBUG] serv.cpp(327): w:0.002,p:0.073, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126751  2014-11-15 21:23:21.042 [DEBUG] serv.cpp(358): w:0.040,p:0.053, req: hincr hSerial userPack 1, resp: ok 17\n 126752  2014-11-15 21:23:21.050 [DEBUG] serv.cpp(358): w:0.026,p:0.055, req: hset H_PACK 17 [986], resp: ok 1\n .....\n 126762  2014-11-15 21:23:23.997 [DEBUG] serv.cpp(327): w:0.003,p:0.060, req: multi_hget H_MATCH_EXTRA 17/PlayTimes 17/ExtraCoupon, resp: ok\n 126763  2014-11-15 21:23:23.998 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_MATCH_PLAY 17/1030, resp: not_found\n 126764: 2014-11-15 21:23:23.998 [DEBUG] serv.cpp(327): w:0.001,p:0.073, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126765  2014-11-15 21:23:24.001 [DEBUG] serv.cpp(358): w:0.060,p:0.100, req: hset H_MATCH_PLAY 17/1030 [205], resp: ok 1\n 126766  2014-11-15 21:23:24.001 [DEBUG] serv.cpp(327): w:0.001,p:0.017, req: hget H_MATCH 17, resp: ok [538]\n .....\n 126791  2014-11-15 21:28:29.481 [DEBUG] serv.cpp(327): w:0.002,p:3.391, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126792  2014-11-15 21:28:29.492 [DEBUG] serv.cpp(327): w:0.002,p:0.278, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 126793: 2014-11-15 21:28:33.210 [DEBUG] serv.cpp(327): w:0.002,p:0.051, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126794  2014-11-15 21:28:33.257 [DEBUG] serv.cpp(327): w:0.001,p:0.030, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126795  2014-11-15 21:28:59.217 [INFO ] ssdb-server.cpp(215): ssdb working, links: 2\n .....\n 126798  2014-11-15 21:29:22.020 [DEBUG] serv.cpp(327): w:0.003,p:0.090, req: multi_hget H_MATCH_EXTRA 12/PlayTimes 12/ExtraCoupon, resp: ok 12/PlayTimes 5 12/ExtraCoupon 2\n 126799  2014-11-15 21:29:22.021 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_MATCH_PLAY 12/1030, resp: not_found\n 126800: 2014-11-15 21:29:22.022 [DEBUG] serv.cpp(327): w:0.001,p:0.070, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126801  2014-11-15 21:29:22.024 [DEBUG] serv.cpp(358): w:0.158,p:1.640, req: hset H_MATCH_PLAY 12/1030 [205], resp: ok 1\n 126802  2014-11-15 21:29:22.025 [DEBUG] serv.cpp(327): w:0.003,p:0.452, req: hget H_MATCH 12, resp: ok [538]\n .....\n 126813  2014-11-15 21:29:37.148 [DEBUG] serv.cpp(327): w:0.001,p:0.057, req: multi_hget H_MATCH_EXTRA 11/PlayTimes 11/ExtraCoupon, resp: ok 11/PlayTimes 9 11/ExtraCoupon 6\n 126814  2014-11-15 21:29:37.148 [DEBUG] serv.cpp(327): w:0.001,p:0.015, req: hget H_MATCH_PLAY 11/1030, resp: not_found\n 126815: 2014-11-15 21:29:37.151 [DEBUG] serv.cpp(327): w:0.000,p:0.052, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126816  2014-11-15 21:29:37.152 [DEBUG] serv.cpp(358): w:0.031,p:0.046, req: hset H_MATCH_PLAY 11/1030 [205], resp: ok 1\n 126817  2014-11-15 21:29:37.152 [DEBUG] serv.cpp(327): w:0.000,p:0.031, req: hget H_MATCH 11, resp: ok [537]\n .....\n 126830  2014-11-15 21:30:24.316 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_MATCH_EXTRA 14/PlayTimes 14/ExtraCoupon, resp: ok 14/PlayTimes 5 14/ExtraCoupon 2\n 126831  2014-11-15 21:30:24.317 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_MATCH_PLAY 14/1030, resp: not_found\n 126832: 2014-11-15 21:30:24.317 [DEBUG] serv.cpp(327): w:0.001,p:0.071, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126833  2014-11-15 21:30:24.318 [DEBUG] serv.cpp(358): w:0.044,p:0.079, req: hset H_MATCH_PLAY 14/1030 [205], resp: ok 1\n 126834  2014-11-15 21:30:24.318 [DEBUG] serv.cpp(327): w:0.001,p:0.039, req: hget H_MATCH 14, resp: ok [534]\n .....\n 126869  2014-11-15 21:34:09.059 [DEBUG] serv.cpp(327): w:0.001,p:3.304, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 126870  2014-11-15 21:34:09.065 [DEBUG] serv.cpp(327): w:0.002,p:0.232, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 126871: 2014-11-15 21:34:13.040 [DEBUG] serv.cpp(327): w:0.001,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126872  2014-11-15 21:34:13.079 [DEBUG] serv.cpp(327): w:0.002,p:0.030, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126873: 2014-11-15 21:34:16.700 [DEBUG] serv.cpp(327): w:0.001,p:0.046, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126874: 2014-11-15 21:34:20.906 [DEBUG] serv.cpp(327): w:0.003,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126875  2014-11-15 21:34:45.888 [DEBUG] serv.cpp(358): w:0.130,p:0.137, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 17 1416057801\n 126876  2014-11-15 21:34:45.889 [DEBUG] serv.cpp(327): w:0.002,p:0.044, req: multi_hget H_MATCH \"\" 17, resp: ok 17 [538]\n .....\n 126896  2014-11-15 21:37:10.909 [DEBUG] serv.cpp(358): w:0.072,p:0.388, req: hgetall H_ECARD_TYPE, resp: ok amazon/10 [142]\n 126897  2014-11-15 21:37:10.984 [DEBUG] serv.cpp(358): w:0.049,p:0.098, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 126898: 2014-11-15 21:37:12.522 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126899  2014-11-15 21:38:00.009 [DEBUG] serv.cpp(358): w:0.036,p:0.121, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n 126900  2014-11-15 21:38:08.889 [DEBUG] serv.cpp(327): w:0.002,p:0.014, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n .....\n 126906  2014-11-15 21:41:00.009 [DEBUG] serv.cpp(358): w:0.083,p:0.078, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n 126907  2014-11-15 21:41:08.921 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126908: 2014-11-15 21:41:30.601 [DEBUG] serv.cpp(327): w:0.002,p:0.314, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126909: 2014-11-15 21:41:36.922 [DEBUG] serv.cpp(327): w:0.002,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126910: 2014-11-15 21:41:54.362 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126911  2014-11-15 21:41:55.971 [DEBUG] serv.cpp(327): w:0.002,p:0.068, req: hget H_PACK 17, resp: ok [986]\n 126912  2014-11-15 21:41:56.275 [DEBUG] serv.cpp(327): w:0.002,p:0.060, req: multi_hget H_MATCH_EXTRA 17/PlayTimes 17/ExtraCoupon, resp: ok\n .....\n 126984  2014-11-15 22:04:59.071 [DEBUG] serv.cpp(327): w:0.001,p:0.336, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 126985  2014-11-15 22:05:00.018 [DEBUG] serv.cpp(358): w:0.030,p:0.068, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n 126986: 2014-11-15 22:05:03.239 [DEBUG] serv.cpp(327): w:0.002,p:0.046, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 126987  2014-11-15 22:05:03.265 [DEBUG] serv.cpp(327): w:0.001,p:0.014, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 126988  2014-11-15 22:05:10.462 [DEBUG] serv.cpp(327): w:0.002,p:0.055, req: hget H_PACK 16, resp: ok [592]\n .....\n 127140  2014-11-15 23:13:31.021 [DEBUG] serv.cpp(327): w:0.002,p:10.249, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127141  2014-11-15 23:13:31.029 [DEBUG] serv.cpp(327): w:0.002,p:0.303, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127142: 2014-11-15 23:13:36.085 [DEBUG] serv.cpp(327): w:0.003,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127143  2014-11-15 23:13:36.118 [DEBUG] serv.cpp(327): w:0.002,p:0.044, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127144  2014-11-15 23:13:44.101 [DEBUG] serv.cpp(358): w:0.109,p:0.129, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 17 1416057801\n .....\n 127160  2014-11-15 23:16:08.858 [DEBUG] serv.cpp(327): w:0.003,p:14.826, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127161  2014-11-15 23:16:08.871 [DEBUG] serv.cpp(327): w:0.002,p:0.268, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127162: 2014-11-15 23:16:12.596 [DEBUG] serv.cpp(327): w:0.003,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127163  2014-11-15 23:16:13.305 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127164  2014-11-15 23:16:17.196 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PACK 16, resp: ok [592]\n .....\n 127186  2014-11-15 23:20:52.057 [DEBUG] serv.cpp(327): w:0.002,p:0.406, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127187  2014-11-15 23:20:52.059 [DEBUG] serv.cpp(327): w:0.001,p:0.215, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127188: 2014-11-15 23:20:56.019 [DEBUG] serv.cpp(327): w:0.002,p:0.056, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127189  2014-11-15 23:20:56.087 [DEBUG] serv.cpp(327): w:0.001,p:0.024, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127190  2014-11-15 23:20:57.254 [DEBUG] serv.cpp(327): w:0.002,p:0.021, req: hget H_PACK 16, resp: ok [592]\n .....\n 127199  2014-11-15 23:22:38.864 [DEBUG] serv.cpp(327): w:0.001,p:5.928, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127200  2014-11-15 23:22:38.866 [DEBUG] serv.cpp(327): w:0.001,p:0.214, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127201: 2014-11-15 23:22:42.395 [DEBUG] serv.cpp(327): w:0.001,p:0.048, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127202  2014-11-15 23:22:42.510 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127203  2014-11-15 23:22:53.520 [DEBUG] serv.cpp(327): w:0.003,p:0.045, req: hget H_PACK 16, resp: ok [592]\n .....\n 127213  2014-11-15 23:24:40.293 [DEBUG] serv.cpp(327): w:0.003,p:4.145, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127214  2014-11-15 23:24:40.298 [DEBUG] serv.cpp(327): w:0.002,p:0.262, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127215: 2014-11-15 23:24:42.149 [DEBUG] serv.cpp(327): w:0.001,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127216  2014-11-15 23:24:42.248 [DEBUG] serv.cpp(327): w:0.002,p:0.042, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127217  2014-11-15 23:25:00.040 [DEBUG] serv.cpp(358): w:0.073,p:0.070, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n .....\n 127340  2014-11-15 23:55:14.933 [DEBUG] serv.cpp(327): w:0.001,p:2.564, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127341  2014-11-15 23:55:14.949 [DEBUG] serv.cpp(327): w:0.002,p:0.238, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127342: 2014-11-15 23:55:19.116 [DEBUG] serv.cpp(327): w:0.002,p:0.080, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127343  2014-11-15 23:55:19.219 [DEBUG] serv.cpp(327): w:0.001,p:0.029, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127344  2014-11-15 23:55:24.020 [DEBUG] serv.cpp(327): w:0.004,p:0.044, req: hget H_PACK 16, resp: ok [592]\n .....\n 127371  2014-11-15 23:59:55.150 [DEBUG] serv.cpp(327): w:0.002,p:0.540, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127372  2014-11-15 23:59:55.162 [DEBUG] serv.cpp(327): w:0.002,p:0.293, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127373: 2014-11-15 23:59:58.748 [DEBUG] serv.cpp(327): w:0.002,p:0.107, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127374  2014-11-15 23:59:58.833 [DEBUG] serv.cpp(327): w:0.001,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127375  2014-11-16 00:00:00.304 [DEBUG] serv.cpp(358): w:12.306,p:0.073, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n .....\n 127391  2014-11-16 00:04:33.634 [DEBUG] serv.cpp(327): w:0.002,p:8.112, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [538] 14 [534] [26 more...]\n 127392  2014-11-16 00:04:33.639 [DEBUG] serv.cpp(327): w:0.001,p:0.230, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127393: 2014-11-16 00:04:38.303 [DEBUG] serv.cpp(327): w:0.002,p:0.050, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127394  2014-11-16 00:04:38.349 [DEBUG] serv.cpp(327): w:0.001,p:0.015, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 127395  2014-11-16 00:05:00.017 [DEBUG] serv.cpp(358): w:11.909,p:0.086, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 16 1416074838 17 1416144201\n .....\n 127685  2014-11-16 02:23:41.187 [DEBUG] serv.cpp(327): w:0.001,p:2.861, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 127686  2014-11-16 02:23:41.192 [DEBUG] serv.cpp(327): w:0.001,p:0.218, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127687: 2014-11-16 02:23:43.036 [DEBUG] serv.cpp(327): w:0.002,p:0.051, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127688  2014-11-16 02:23:43.073 [DEBUG] serv.cpp(327): w:0.001,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 127689  2014-11-16 02:24:00.003 [DEBUG] serv.cpp(358): w:0.080,p:0.080, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 127923  2014-11-16 04:17:01.943 [DEBUG] serv.cpp(327): w:0.001,p:0.299, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 127924  2014-11-16 04:17:01.953 [DEBUG] serv.cpp(327): w:0.002,p:0.240, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 127925: 2014-11-16 04:17:05.156 [DEBUG] serv.cpp(327): w:0.002,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127926  2014-11-16 04:17:05.197 [DEBUG] serv.cpp(327): w:0.004,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 127927: 2014-11-16 04:17:06.550 [DEBUG] serv.cpp(327): w:0.002,p:0.080, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127928  2014-11-16 04:17:59.748 [DEBUG] serv.cpp(327): w:0.002,p:0.048, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 127929  2014-11-16 04:18:00.022 [DEBUG] serv.cpp(358): w:0.068,p:0.064, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 127933  2014-11-16 04:19:59.975 [DEBUG] serv.cpp(327): w:0.001,p:0.055, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 127934  2014-11-16 04:20:00.032 [DEBUG] serv.cpp(358): w:0.105,p:0.066, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n 127935: 2014-11-16 04:20:10.835 [DEBUG] serv.cpp(327): w:0.003,p:0.488, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 127936  2014-11-16 04:21:00.001 [DEBUG] serv.cpp(358): w:0.066,p:0.106, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n 127937  2014-11-16 04:22:00.000 [DEBUG] serv.cpp(358): w:0.083,p:0.108, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 129702  2014-11-16 18:01:38.235 [DEBUG] serv.cpp(327): w:0.002,p:33.382, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129703  2014-11-16 18:01:38.249 [DEBUG] serv.cpp(327): w:0.002,p:0.253, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129704: 2014-11-16 18:01:43.154 [DEBUG] serv.cpp(327): w:0.001,p:0.051, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129705  2014-11-16 18:01:43.194 [DEBUG] serv.cpp(327): w:0.001,p:0.029, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129706  2014-11-16 18:01:58.676 [INFO ] ssdb-server.cpp(215): ssdb working, links: 2\n .....\n 129748  2014-11-16 18:13:14.272 [DEBUG] serv.cpp(327): w:0.002,p:8.107, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129749  2014-11-16 18:13:14.277 [DEBUG] serv.cpp(327): w:0.002,p:0.248, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129750: 2014-11-16 18:13:19.305 [DEBUG] serv.cpp(327): w:0.001,p:0.050, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129751  2014-11-16 18:13:19.353 [DEBUG] serv.cpp(327): w:0.002,p:0.030, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129752  2014-11-16 18:13:26.139 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PACK 16, resp: ok [592]\n .....\n 129759  2014-11-16 18:14:25.872 [DEBUG] serv.cpp(327): w:0.002,p:0.725, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129760  2014-11-16 18:14:25.875 [DEBUG] serv.cpp(327): w:0.001,p:0.272, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129761: 2014-11-16 18:14:29.713 [DEBUG] serv.cpp(327): w:0.001,p:0.047, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129762  2014-11-16 18:14:29.781 [DEBUG] serv.cpp(327): w:0.003,p:0.044, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129763  2014-11-16 18:15:00.007 [DEBUG] serv.cpp(358): w:0.086,p:0.078, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 129866  2014-11-16 18:39:34.228 [DEBUG] serv.cpp(327): w:0.002,p:4.177, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129867  2014-11-16 18:39:34.233 [DEBUG] serv.cpp(327): w:0.002,p:0.296, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129868: 2014-11-16 18:39:38.413 [DEBUG] serv.cpp(327): w:0.003,p:0.139, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129869  2014-11-16 18:39:38.451 [DEBUG] serv.cpp(327): w:0.003,p:0.047, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129870  2014-11-16 18:39:52.538 [DEBUG] serv.cpp(327): w:0.003,p:0.030, req: hget H_PACK 16, resp: ok [592]\n .....\n 129920  2014-11-16 18:46:22.410 [DEBUG] serv.cpp(327): w:0.002,p:8.731, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129921  2014-11-16 18:46:22.412 [DEBUG] serv.cpp(327): w:0.002,p:0.320, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129922: 2014-11-16 18:46:26.067 [DEBUG] serv.cpp(327): w:0.003,p:0.085, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129923  2014-11-16 18:46:26.145 [DEBUG] serv.cpp(327): w:0.002,p:0.025, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129924  2014-11-16 18:46:39.159 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PACK 16, resp: ok [592]\n .....\n 129976  2014-11-16 18:47:49.248 [DEBUG] serv.cpp(327): w:0.002,p:0.351, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 129977  2014-11-16 18:47:49.250 [DEBUG] serv.cpp(327): w:0.001,p:0.247, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 129978: 2014-11-16 18:47:52.447 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 129979  2014-11-16 18:47:52.595 [DEBUG] serv.cpp(327): w:0.002,p:0.018, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 129980  2014-11-16 18:48:00.005 [DEBUG] serv.cpp(358): w:0.027,p:0.065, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 130153  2014-11-16 19:12:46.644 [DEBUG] serv.cpp(327): w:0.002,p:7.315, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 130154  2014-11-16 19:12:46.649 [DEBUG] serv.cpp(327): w:0.002,p:0.311, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 130155: 2014-11-16 19:12:50.754 [DEBUG] serv.cpp(327): w:0.002,p:0.062, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 130156  2014-11-16 19:12:50.788 [DEBUG] serv.cpp(327): w:0.001,p:0.016, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 130157  2014-11-16 19:13:00.011 [DEBUG] serv.cpp(358): w:0.075,p:0.084, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 17 1416144201\n .....\n 130252  2014-11-16 19:14:47.184 [DEBUG] serv.cpp(327): w:0.003,p:0.068, req: multi_hget H_MATCH_EXTRA 8/PlayTimes 8/ExtraCoupon, resp: ok\n 130253  2014-11-16 19:14:47.185 [DEBUG] serv.cpp(327): w:0.001,p:0.025, req: hget H_MATCH_PLAY 8/1030, resp: not_found\n 130254: 2014-11-16 19:14:47.185 [DEBUG] serv.cpp(327): w:0.002,p:0.073, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 130255  2014-11-16 19:14:47.186 [DEBUG] serv.cpp(358): w:0.040,p:0.091, req: hset H_MATCH_PLAY 8/1030 [218], resp: ok 1\n 130256  2014-11-16 19:14:47.186 [DEBUG] serv.cpp(327): w:0.001,p:0.039, req: hget H_MATCH 8, resp: ok [531]\n .....\n 130318  2014-11-16 19:15:48.794 [DEBUG] serv.cpp(327): w:0.003,p:0.081, req: multi_hget H_MATCH_EXTRA 5/PlayTimes 5/ExtraCoupon, resp: ok 5/PlayTimes 1\n 130319  2014-11-16 19:15:48.794 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_MATCH_PLAY 5/1030, resp: not_found\n 130320: 2014-11-16 19:15:48.796 [DEBUG] serv.cpp(327): w:0.002,p:0.075, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 130321  2014-11-16 19:15:48.804 [DEBUG] serv.cpp(358): w:0.040,p:7.889, req: hset H_MATCH_PLAY 5/1030 [218], resp: ok 1\n 130322  2014-11-16 19:15:48.804 [DEBUG] serv.cpp(327): w:0.001,p:0.032, req: hget H_MATCH 5, resp: ok [519]\n .....\n 130335  2014-11-16 19:16:02.928 [DEBUG] serv.cpp(327): w:0.003,p:0.062, req: multi_hget H_MATCH_EXTRA 2/PlayTimes 2/ExtraCoupon, resp: ok\n 130336  2014-11-16 19:16:02.928 [DEBUG] serv.cpp(327): w:0.001,p:0.032, req: hget H_MATCH_PLAY 2/1030, resp: not_found\n 130337: 2014-11-16 19:16:02.928 [DEBUG] serv.cpp(327): w:0.001,p:0.071, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 130338  2014-11-16 19:16:02.929 [DEBUG] serv.cpp(358): w:0.038,p:0.063, req: hset H_MATCH_PLAY 2/1030 [218], resp: ok 1\n 130339  2014-11-16 19:16:02.929 [DEBUG] serv.cpp(327): w:0.001,p:0.043, req: hget H_MATCH 2, resp: ok [519]\n .....\n 130360  2014-11-16 19:16:17.282 [DEBUG] serv.cpp(327): w:0.003,p:0.063, req: multi_hget H_MATCH_EXTRA 4/PlayTimes 4/ExtraCoupon, resp: ok\n 130361  2014-11-16 19:16:17.282 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: hget H_MATCH_PLAY 4/1030, resp: not_found\n 130362: 2014-11-16 19:16:17.283 [DEBUG] serv.cpp(327): w:0.001,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 130363  2014-11-16 19:16:17.284 [DEBUG] serv.cpp(358): w:0.037,p:0.065, req: hset H_MATCH_PLAY 4/1030 [218], resp: ok 1\n 130364  2014-11-16 19:16:17.284 [DEBUG] serv.cpp(327): w:0.001,p:0.043, req: hget H_MATCH 4, resp: ok [518]\n .....\n 131010  2014-11-16 22:26:51.903 [DEBUG] serv.cpp(327): w:0.001,p:13.523, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131011  2014-11-16 22:26:51.907 [DEBUG] serv.cpp(327): w:0.001,p:0.246, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131012: 2014-11-16 22:26:56.982 [DEBUG] serv.cpp(327): w:0.001,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131013  2014-11-16 22:26:57.088 [DEBUG] serv.cpp(327): w:0.002,p:0.030, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131014  2014-11-16 22:27:00.003 [DEBUG] serv.cpp(358): w:0.074,p:0.061, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131021  2014-11-16 22:27:08.603 [DEBUG] serv.cpp(327): w:0.004,p:0.143, req: multi_hget H_MATCH_EXTRA 13/PlayTimes 13/ExtraCoupon, resp: ok 13/PlayTimes 1\n 131022  2014-11-16 22:27:08.603 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_MATCH_PLAY 13/1030, resp: not_found\n 131023: 2014-11-16 22:27:08.606 [DEBUG] serv.cpp(327): w:0.001,p:0.075, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131024  2014-11-16 22:27:08.608 [DEBUG] serv.cpp(358): w:0.145,p:1.714, req: hset H_MATCH_PLAY 13/1030 [218], resp: ok 1\n 131025  2014-11-16 22:27:08.609 [DEBUG] serv.cpp(327): w:0.002,p:0.057, req: hget H_MATCH 13, resp: ok [538]\n .....\n 131108  2014-11-16 22:29:26.361 [DEBUG] serv.cpp(327): w:0.001,p:2.537, req: multi_hget H_MATCH \"\" \"\" \"\" [7 more...], resp: ok 16 [537] 14 [534] [6 more...]\n 131109  2014-11-16 22:29:26.373 [DEBUG] serv.cpp(327): w:0.002,p:0.165, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [7 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [12 more...]\n 131110: 2014-11-16 22:29:28.163 [DEBUG] serv.cpp(327): w:0.003,p:0.133, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131111  2014-11-16 22:29:28.299 [DEBUG] serv.cpp(327): w:0.001,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131112  2014-11-16 22:30:00.058 [DEBUG] serv.cpp(358): w:0.068,p:0.163, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131201  2014-11-16 22:32:28.614 [DEBUG] serv.cpp(327): w:0.003,p:2.901, req: multi_hget H_MATCH \"\" \"\" \"\" [7 more...], resp: ok 16 [537] 14 [534] [6 more...]\n 131202  2014-11-16 22:32:28.618 [DEBUG] serv.cpp(327): w:0.002,p:0.224, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [7 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [12 more...]\n 131203: 2014-11-16 22:32:32.773 [DEBUG] serv.cpp(327): w:0.002,p:0.057, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131204  2014-11-16 22:32:32.854 [DEBUG] serv.cpp(327): w:0.001,p:0.014, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131205  2014-11-16 22:33:00.009 [DEBUG] serv.cpp(358): w:0.075,p:0.075, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131378  2014-11-16 23:29:26.286 [DEBUG] serv.cpp(327): w:0.001,p:9.732, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131379  2014-11-16 23:29:26.328 [DEBUG] serv.cpp(327): w:0.002,p:0.279, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131380: 2014-11-16 23:29:31.124 [DEBUG] serv.cpp(327): w:0.002,p:0.243, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131381  2014-11-16 23:29:31.228 [DEBUG] serv.cpp(327): w:0.001,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131382  2014-11-16 23:30:00.033 [DEBUG] serv.cpp(358): w:0.081,p:0.060, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131383  2014-11-16 23:30:13.204 [DEBUG] ssdb-server.cpp(176): fd: 18, read: 0, delete link\n 131384  2014-11-16 23:30:13.204 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:63031, fd: 18, link_count: 2\n 131385: 2014-11-16 23:30:13.212 [DEBUG] serv.cpp(327): w:0.002,p:6.518, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131386: 2014-11-16 23:30:15.269 [DEBUG] serv.cpp(327): w:0.002,p:0.047, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131387  2014-11-16 23:30:17.895 [DEBUG] serv.cpp(327): w:0.002,p:0.022, req: hget H_PACK 16, resp: ok [592]\n 131388  2014-11-16 23:30:18.508 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon, resp: ok 16/PlayTimes 2\n .....\n 131397  2014-11-16 23:30:24.505 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: multi_hget H_MATCH \"\" 17, resp: ok 17 [537]\n 131398  2014-11-16 23:30:24.506 [DEBUG] serv.cpp(327): w:0.001,p:0.027, req: multi_hget H_MATCH_EXTRA 17/PlayTimes 17/ExtraCoupon, resp: ok\n 131399: 2014-11-16 23:30:25.574 [DEBUG] serv.cpp(327): w:0.003,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131400  2014-11-16 23:30:25.675 [DEBUG] serv.cpp(327): w:0.001,p:0.014, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131401  2014-11-16 23:31:00.005 [DEBUG] serv.cpp(358): w:0.079,p:0.060, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131497  2014-11-17 00:26:30.131 [DEBUG] serv.cpp(327): w:0.002,p:14.283, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131498  2014-11-17 00:26:30.166 [DEBUG] serv.cpp(327): w:0.002,p:0.268, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131499: 2014-11-17 00:26:35.008 [DEBUG] serv.cpp(327): w:0.003,p:0.067, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131500  2014-11-17 00:26:35.070 [DEBUG] serv.cpp(327): w:0.002,p:0.047, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131501  2014-11-17 00:27:00.008 [DEBUG] serv.cpp(358): w:0.081,p:0.075, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131512  2014-11-17 00:31:55.597 [DEBUG] serv.cpp(327): w:0.002,p:8.768, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131513  2014-11-17 00:31:55.612 [DEBUG] serv.cpp(327): w:0.002,p:0.241, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131514: 2014-11-17 00:31:59.271 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131515  2014-11-17 00:31:59.438 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131516  2014-11-17 00:32:00.012 [DEBUG] serv.cpp(358): w:0.067,p:0.065, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131549  2014-11-17 00:45:53.279 [DEBUG] serv.cpp(327): w:0.002,p:0.467, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131550  2014-11-17 00:45:53.284 [DEBUG] serv.cpp(327): w:0.002,p:0.274, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131551: 2014-11-17 00:45:57.416 [DEBUG] serv.cpp(327): w:0.001,p:0.141, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131552  2014-11-17 00:45:57.516 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131553  2014-11-17 00:46:00.007 [DEBUG] serv.cpp(358): w:0.076,p:0.105, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131564  2014-11-17 00:50:07.583 [DEBUG] serv.cpp(327): w:0.002,p:0.793, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131565  2014-11-17 00:50:07.587 [DEBUG] serv.cpp(327): w:0.002,p:0.280, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131566: 2014-11-17 00:50:09.515 [DEBUG] serv.cpp(327): w:0.003,p:0.081, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131567  2014-11-17 00:50:09.572 [DEBUG] serv.cpp(327): w:0.001,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131568  2014-11-17 00:51:00.031 [DEBUG] serv.cpp(358): w:0.068,p:0.092, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131581  2014-11-17 00:56:28.086 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:65361, fd: 19, link_count: 3\n 131582  2014-11-17 00:56:28.090 [DEBUG] ssdb-server.cpp(176): fd: 18, read: 0, delete link\n 131583: 2014-11-17 00:56:28.096 [DEBUG] serv.cpp(327): w:0.001,p:0.067, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131584: 2014-11-17 00:56:32.932 [DEBUG] serv.cpp(327): w:0.001,p:0.046, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131585: 2014-11-17 00:56:35.265 [DEBUG] serv.cpp(327): w:0.002,p:0.049, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131586  2014-11-17 00:57:00.010 [DEBUG] serv.cpp(358): w:0.086,p:0.062, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131587  2014-11-17 00:57:05.382 [DEBUG] serv.cpp(327): w:0.002,p:0.015, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n .....\n 131713  2014-11-17 02:10:54.099 [DEBUG] serv.cpp(327): w:0.001,p:10.566, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131714  2014-11-17 02:10:54.134 [DEBUG] serv.cpp(327): w:0.002,p:4.452, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131715: 2014-11-17 02:10:59.248 [DEBUG] serv.cpp(327): w:0.002,p:0.053, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131716  2014-11-17 02:10:59.708 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131717  2014-11-17 02:11:00.025 [DEBUG] serv.cpp(358): w:0.066,p:0.058, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131740  2014-11-17 02:20:45.774 [DEBUG] serv.cpp(327): w:0.001,p:38.085, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131741  2014-11-17 02:20:45.801 [DEBUG] serv.cpp(327): w:0.002,p:0.307, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131742: 2014-11-17 02:20:50.722 [DEBUG] serv.cpp(327): w:0.002,p:0.049, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131743  2014-11-17 02:20:50.774 [DEBUG] serv.cpp(327): w:0.001,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131744  2014-11-17 02:21:00.019 [DEBUG] serv.cpp(358): w:0.071,p:0.061, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131756  2014-11-17 02:26:08.561 [DEBUG] serv.cpp(327): w:0.001,p:2.595, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131757  2014-11-17 02:26:08.573 [DEBUG] serv.cpp(327): w:0.002,p:0.304, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131758: 2014-11-17 02:26:12.244 [DEBUG] serv.cpp(327): w:0.003,p:0.084, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131759  2014-11-17 02:26:12.352 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131760  2014-11-17 02:27:00.051 [DEBUG] serv.cpp(358): w:0.069,p:0.063, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131763  2014-11-17 02:28:43.401 [DEBUG] serv.cpp(327): w:0.002,p:11.581, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131764  2014-11-17 02:28:43.411 [DEBUG] serv.cpp(327): w:0.002,p:0.295, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131765: 2014-11-17 02:28:47.422 [DEBUG] serv.cpp(327): w:0.002,p:0.052, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131766  2014-11-17 02:28:47.506 [DEBUG] serv.cpp(327): w:0.001,p:0.064, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131767  2014-11-17 02:29:00.005 [DEBUG] serv.cpp(358): w:0.066,p:0.063, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131784  2014-11-17 02:36:51.854 [DEBUG] serv.cpp(327): w:0.003,p:0.890, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131785  2014-11-17 02:36:51.859 [DEBUG] serv.cpp(327): w:0.002,p:0.298, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131786: 2014-11-17 02:36:55.354 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131787  2014-11-17 02:36:55.383 [DEBUG] serv.cpp(327): w:0.002,p:0.045, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131788  2014-11-17 02:37:00.003 [DEBUG] serv.cpp(358): w:0.074,p:0.056, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131789  2014-11-17 02:37:30.348 [DEBUG] ssdb-server.cpp(176): fd: 19, read: 0, delete link\n 131790  2014-11-17 02:37:30.350 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:50667, fd: 18, link_count: 2\n 131791: 2014-11-17 02:37:30.358 [DEBUG] serv.cpp(327): w:0.002,p:0.060, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131792  2014-11-17 02:37:51.237 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131793  2014-11-17 02:38:00.007 [DEBUG] serv.cpp(358): w:0.063,p:0.055, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131800  2014-11-17 02:38:21.887 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:50673, fd: 19, link_count: 3\n 131801  2014-11-17 02:38:21.888 [DEBUG] serv.cpp(358): w:0.069,p:0.057, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 131802: 2014-11-17 02:38:23.379 [DEBUG] serv.cpp(327): w:0.002,p:0.084, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131803  2014-11-17 02:38:27.371 [DEBUG] serv.cpp(327): w:0.002,p:0.025, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 150\n 131804  2014-11-17 02:38:27.382 [DEBUG] serv.cpp(358): w:6.775,p:0.891, req: hincr H_PLAYER_INFO/1030 Coupon 150.000000, resp: ok 150\n 131805  2014-11-17 02:38:27.382 [DEBUG] serv.cpp(358): w:0.024,p:0.035, req: hincr H_PLAYER_INFO/1030 TotalCoupon 150.000000, resp: ok 150\n 131806  2014-11-17 02:38:27.383 [DEBUG] serv.cpp(358): w:0.022,p:0.030, req: hincr H_PLAYER_INFO/1030 CouponCache -150.000000, resp: ok 0\n 131807: 2014-11-17 02:38:27.383 [DEBUG] serv.cpp(327): w:0.001,p:0.047, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131808: 2014-11-17 02:38:29.935 [DEBUG] serv.cpp(327): w:0.001,p:0.063, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131809: 2014-11-17 02:38:38.840 [DEBUG] serv.cpp(327): w:0.003,p:0.084, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131810  2014-11-17 02:38:48.876 [DEBUG] serv.cpp(358): w:0.119,p:0.208, req: zrscan Z_LIKE_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 9 21 7 20 [8 more...]\n 131811  2014-11-17 02:38:48.886 [DEBUG] serv.cpp(327): w:0.002,p:9.510, req: multi_hget H_MATCH \"\" \"\" \"\" [9 more...], resp: ok 9 [531] 7 [518] [8 more...]\n .....\n 131819  2014-11-17 02:38:50.942 [DEBUG] serv.cpp(327): w:0.001,p:0.232, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131820  2014-11-17 02:38:51.436 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131821: 2014-11-17 02:38:57.380 [DEBUG] serv.cpp(327): w:0.003,p:0.088, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131822  2014-11-17 02:39:00.008 [DEBUG] serv.cpp(358): w:0.036,p:0.063, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131823  2014-11-17 02:39:10.149 [INFO ] ssdb-server.cpp(215): ssdb working, links: 3\n 131824: 2014-11-17 02:39:12.634 [DEBUG] serv.cpp(327): w:0.002,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131825: 2014-11-17 02:39:16.427 [DEBUG] serv.cpp(327): w:0.002,p:0.082, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131826  2014-11-17 02:39:49.430 [DEBUG] serv.cpp(358): w:0.048,p:0.116, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 10 10\n 131827  2014-11-17 02:39:49.431 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: multi_hget H_PLAYER_REWARD 10, resp: ok 10 [111]\n 131828  2014-11-17 02:39:51.353 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131829: 2014-11-17 02:39:58.303 [DEBUG] serv.cpp(327): w:0.001,p:0.055, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131830  2014-11-17 02:40:00.002 [DEBUG] serv.cpp(358): w:0.030,p:0.057, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131831  2014-11-17 02:40:51.586 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n .....\n 131848  2014-11-17 02:46:51.311 [DEBUG] serv.cpp(327): w:0.002,p:18.129, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131849  2014-11-17 02:46:51.335 [DEBUG] serv.cpp(327): w:0.002,p:0.302, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131850: 2014-11-17 02:46:53.224 [DEBUG] serv.cpp(327): w:0.001,p:0.057, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131851  2014-11-17 02:46:53.343 [DEBUG] serv.cpp(327): w:0.002,p:0.031, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131852  2014-11-17 02:47:00.023 [DEBUG] serv.cpp(358): w:0.079,p:0.082, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 131862  2014-11-17 02:51:31.661 [DEBUG] ssdb-server.cpp(176): fd: 18, read: 0, delete link\n 131863  2014-11-17 02:51:31.662 [DEBUG] ssdb-server.cpp(96): new link from 127.0.0.1:50782, fd: 18, link_count: 2\n 131864: 2014-11-17 02:51:31.677 [DEBUG] serv.cpp(327): w:0.002,p:0.076, req: multi_hget H_PLAYER_INFO/1030 UserId NickName TeamName [3 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [6 more...]\n 131865  2014-11-17 02:51:34.476 [DEBUG] serv.cpp(358): w:0.070,p:0.095, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 17 1416057801\n 131866  2014-11-17 02:51:34.476 [DEBUG] serv.cpp(327): w:0.001,p:0.031, req: multi_hget H_MATCH \"\" 17, resp: ok 17 [537]\n .....\n 131876  2014-11-17 02:53:40.810 [DEBUG] serv.cpp(327): w:0.002,p:5.476, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131877  2014-11-17 02:53:40.818 [DEBUG] serv.cpp(327): w:0.002,p:0.657, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131878: 2014-11-17 02:53:42.746 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131879  2014-11-17 02:53:42.850 [DEBUG] serv.cpp(327): w:0.001,p:0.015, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131880  2014-11-17 02:53:44.379 [DEBUG] serv.cpp(358): w:0.079,p:0.269, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 10 10\n .....\n 131892  2014-11-17 02:55:48.607 [DEBUG] serv.cpp(327): w:0.002,p:1.016, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 131893  2014-11-17 02:55:48.616 [DEBUG] serv.cpp(327): w:0.004,p:0.720, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 131894: 2014-11-17 02:55:50.082 [DEBUG] serv.cpp(327): w:0.001,p:0.049, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131895  2014-11-17 02:55:50.125 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131896  2014-11-17 02:55:52.074 [DEBUG] serv.cpp(358): w:0.120,p:0.120, req: zrscan Z_HOT_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n .....\n 131911  2014-11-17 02:56:15.928 [DEBUG] serv.cpp(358): w:0.048,p:0.106, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 131912  2014-11-17 02:56:18.280 [DEBUG] serv.cpp(358): w:0.040,p:0.096, req: hgetall H_ECARD_TYPE, resp: ok amazon/10 [142]\n 131913: 2014-11-17 02:56:36.100 [DEBUG] serv.cpp(327): w:0.002,p:0.079, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131914: 2014-11-17 02:56:41.228 [DEBUG] serv.cpp(327): w:0.003,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131915: 2014-11-17 02:56:46.031 [DEBUG] serv.cpp(327): w:0.002,p:0.108, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131916  2014-11-17 02:56:46.172 [DEBUG] serv.cpp(327): w:0.002,p:0.025, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 131917: 2014-11-17 02:56:50.848 [DEBUG] serv.cpp(327): w:0.003,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131918: 2014-11-17 02:56:54.749 [DEBUG] serv.cpp(327): w:0.002,p:0.062, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131919: 2014-11-17 02:56:54.758 [DEBUG] serv.cpp(358): w:0.086,p:1.282, req: multi_hset H_PLAYER_INFO/1030 NickName uuid TeamName [25 more...], resp: ok 0\n 131920: 2014-11-17 02:56:54.912 [DEBUG] serv.cpp(327): w:0.002,p:0.084, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131921  2014-11-17 02:57:00.000 [DEBUG] serv.cpp(358): w:0.031,p:0.063, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 131922: 2014-11-17 02:57:01.500 [DEBUG] serv.cpp(327): w:0.002,p:0.086, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 131923  2014-11-17 02:57:04.672 [DEBUG] serv.cpp(327): w:0.001,p:0.372, req: hget H_PACK 12, resp: ok [592]\n 131924  2014-11-17 02:57:05.286 [DEBUG] serv.cpp(327): w:0.002,p:0.087, req: multi_hget H_MATCH_EXTRA 12/PlayTimes 12/ExtraCoupon, resp: ok 12/PlayTimes 5 12/ExtraCoupon 2\n .....\n 132021  2014-11-17 02:57:57.931 [DEBUG] serv.cpp(327): w:0.002,p:0.174, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 1/PlayTimes [17 more...], resp: ok 16/PlayTimes 2 5/PlayTimes 1 [18 more...]\n 132022  2014-11-17 02:58:00.005 [DEBUG] serv.cpp(358): w:0.031,p:0.063, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132023: 2014-11-17 02:58:00.272 [DEBUG] serv.cpp(327): w:0.002,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132024  2014-11-17 02:58:06.416 [DEBUG] serv.cpp(327): w:0.002,p:0.025, req: hget H_PACK 16, resp: ok [592]\n 132025  2014-11-17 02:58:06.696 [DEBUG] serv.cpp(327): w:0.002,p:0.056, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon, resp: ok 16/PlayTimes 2\n .....\n 132033  2014-11-17 02:59:40.044 [DEBUG] serv.cpp(327): w:0.002,p:0.593, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132034  2014-11-17 02:59:40.048 [DEBUG] serv.cpp(327): w:0.002,p:0.414, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132035: 2014-11-17 02:59:43.301 [DEBUG] serv.cpp(327): w:0.002,p:0.086, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132036  2014-11-17 02:59:43.401 [DEBUG] serv.cpp(327): w:0.002,p:0.019, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132037  2014-11-17 02:59:44.223 [DEBUG] serv.cpp(358): w:0.110,p:0.131, req: zrscan Z_HOT_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n .....\n 132068  2014-11-17 03:10:26.518 [DEBUG] serv.cpp(327): w:0.001,p:2.635, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132069  2014-11-17 03:10:26.552 [DEBUG] serv.cpp(327): w:0.003,p:0.464, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132070: 2014-11-17 03:10:30.361 [DEBUG] serv.cpp(327): w:0.001,p:0.053, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132071  2014-11-17 03:10:30.525 [DEBUG] serv.cpp(327): w:0.001,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132072: 2014-11-17 03:10:40.798 [DEBUG] serv.cpp(327): w:0.003,p:0.062, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132073  2014-11-17 03:11:00.068 [DEBUG] serv.cpp(358): w:0.132,p:0.119, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132074  2014-11-17 03:11:26.178 [DEBUG] serv.cpp(327): w:0.003,p:0.029, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n .....\n 132108  2014-11-17 03:29:41.548 [DEBUG] serv.cpp(327): w:0.001,p:14.371, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132109  2014-11-17 03:29:41.598 [DEBUG] serv.cpp(327): w:0.002,p:0.345, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132110: 2014-11-17 03:29:45.257 [DEBUG] serv.cpp(327): w:0.002,p:0.063, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132111  2014-11-17 03:29:45.464 [DEBUG] serv.cpp(327): w:0.001,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132112  2014-11-17 03:30:00.008 [DEBUG] serv.cpp(358): w:0.415,p:0.054, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132118  2014-11-17 03:31:02.478 [DEBUG] serv.cpp(327): w:0.003,p:2.939, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132119  2014-11-17 03:31:02.491 [DEBUG] serv.cpp(327): w:0.002,p:0.234, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132120: 2014-11-17 03:31:03.053 [DEBUG] serv.cpp(327): w:0.002,p:0.065, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132121  2014-11-17 03:31:03.166 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132122  2014-11-17 03:31:58.030 [DEBUG] serv.cpp(327): w:0.002,p:0.022, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132123: 2014-11-17 03:31:59.962 [DEBUG] serv.cpp(327): w:0.002,p:0.059, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132124  2014-11-17 03:32:00.005 [DEBUG] serv.cpp(358): w:0.077,p:0.072, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132125: 2014-11-17 03:32:04.058 [DEBUG] serv.cpp(327): w:0.002,p:0.059, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132126  2014-11-17 03:32:25.564 [DEBUG] serv.cpp(358): w:0.448,p:0.761, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 16 1415988438 14 1415197832 [26 more...]\n 132127  2014-11-17 03:32:25.574 [DEBUG] serv.cpp(327): w:0.002,p:4.615, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132128  2014-11-17 03:32:25.579 [DEBUG] serv.cpp(327): w:0.002,p:0.231, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132129: 2014-11-17 03:32:28.313 [DEBUG] serv.cpp(327): w:0.001,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132130  2014-11-17 03:32:28.392 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132131: 2014-11-17 03:32:29.555 [DEBUG] serv.cpp(327): w:0.001,p:0.049, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132132  2014-11-17 03:32:30.989 [DEBUG] serv.cpp(358): w:0.065,p:0.082, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 10 10\n 132133  2014-11-17 03:32:30.990 [DEBUG] serv.cpp(327): w:0.002,p:0.021, req: multi_hget H_PLAYER_REWARD 10, resp: ok 10 [111]\n 132134  2014-11-17 03:32:31.005 [DEBUG] serv.cpp(358): w:0.087,p:0.060, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 132135  2014-11-17 03:32:31.011 [DEBUG] serv.cpp(358): w:0.066,p:0.381, req: hgetall H_ECARD_TYPE, resp: ok amazon/10 [142]\n 132136: 2014-11-17 03:32:39.388 [DEBUG] serv.cpp(327): w:0.002,p:0.059, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132137: 2014-11-17 03:32:47.687 [DEBUG] serv.cpp(327): w:0.003,p:0.056, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132138: 2014-11-17 03:32:51.682 [DEBUG] serv.cpp(327): w:0.002,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132139  2014-11-17 03:33:00.002 [DEBUG] serv.cpp(358): w:0.517,p:0.072, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132140: 2014-11-17 03:33:09.798 [DEBUG] serv.cpp(327): w:0.002,p:0.050, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132141  2014-11-17 03:33:25.159 [DEBUG] serv.cpp(327): w:0.002,p:0.021, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132142  2014-11-17 03:34:00.001 [DEBUG] serv.cpp(358): w:0.081,p:0.092, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132147  2014-11-17 03:34:16.415 [DEBUG] serv.cpp(327): w:0.001,p:0.021, req: hget H_MATCH 16, resp: ok [537]\n 132148  2014-11-17 03:34:16.423 [DEBUG] serv.cpp(327): w:0.002,p:0.054, req: hsize H_MATCH_RANK/16, resp: ok 2\n 132149: 2014-11-17 03:34:23.428 [DEBUG] serv.cpp(327): w:0.003,p:0.090, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132150  2014-11-17 03:34:25.166 [DEBUG] serv.cpp(327): w:0.001,p:0.041, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132151  2014-11-17 03:35:00.006 [DEBUG] serv.cpp(358): w:0.068,p:0.058, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132184  2014-11-17 03:47:12.252 [DEBUG] serv.cpp(327): w:0.001,p:2.481, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132185  2014-11-17 03:47:12.257 [DEBUG] serv.cpp(327): w:0.002,p:0.325, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132186: 2014-11-17 03:47:15.821 [DEBUG] serv.cpp(327): w:0.002,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132187  2014-11-17 03:47:45.211 [DEBUG] serv.cpp(327): w:0.001,p:0.028, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132188  2014-11-17 03:48:00.002 [DEBUG] serv.cpp(358): w:0.082,p:0.062, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132215  2014-11-17 03:51:37.563 [DEBUG] serv.cpp(327): w:0.002,p:0.652, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132216  2014-11-17 03:51:37.566 [DEBUG] serv.cpp(327): w:0.002,p:0.286, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132217: 2014-11-17 03:51:41.766 [DEBUG] serv.cpp(327): w:0.002,p:0.088, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132218  2014-11-17 03:51:41.847 [DEBUG] serv.cpp(327): w:0.002,p:0.019, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132219  2014-11-17 03:51:48.812 [DEBUG] serv.cpp(358): w:0.119,p:0.121, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 17 1416057801\n .....\n 132223  2014-11-17 03:52:37.041 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132224  2014-11-17 03:53:00.005 [DEBUG] serv.cpp(358): w:0.078,p:0.061, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132225: 2014-11-17 03:53:01.926 [DEBUG] serv.cpp(327): w:0.003,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132226  2014-11-17 03:53:37.816 [DEBUG] serv.cpp(327): w:0.002,p:0.196, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132227  2014-11-17 03:54:00.035 [DEBUG] serv.cpp(358): w:0.101,p:0.964, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132236  2014-11-17 03:56:36.974 [DEBUG] serv.cpp(327): w:0.002,p:0.016, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132237  2014-11-17 03:56:53.002 [DEBUG] serv.cpp(358): w:5.003,p:1.121, req: hincr H_PLAYER_INFO/1030 GoldCoin 100, resp: ok 100\n 132238: 2014-11-17 03:56:53.003 [DEBUG] serv.cpp(327): w:0.001,p:0.454, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132239  2014-11-17 03:57:00.002 [DEBUG] serv.cpp(358): w:0.083,p:0.062, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132240  2014-11-17 03:57:11.924 [DEBUG] serv.cpp(358): w:0.092,p:0.165, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 16 1415988438 14 1415197832 [26 more...]\n 132241  2014-11-17 03:57:11.933 [DEBUG] serv.cpp(327): w:0.001,p:2.718, req: multi_hget H_MATCH \"\" \"\" \"\" [27 more...], resp: ok 16 [537] 14 [534] [26 more...]\n 132242  2014-11-17 03:57:11.935 [DEBUG] serv.cpp(327): w:0.001,p:0.218, req: multi_hget H_MATCH_EXTRA 16/PlayTimes 16/ExtraCoupon 14/PlayTimes [27 more...], resp: ok 16/PlayTimes 2 14/PlayTimes 5 [22 more...]\n 132243: 2014-11-17 03:57:14.932 [DEBUG] serv.cpp(327): w:0.002,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132244  2014-11-17 03:57:14.957 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0.000000\n 132245: 2014-11-17 03:57:16.350 [DEBUG] serv.cpp(327): w:0.002,p:0.088, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132246  2014-11-17 03:57:22.042 [DEBUG] serv.cpp(358): w:0.131,p:0.077, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 10 10\n 132247  2014-11-17 03:57:22.043 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: multi_hget H_PLAYER_REWARD 10, resp: ok 10 [111]\n .....\n 132252  2014-11-17 03:57:25.613 [DEBUG] serv.cpp(327): w:0.001,p:0.040, req: multi_hget H_MATCH_EXTRA 17/PlayTimes 17/ExtraCoupon, resp: ok\n 132253  2014-11-17 03:57:48.026 [DEBUG] serv.cpp(327): w:0.002,p:0.026, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 100\n 132254: 2014-11-17 03:57:48.027 [DEBUG] serv.cpp(327): w:0.001,p:0.074, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132255  2014-11-17 03:57:48.027 [DEBUG] serv.cpp(358): w:0.047,p:0.059, req: hincr hSerial userPack 1, resp: ok 18\n 132256  2014-11-17 03:57:48.028 [DEBUG] serv.cpp(358): w:0.028,p:0.076, req: hset H_PACK 18 [592], resp: ok 1\n .....\n 132268  2014-11-17 03:57:51.404 [DEBUG] serv.cpp(327): w:0.002,p:0.051, req: multi_hget H_MATCH_EXTRA 18/PlayTimes 18/ExtraCoupon, resp: ok\n 132269  2014-11-17 03:57:51.405 [DEBUG] serv.cpp(327): w:0.001,p:0.019, req: hget H_MATCH_PLAY 18/1030, resp: not_found\n 132270: 2014-11-17 03:57:51.405 [DEBUG] serv.cpp(327): w:0.001,p:0.051, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132271  2014-11-17 03:57:51.405 [DEBUG] serv.cpp(358): w:0.026,p:0.042, req: hset H_MATCH_PLAY 18/1030 [218], resp: ok 1\n 132272  2014-11-17 03:57:51.406 [DEBUG] serv.cpp(327): w:0.001,p:0.014, req: hget H_MATCH 18, resp: ok [540]\n .....\n 132331  2014-11-17 04:01:00.501 [DEBUG] serv.cpp(358): w:0.032,p:0.048, req: hincr H_PLAYER_INFO/1030 TotalCoupon 250.000000, resp: ok 251\n 132332  2014-11-17 04:01:00.503 [DEBUG] serv.cpp(358): w:0.021,p:0.045, req: hincr H_PLAYER_INFO/1030 CouponCache -250.000000, resp: ok 0\n 132333: 2014-11-17 04:01:00.503 [DEBUG] serv.cpp(327): w:0.001,p:0.049, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132334  2014-11-17 04:01:11.392 [DEBUG] serv.cpp(327): w:0.002,p:0.019, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132335  2014-11-17 04:02:00.001 [DEBUG] serv.cpp(358): w:0.032,p:0.662, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132341  2014-11-17 04:02:35.652 [DEBUG] serv.cpp(327): w:0.001,p:0.287, req: multi_hget H_MATCH \"\" \"\" \"\" [29 more...], resp: ok 18 [539] 16 [537] [28 more...]\n 132342  2014-11-17 04:02:35.655 [DEBUG] serv.cpp(327): w:0.001,p:0.239, req: multi_hget H_MATCH_EXTRA 18/PlayTimes 18/ExtraCoupon 16/PlayTimes [29 more...], resp: ok 18/PlayTimes 1 16/PlayTimes 2 [24 more...]\n 132343: 2014-11-17 04:02:39.050 [DEBUG] serv.cpp(327): w:0.001,p:0.050, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132344  2014-11-17 04:02:39.151 [DEBUG] serv.cpp(327): w:0.002,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132345: 2014-11-17 04:02:41.057 [DEBUG] serv.cpp(327): w:0.002,p:0.060, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132346  2014-11-17 04:02:43.855 [DEBUG] serv.cpp(358): w:0.032,p:0.071, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 14 14 13 13 [2 more...]\n 132347  2014-11-17 04:02:43.855 [DEBUG] serv.cpp(327): w:0.001,p:0.024, req: multi_hget H_PLAYER_REWARD 14 13 10, resp: ok 14 [109] 13 [111] [2 more...]\n .....\n 132352  2014-11-17 04:03:07.325 [DEBUG] serv.cpp(327): w:0.001,p:0.441, req: multi_hget H_MATCH \"\" \"\" \"\" [29 more...], resp: ok 18 [539] 16 [537] [28 more...]\n 132353  2014-11-17 04:03:07.327 [DEBUG] serv.cpp(327): w:0.002,p:0.376, req: multi_hget H_MATCH_EXTRA 18/PlayTimes 18/ExtraCoupon 16/PlayTimes [29 more...], resp: ok 18/PlayTimes 1 16/PlayTimes 2 [24 more...]\n 132354: 2014-11-17 04:03:10.250 [DEBUG] serv.cpp(327): w:0.003,p:0.090, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132355  2014-11-17 04:03:10.281 [DEBUG] serv.cpp(327): w:0.003,p:0.027, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132356: 2014-11-17 04:03:12.322 [DEBUG] serv.cpp(327): w:0.003,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132357  2014-11-17 04:03:15.296 [DEBUG] serv.cpp(358): w:0.032,p:0.087, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 18 1416167868 17 1416057801\n 132358  2014-11-17 04:03:15.296 [DEBUG] serv.cpp(327): w:0.001,p:0.041, req: multi_hget H_MATCH \"\" \"\" 18 17, resp: ok 18 [539] 17 [537]\n .....\n 132373  2014-11-17 04:04:26.883 [DEBUG] serv.cpp(327): w:0.002,p:0.268, req: multi_hget H_MATCH \"\" \"\" \"\" [29 more...], resp: ok 18 [539] 16 [537] [28 more...]\n 132374  2014-11-17 04:04:26.893 [DEBUG] serv.cpp(327): w:0.003,p:0.280, req: multi_hget H_MATCH_EXTRA 18/PlayTimes 18/ExtraCoupon 16/PlayTimes [29 more...], resp: ok 18/PlayTimes 1 16/PlayTimes 2 [24 more...]\n 132375: 2014-11-17 04:04:29.703 [DEBUG] serv.cpp(327): w:0.002,p:0.093, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132376  2014-11-17 04:04:29.728 [DEBUG] serv.cpp(327): w:0.002,p:0.028, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132377: 2014-11-17 04:04:31.685 [DEBUG] serv.cpp(327): w:0.002,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132378  2014-11-17 04:04:35.267 [DEBUG] serv.cpp(358): w:0.030,p:0.087, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 14 14 13 13 [2 more...]\n 132379  2014-11-17 04:04:35.267 [DEBUG] serv.cpp(327): w:0.007,p:0.032, req: multi_hget H_PLAYER_REWARD 14 13 10, resp: ok 14 [109] 13 [111] [2 more...]\n .....\n 132385  2014-11-17 04:05:03.356 [DEBUG] serv.cpp(327): w:0.001,p:0.052, req: multi_hget H_MATCH_EXTRA 18/PlayTimes 18/ExtraCoupon 17/PlayTimes 17/ExtraCoupon, resp: ok 18/PlayTimes 1\n 132386  2014-11-17 04:05:21.346 [DEBUG] serv.cpp(327): w:0.002,p:0.028, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 90\n 132387: 2014-11-17 04:05:21.346 [DEBUG] serv.cpp(327): w:0.001,p:0.078, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132388  2014-11-17 04:05:21.347 [DEBUG] serv.cpp(358): w:0.049,p:0.062, req: hincr hSerial userPack 1, resp: ok 19\n 132389  2014-11-17 04:05:21.347 [DEBUG] serv.cpp(358): w:0.027,p:0.063, req: hset H_PACK 19 [591], resp: ok 1\n .....\n 132422  2014-11-17 04:07:15.426 [DEBUG] serv.cpp(358): w:0.025,p:0.044, req: hincr H_PLAYER_INFO/1030 TotalCoupon 110.000000, resp: ok 361\n 132423  2014-11-17 04:07:15.426 [DEBUG] serv.cpp(358): w:0.028,p:0.043, req: hincr H_PLAYER_INFO/1030 CouponCache -110.000000, resp: ok 0\n 132424: 2014-11-17 04:07:15.427 [DEBUG] serv.cpp(327): w:0.002,p:0.076, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132425: 2014-11-17 04:07:17.170 [DEBUG] serv.cpp(327): w:0.003,p:0.095, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132426  2014-11-17 04:07:24.665 [DEBUG] serv.cpp(358): w:0.055,p:0.230, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 19 1416168321 18 1416167868 [30 more...]\n 132427  2014-11-17 04:07:24.689 [DEBUG] serv.cpp(327): w:0.002,p:0.475, req: multi_hget H_MATCH \"\" \"\" \"\" [31 more...], resp: ok 19 [539] 18 [539] [30 more...]\n 132428  2014-11-17 04:07:24.692 [DEBUG] serv.cpp(327): w:0.002,p:0.235, req: multi_hget H_MATCH_EXTRA 19/PlayTimes 19/ExtraCoupon 18/PlayTimes [31 more...], resp: ok 18/PlayTimes 1 16/PlayTimes 2 [24 more...]\n 132429: 2014-11-17 04:07:27.653 [DEBUG] serv.cpp(327): w:0.002,p:0.091, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132430  2014-11-17 04:07:27.696 [DEBUG] serv.cpp(327): w:0.001,p:0.018, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132431: 2014-11-17 04:07:28.667 [DEBUG] serv.cpp(327): w:0.002,p:0.099, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132432  2014-11-17 04:07:30.190 [DEBUG] serv.cpp(358): w:0.034,p:0.088, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 19 1416168321 18 1416167868 [2 more...]\n 132433  2014-11-17 04:07:30.190 [DEBUG] serv.cpp(327): w:0.001,p:0.049, req: multi_hget H_MATCH \"\" \"\" \"\" [3 more...], resp: ok 19 [539] 18 [539] [2 more...]\n .....\n 132440  2014-11-17 04:08:00.021 [DEBUG] serv.cpp(358): w:0.030,p:0.059, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132441  2014-11-17 04:08:13.890 [DEBUG] serv.cpp(327): w:0.002,p:0.028, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 79\n 132442: 2014-11-17 04:08:13.891 [DEBUG] serv.cpp(327): w:0.002,p:0.080, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132443  2014-11-17 04:08:13.891 [DEBUG] serv.cpp(358): w:0.047,p:0.065, req: hincr hSerial userPack 1, resp: ok 20\n 132444  2014-11-17 04:08:13.892 [DEBUG] serv.cpp(358): w:0.033,p:0.063, req: hset H_PACK 20 [592], resp: ok 1\n .....\n 132456  2014-11-17 04:08:17.061 [DEBUG] serv.cpp(327): w:0.001,p:0.040, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon, resp: ok\n 132457  2014-11-17 04:08:17.062 [DEBUG] serv.cpp(327): w:0.001,p:0.021, req: hget H_MATCH_PLAY 20/1030, resp: not_found\n 132458: 2014-11-17 04:08:17.062 [DEBUG] serv.cpp(327): w:0.000,p:0.053, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132459  2014-11-17 04:08:17.062 [DEBUG] serv.cpp(358): w:0.030,p:0.063, req: hset H_MATCH_PLAY 20/1030 [218], resp: ok 1\n 132460  2014-11-17 04:08:17.063 [DEBUG] serv.cpp(327): w:0.001,p:0.019, req: hget H_MATCH 20, resp: ok [539]\n .....\n 132512  2014-11-17 04:14:46.080 [DEBUG] serv.cpp(358): w:0.034,p:0.051, req: hincr H_PLAYER_INFO/1030 TotalCoupon 125.000000, resp: ok 486\n 132513  2014-11-17 04:14:46.081 [DEBUG] serv.cpp(358): w:0.031,p:0.042, req: hincr H_PLAYER_INFO/1030 CouponCache -125.000000, resp: ok 0\n 132514: 2014-11-17 04:14:46.082 [DEBUG] serv.cpp(327): w:0.002,p:0.555, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132515: 2014-11-17 04:14:52.833 [DEBUG] serv.cpp(327): w:0.002,p:0.091, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132516  2014-11-17 04:15:00.001 [DEBUG] serv.cpp(358): w:0.431,p:0.064, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132517  2014-11-17 04:15:03.894 [DEBUG] serv.cpp(358): w:0.134,p:0.240, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 20 1416168493 19 1416168321 [32 more...]\n 132518  2014-11-17 04:15:03.899 [DEBUG] serv.cpp(327): w:0.003,p:4.230, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132519  2014-11-17 04:15:03.903 [DEBUG] serv.cpp(327): w:0.003,p:0.428, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132520: 2014-11-17 04:15:07.144 [DEBUG] serv.cpp(327): w:0.002,p:0.093, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132521  2014-11-17 04:15:07.177 [DEBUG] serv.cpp(327): w:0.001,p:0.018, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132522: 2014-11-17 04:15:08.399 [DEBUG] serv.cpp(327): w:0.003,p:0.096, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132523  2014-11-17 04:16:00.001 [DEBUG] serv.cpp(358): w:0.070,p:0.064, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132524  2014-11-17 04:16:03.497 [DEBUG] serv.cpp(327): w:0.002,p:0.030, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n .....\n 132542  2014-11-17 04:25:55.777 [DEBUG] serv.cpp(327): w:0.002,p:1.473, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132543  2014-11-17 04:25:55.781 [DEBUG] serv.cpp(327): w:0.002,p:0.282, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132544: 2014-11-17 04:25:59.468 [DEBUG] serv.cpp(327): w:0.002,p:0.063, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132545  2014-11-17 04:26:00.004 [DEBUG] serv.cpp(358): w:0.068,p:0.059, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132546  2014-11-17 04:27:00.009 [DEBUG] ssdb-server.cpp(176): fd: 17, read: 0, delete link\n .....\n 132550  2014-11-17 04:27:12.839 [DEBUG] serv.cpp(327): w:0.002,p:0.303, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132551  2014-11-17 04:27:12.841 [DEBUG] serv.cpp(327): w:0.001,p:0.322, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132552: 2014-11-17 04:27:14.883 [DEBUG] serv.cpp(327): w:0.002,p:0.094, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132553  2014-11-17 04:27:52.789 [DEBUG] serv.cpp(358): w:0.124,p:0.253, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 20 1416168493 19 1416168321 [32 more...]\n 132554  2014-11-17 04:27:52.792 [DEBUG] serv.cpp(327): w:0.003,p:0.494, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132555  2014-11-17 04:27:52.796 [DEBUG] serv.cpp(327): w:0.001,p:0.271, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132556: 2014-11-17 04:27:56.448 [DEBUG] serv.cpp(327): w:0.003,p:0.097, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132557  2014-11-17 04:28:00.004 [DEBUG] serv.cpp(358): w:0.081,p:0.065, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132558  2014-11-17 04:29:00.009 [DEBUG] ssdb-server.cpp(176): fd: 17, read: 0, delete link\n .....\n 132563  2014-11-17 04:29:25.590 [DEBUG] serv.cpp(327): w:0.002,p:6.699, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132564  2014-11-17 04:29:25.593 [DEBUG] serv.cpp(327): w:0.002,p:0.277, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132565: 2014-11-17 04:29:28.645 [DEBUG] serv.cpp(327): w:0.003,p:0.095, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132566  2014-11-17 04:30:00.010 [DEBUG] serv.cpp(358): w:0.087,p:0.248, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132567  2014-11-17 04:30:19.641 [DEBUG] serv.cpp(358): w:0.067,p:0.139, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 20 1416168493 19 1416168321 [32 more...]\n 132568  2014-11-17 04:30:19.641 [DEBUG] serv.cpp(327): w:0.001,p:0.251, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132569  2014-11-17 04:30:19.644 [DEBUG] serv.cpp(327): w:0.001,p:0.245, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132570: 2014-11-17 04:30:23.218 [DEBUG] serv.cpp(327): w:0.003,p:0.094, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132571  2014-11-17 04:31:00.014 [DEBUG] serv.cpp(358): w:0.077,p:0.060, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132572  2014-11-17 04:32:00.008 [DEBUG] serv.cpp(358): w:0.081,p:0.067, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 132575  2014-11-17 04:32:59.300 [DEBUG] serv.cpp(327): w:0.001,p:0.545, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132576  2014-11-17 04:33:00.006 [DEBUG] serv.cpp(358): w:0.077,p:0.061, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132577: 2014-11-17 04:33:02.955 [DEBUG] serv.cpp(327): w:0.002,p:0.054, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132578  2014-11-17 04:33:11.747 [DEBUG] serv.cpp(327): w:0.002,p:0.031, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132579  2014-11-17 04:33:17.511 [DEBUG] serv.cpp(358): w:0.117,p:0.182, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 17 17 16 16 [8 more...]\n .....\n 132581  2014-11-17 04:33:17.537 [DEBUG] serv.cpp(358): w:0.071,p:0.079, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 132582  2014-11-17 04:33:18.884 [DEBUG] serv.cpp(358): w:0.117,p:2.259, req: hgetall H_ECARD_TYPE, resp: ok amazon/10 [142]\n 132583: 2014-11-17 04:33:44.134 [DEBUG] serv.cpp(327): w:0.001,p:0.062, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132584  2014-11-17 04:33:47.003 [DEBUG] serv.cpp(358): w:0.081,p:0.111, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 20 1416168493 19 1416168321 [4 more...]\n 132585  2014-11-17 04:33:47.003 [DEBUG] serv.cpp(327): w:0.001,p:0.064, req: multi_hget H_MATCH \"\" \"\" \"\" [5 more...], resp: ok 20 [538] 19 [539] [4 more...]\n .....\n 132602  2014-11-17 04:38:26.058 [DEBUG] serv.cpp(327): w:0.002,p:2.891, req: multi_hget H_MATCH \"\" \"\" \"\" [33 more...], resp: ok 20 [538] 19 [539] [32 more...]\n 132603  2014-11-17 04:38:26.063 [DEBUG] serv.cpp(327): w:0.002,p:0.290, req: multi_hget H_MATCH_EXTRA 20/PlayTimes 20/ExtraCoupon 19/PlayTimes [33 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132604: 2014-11-17 04:38:29.542 [DEBUG] serv.cpp(327): w:0.002,p:0.063, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132605  2014-11-17 04:38:29.617 [DEBUG] serv.cpp(327): w:0.002,p:0.048, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132606  2014-11-17 04:38:39.160 [DEBUG] serv.cpp(358): w:0.112,p:0.186, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 20 1416168493 19 1416168321 [4 more...]\n .....\n 132609  2014-11-17 04:39:00.008 [DEBUG] serv.cpp(358): w:0.071,p:0.060, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132610  2014-11-17 04:39:00.876 [DEBUG] serv.cpp(327): w:0.003,p:0.028, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 74\n 132611: 2014-11-17 04:39:00.877 [DEBUG] serv.cpp(327): w:0.002,p:0.083, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132612  2014-11-17 04:39:00.879 [DEBUG] serv.cpp(358): w:0.130,p:0.922, req: hincr hSerial userPack 1, resp: ok 21\n 132613  2014-11-17 04:39:00.880 [DEBUG] serv.cpp(358): w:0.026,p:0.077, req: hset H_PACK 21 [592], resp: ok 1\n .....\n 132688  2014-11-17 04:41:46.600 [DEBUG] serv.cpp(327): w:0.002,p:3.419, req: multi_hget H_MATCH \"\" \"\" \"\" [35 more...], resp: ok 21 [539] 20 [538] [34 more...]\n 132689  2014-11-17 04:41:46.608 [DEBUG] serv.cpp(327): w:0.002,p:0.307, req: multi_hget H_MATCH_EXTRA 21/PlayTimes 21/ExtraCoupon 20/PlayTimes [35 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132690: 2014-11-17 04:41:48.500 [DEBUG] serv.cpp(327): w:0.002,p:0.060, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132691  2014-11-17 04:41:48.603 [DEBUG] serv.cpp(327): w:0.002,p:0.046, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 132692  2014-11-17 04:41:51.077 [DEBUG] serv.cpp(358): w:0.128,p:0.171, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 18 18 17 17 [10 more...]\n .....\n 132698  2014-11-17 04:41:52.800 [DEBUG] serv.cpp(358): w:0.020,p:0.027, req: hincr H_PLAYER_INFO/1030 TotalCoupon 100.000000, resp: ok 586\n 132699  2014-11-17 04:41:52.801 [DEBUG] serv.cpp(358): w:0.018,p:0.026, req: hincr H_PLAYER_INFO/1030 CouponCache -100.000000, resp: ok 0\n 132700: 2014-11-17 04:41:52.801 [DEBUG] serv.cpp(327): w:0.001,p:0.047, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132701: 2014-11-17 04:41:56.285 [DEBUG] serv.cpp(327): w:0.002,p:0.094, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132702  2014-11-17 04:42:00.003 [DEBUG] serv.cpp(358): w:0.076,p:0.062, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132703  2014-11-17 04:42:44.740 [DEBUG] serv.cpp(327): w:0.001,p:0.017, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n .....\n 132763  2014-11-17 04:57:34.561 [DEBUG] serv.cpp(327): w:0.002,p:0.324, req: multi_hget H_MATCH \"\" \"\" \"\" [35 more...], resp: ok 21 [539] 20 [538] [34 more...]\n 132764  2014-11-17 04:57:34.564 [DEBUG] serv.cpp(327): w:0.001,p:0.240, req: multi_hget H_MATCH_EXTRA 21/PlayTimes 21/ExtraCoupon 20/PlayTimes [35 more...], resp: ok 20/PlayTimes 1 18/PlayTimes 1 [26 more...]\n 132765: 2014-11-17 04:57:38.934 [DEBUG] serv.cpp(327): w:0.002,p:0.057, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132766  2014-11-17 04:57:39.065 [DEBUG] serv.cpp(327): w:0.007,p:0.022, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132767: 2014-11-17 04:57:42.541 [DEBUG] serv.cpp(327): w:0.002,p:0.095, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132768  2014-11-17 04:57:58.871 [DEBUG] serv.cpp(358): w:0.071,p:0.115, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 18 18 17 17 [10 more...]\n 132769  2014-11-17 04:57:58.871 [DEBUG] serv.cpp(327): w:0.001,p:0.041, req: multi_hget H_PLAYER_REWARD 18 17 16 [4 more...], resp: ok 18 [109] 17 [111] [10 more...]\n .....\n 132771  2014-11-17 04:57:58.907 [DEBUG] serv.cpp(358): w:0.053,p:0.148, req: zrscan Z_PLAYER_ECARD/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok\n 132772  2014-11-17 04:58:00.015 [DEBUG] serv.cpp(358): w:0.031,p:0.060, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 132773: 2014-11-17 04:58:00.974 [DEBUG] serv.cpp(327): w:0.002,p:0.066, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132774  2014-11-17 04:58:07.834 [DEBUG] serv.cpp(358): w:0.049,p:0.129, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 18 18 17 17 [10 more...]\n 132775  2014-11-17 04:58:07.834 [DEBUG] serv.cpp(327): w:0.001,p:0.062, req: multi_hget H_PLAYER_REWARD 18 17 16 [4 more...], resp: ok 18 [109] 17 [111] [10 more...]\n 132776: 2014-11-17 04:58:26.375 [DEBUG] serv.cpp(327): w:0.003,p:0.096, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132777  2014-11-17 04:58:34.361 [DEBUG] serv.cpp(327): w:0.002,p:0.020, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132778  2014-11-17 04:58:45.963 [DEBUG] ssdb-server.cpp(176): fd: 17, read: 0, delete link\n .....\n 132791  2014-11-17 04:59:34.241 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 132792  2014-11-17 04:59:55.353 [DEBUG] serv.cpp(327): w:0.003,p:0.027, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 64\n 132793: 2014-11-17 04:59:55.353 [DEBUG] serv.cpp(327): w:0.002,p:0.087, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132794  2014-11-17 04:59:55.356 [DEBUG] serv.cpp(358): w:0.130,p:1.457, req: hincr hSerial userPack 1, resp: ok 22\n 132795  2014-11-17 04:59:55.356 [DEBUG] serv.cpp(358): w:0.032,p:0.048, req: hset H_PACK 22 [592], resp: ok 1\n .....\n 132902  2014-11-17 05:05:03.986 [DEBUG] serv.cpp(327): w:0.002,p:1.254, req: multi_hget H_MATCH \"\" \"\" \"\" [37 more...], resp: ok 22 [539] 21 [539] [36 more...]\n 132903  2014-11-17 05:05:03.990 [DEBUG] serv.cpp(327): w:0.002,p:0.352, req: multi_hget H_MATCH_EXTRA 22/PlayTimes 22/ExtraCoupon 21/PlayTimes [37 more...], resp: ok 22/PlayTimes 1 20/PlayTimes 1 [28 more...]\n 132904: 2014-11-17 05:05:07.531 [DEBUG] serv.cpp(327): w:0.002,p:0.089, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132905  2014-11-17 05:05:07.623 [DEBUG] serv.cpp(327): w:0.001,p:0.020, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 132906: 2014-11-17 05:05:08.694 [DEBUG] serv.cpp(327): w:0.002,p:0.066, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 132907  2014-11-17 05:05:46.990 [DEBUG] serv.cpp(358): w:0.159,p:0.274, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 22 1416171595 21 1416170340 [36 more...]\n 132908  2014-11-17 05:05:46.993 [DEBUG] serv.cpp(327): w:0.003,p:0.454, req: multi_hget H_MATCH \"\" \"\" \"\" [37 more...], resp: ok 22 [539] 21 [539] [36 more...]\n .....\n 133084  2014-11-17 05:22:48.936 [DEBUG] serv.cpp(327): w:0.001,p:0.882, req: multi_hget H_MATCH \"\" \"\" \"\" [39 more...], resp: ok 23 [542] 22 [539] [38 more...]\n 133085  2014-11-17 05:22:48.939 [DEBUG] serv.cpp(327): w:0.001,p:0.434, req: multi_hget H_MATCH_EXTRA 23/PlayTimes 23/ExtraCoupon 22/PlayTimes [39 more...], resp: ok 22/PlayTimes 1 20/PlayTimes 1 [28 more...]\n 133086: 2014-11-17 05:22:52.584 [DEBUG] serv.cpp(327): w:0.003,p:0.277, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133087  2014-11-17 05:22:52.668 [DEBUG] serv.cpp(327): w:0.002,p:0.086, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 133088: 2014-11-17 05:22:53.743 [DEBUG] serv.cpp(327): w:0.003,p:0.277, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133089  2014-11-17 05:22:58.967 [DEBUG] serv.cpp(327): w:0.002,p:0.024, req: hget H_PACK 23, resp: ok [592]\n 133090  2014-11-17 05:22:59.479 [DEBUG] serv.cpp(327): w:0.002,p:0.068, req: multi_hget H_MATCH_EXTRA 23/PlayTimes 23/ExtraCoupon, resp: ok\n 133091  2014-11-17 05:22:59.480 [DEBUG] serv.cpp(327): w:0.002,p:0.029, req: hget H_MATCH_PLAY 23/1030, resp: not_found\n 133092: 2014-11-17 05:22:59.481 [DEBUG] serv.cpp(327): w:0.001,p:0.264, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133093  2014-11-17 05:22:59.482 [DEBUG] serv.cpp(358): w:0.110,p:0.460, req: hset H_MATCH_PLAY 23/1030 [218], resp: ok 1\n 133094  2014-11-17 05:22:59.482 [DEBUG] serv.cpp(327): w:0.001,p:0.016, req: hget H_MATCH 23, resp: ok [542]\n .....\n 133117  2014-11-17 05:24:50.907 [DEBUG] serv.cpp(327): w:0.003,p:1.205, req: multi_hget H_MATCH \"\" \"\" \"\" [39 more...], resp: ok 23 [541] 22 [539] [38 more...]\n 133118  2014-11-17 05:24:50.921 [DEBUG] serv.cpp(327): w:0.002,p:0.990, req: multi_hget H_MATCH_EXTRA 23/PlayTimes 23/ExtraCoupon 22/PlayTimes [39 more...], resp: ok 22/PlayTimes 1 20/PlayTimes 1 [28 more...]\n 133119: 2014-11-17 05:24:54.562 [DEBUG] serv.cpp(327): w:0.003,p:0.286, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133120  2014-11-17 05:24:54.608 [DEBUG] serv.cpp(327): w:0.002,p:0.088, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 133121  2014-11-17 05:24:56.018 [DEBUG] serv.cpp(358): w:0.029,p:0.106, req: zrscan Z_PLAYER_REWARD, 1030 2147483647 2147483647 \"\" 30, resp: ok 20 20 18 18 [12 more...]\n .....\n 133127  2014-11-17 05:24:57.219 [DEBUG] serv.cpp(358): w:0.033,p:0.101, req: hincr H_PLAYER_INFO/1030 TotalCoupon 100.000000, resp: ok 686\n 133128  2014-11-17 05:24:57.219 [DEBUG] serv.cpp(358): w:0.033,p:0.077, req: hincr H_PLAYER_INFO/1030 CouponCache -100.000000, resp: ok 0\n 133129: 2014-11-17 05:24:57.220 [DEBUG] serv.cpp(327): w:0.002,p:0.224, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133130  2014-11-17 05:25:00.006 [DEBUG] serv.cpp(358): w:0.035,p:0.080, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n 133131: 2014-11-17 05:25:11.878 [DEBUG] serv.cpp(327): w:0.003,p:0.257, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133132  2014-11-17 05:25:19.460 [DEBUG] serv.cpp(358): w:0.051,p:0.156, req: zrscan Z_PLAYER_MATCH/1030 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 22 1416171595 21 1416170340 [8 more...]\n 133133  2014-11-17 05:25:19.462 [DEBUG] serv.cpp(327): w:0.002,p:0.213, req: multi_hget H_MATCH \"\" \"\" \"\" [9 more...], resp: ok 22 [539] 21 [539] [8 more...]\n .....\n 133135  2014-11-17 05:25:50.852 [DEBUG] serv.cpp(327): w:0.002,p:0.031, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 0\n 133136  2014-11-17 05:25:54.174 [DEBUG] serv.cpp(327): w:0.002,p:0.070, req: hget H_PLAYER_INFO/1030 GoldCoin, resp: ok 54\n 133137: 2014-11-17 05:25:54.175 [DEBUG] serv.cpp(327): w:0.002,p:0.229, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133138  2014-11-17 05:25:54.176 [DEBUG] serv.cpp(358): w:0.047,p:0.056, req: hincr hSerial userPack 1, resp: ok 24\n 133139  2014-11-17 05:25:54.177 [DEBUG] serv.cpp(358): w:0.069,p:0.055, req: hset H_PACK 24 [592], resp: ok 1\n .....\n 133149  2014-11-17 05:25:55.810 [DEBUG] serv.cpp(327): w:0.000,p:0.216, req: multi_hget H_MATCH_EXTRA 24/PlayTimes 24/ExtraCoupon 22/PlayTimes [11 more...], resp: ok 22/PlayTimes 1 20/PlayTimes 1 [2 more...]\n 133150  2014-11-17 05:26:00.005 [DEBUG] serv.cpp(358): w:0.033,p:0.090, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 24 1416173274\n 133151: 2014-11-17 05:26:21.308 [DEBUG] serv.cpp(327): w:0.001,p:0.162, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133152  2014-11-17 05:27:00.011 [DEBUG] serv.cpp(358): w:0.069,p:0.103, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok 24 1416173274\n 133153  2014-11-17 05:27:06.260 [DEBUG] serv.cpp(358): w:0.113,p:0.258, req: zrscan Z_MATCH 9223372036854775807 9223372036854775807 \"\" 30, resp: ok 24 1416173154 23 1416172853 [40 more...]\n .....\n 133337  2014-11-17 05:45:54.466 [DEBUG] serv.cpp(327): w:0.002,p:0.823, req: multi_hget H_MATCH \"\" \"\" \"\" [41 more...], resp: ok 24 [539] 23 [541] [40 more...]\n 133338  2014-11-17 05:45:54.472 [DEBUG] serv.cpp(327): w:0.002,p:0.485, req: multi_hget H_MATCH_EXTRA 24/PlayTimes 24/ExtraCoupon 23/PlayTimes [41 more...], resp: ok 24/PlayTimes 1 22/PlayTimes 1 [30 more...]\n 133339: 2014-11-17 05:45:58.370 [DEBUG] serv.cpp(327): w:0.003,p:0.389, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133340  2014-11-17 05:45:58.456 [DEBUG] serv.cpp(327): w:0.002,p:0.028, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 133341  2014-11-17 05:46:00.013 [DEBUG] serv.cpp(358): w:0.087,p:0.080, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n .....\n 133354  2014-11-17 05:51:21.651 [DEBUG] serv.cpp(327): w:0.002,p:3.077, req: multi_hget H_MATCH \"\" \"\" \"\" [41 more...], resp: ok 24 [539] 23 [541] [40 more...]\n 133355  2014-11-17 05:51:21.657 [DEBUG] serv.cpp(327): w:0.002,p:0.405, req: multi_hget H_MATCH_EXTRA 24/PlayTimes 24/ExtraCoupon 23/PlayTimes [41 more...], resp: ok 24/PlayTimes 1 22/PlayTimes 1 [30 more...]\n 133356: 2014-11-17 05:51:24.458 [DEBUG] serv.cpp(327): w:0.001,p:0.157, req: multi_hget H_PLAYER_INFO/1030 NickName TeamName Gender [11 more...], resp: ok NickName uuid TeamName \\e6\\b9\\96\\e5\\8d\\97 [24 more...]\n 133357  2014-11-17 05:51:24.483 [DEBUG] serv.cpp(327): w:0.002,p:0.019, req: hget H_PLAYER_INFO/1030 CouponCache, resp: ok 100\n 133358  2014-11-17 05:52:00.014 [DEBUG] serv.cpp(358): w:0.068,p:0.072, req: zscan Z_OPEN_MATCH 0 0 \"\" 100, resp: ok\n\n/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go:\n   12  	_ \"github.com/go-sql-driver/mysql\"\n   13  	\"github.com/golang/glog\"\n   14: 	\"github.com/nu7hatch/gouuid\"\n   15  	\"io\"\n   16  	\"net/http\"\n   ..\n  201  }\n  202  \n  203: func GenUUID() string {\n  204: 	uuid, err := uuid.NewV4()\n  205  	CheckError(err, \"\")\n  206: 	return base64.URLEncoding.EncodeToString(uuid[:])\n  207  }\n  208  \n  ...\n  220  	defer rc.Close()\n  221  \n  222: 	fingerprint := GenUUID()\n  223  	redisKey := fmt.Sprintf(\"locker/%s\", key)\n  224  	for {\n\n\n\nSearching 501 files for \"uuid/\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/battle.go:\n   13  \n   14  const (\n   15: 	BATTLE_PACK_USER  = \"uuid/9DA924BB-6327-4C8A-BA4D-B010765478CD\"\n   16  	BATTLE_PACKID_SET = \"BATTLE_PACKID_SET\"\n   17  )\n\n/Users/liwei/Documents/projects/2014/SldServer/ssdb/auth/log.txt:\n 19082  2014-11-15 18:45:07.348 [DEBUG] serv.cpp(358): w:0.045,p:0.177, req: setx [34] 1 60, resp: ok 1\n 19083  2014-11-15 18:45:07.655 [DEBUG] serv.cpp(327): w:0.045,p:2.489, req: exists [34], resp: ok 1\n 19084: 2014-11-15 18:45:07.661 [DEBUG] serv.cpp(327): w:0.001,p:5.481, req: hget H_SNS_ACCONT uuid/uuidtest, resp: not_found\n 19085  2014-11-15 18:45:07.682 [DEBUG] serv.cpp(358): w:0.029,p:20.605, req: hincr hSerial account 1, resp: ok 1029\n 19086: 2014-11-15 18:45:07.684 [DEBUG] serv.cpp(358): w:0.025,p:1.282, req: hset H_SNS_ACCONT uuid/uuidtest 1029, resp: ok 1\n 19087  2014-11-15 18:45:07.684 [DEBUG] serv.cpp(358): w:0.024,p:0.045, req: hset H_ACCOUNT 1029 [72], resp: ok 1\n 19088  2014-11-15 18:45:07.686 [DEBUG] serv.cpp(327): w:0.001,p:0.037, req: get H_USER_TOKEN/0/1029, resp: not_found\n .....\n 19098  2014-11-15 18:59:57.430 [DEBUG] serv.cpp(358): w:0.142,p:5.101, req: setx [34] 1 60, resp: ok 1\n 19099  2014-11-15 18:59:57.630 [DEBUG] serv.cpp(327): w:0.043,p:0.097, req: exists [34], resp: ok 1\n 19100: 2014-11-15 18:59:57.631 [DEBUG] serv.cpp(327): w:0.003,p:0.069, req: hget H_SNS_ACCONT uuid/uuidtest, resp: ok 1029\n 19101  2014-11-15 18:59:57.632 [DEBUG] serv.cpp(327): w:0.002,p:0.020, req: get H_USER_TOKEN/0/1029, resp: ok 4XXHY9LrRKFzXtBc0KMjLg==\n 19102  2014-11-15 18:59:57.632 [DEBUG] serv.cpp(358): w:0.044,p:0.064, req: del H_USER_TOKEN/0/1029, resp: ok 1\n\n4 matches across 2 files\n",
+			"settings":
+			{
+				"buffer_size": 118171,
+				"line_ending": "Unix",
+				"name": "Find Results",
+				"scratch": true
+			}
+		},
+		{
+			"file": "match/conf.go",
+			"settings":
+			{
+				"buffer_size": 1640,
 				"line_ending": "Unix"
 			}
 		},
@@ -507,7 +549,7 @@
 			"file": "match/match.go",
 			"settings":
 			{
-				"buffer_size": 43201,
+				"buffer_size": 43712,
 				"line_ending": "Unix"
 			}
 		},
@@ -515,7 +557,7 @@
 			"file": "match/www/api.js",
 			"settings":
 			{
-				"buffer_size": 15048,
+				"buffer_size": 15121,
 				"line_ending": "Unix"
 			}
 		},
@@ -523,7 +565,7 @@
 			"file": "match/ecoMonitor.go",
 			"settings":
 			{
-				"buffer_size": 5751,
+				"buffer_size": 6239,
 				"line_ending": "Unix"
 			}
 		},
@@ -531,7 +573,7 @@
 			"file": "match/battle.go",
 			"settings":
 			{
-				"buffer_size": 1167,
+				"buffer_size": 1284,
 				"line_ending": "Unix"
 			}
 		},
@@ -539,15 +581,23 @@
 			"file": "match/main.go",
 			"settings":
 			{
-				"buffer_size": 1644,
+				"buffer_size": 1604,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "match/ssdb/ssdb.go",
+			"file": "match/util.go",
 			"settings":
 			{
-				"buffer_size": 11917,
+				"buffer_size": 2133,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/db.go",
+			"settings":
+			{
+				"buffer_size": 1533,
 				"line_ending": "Unix"
 			}
 		}
@@ -592,8 +642,8 @@
 	},
 	"file_history":
 	[
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/backup.go",
@@ -664,7 +714,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 99.0,
 		"where_history":
 		[
 			""
@@ -675,6 +725,66 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"uuid/",
+			"uuid",
+			"panic",
+			"apiGetPlayerInfo",
+			"PLAYER_PRIZE_CACHE",
+			"PLAYER_PRIZE_CACHE\n`",
+			"PLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE",
+			"PLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE",
+			"PLAYER_PRIZE_CACHE",
+			"getPrizeCache",
+			"apiMatchListMine",
+			"ssdbc",
+			"playerinfo",
+			"setPlayerInfo",
+			"getPlayerInfo",
+			"setplayerinf",
+			"checksum",
+			"key",
+			"apiAuthLoginSns",
+			"BATTLE_PACK_USER",
+			"rc.",
+			"redis.  ",
+			"rc.Do(",
+			"RedisHost",
+			"redis",
+			"BATTLE_PACKID_SET",
+			"#email",
+			"localStorage",
+			"_clientConf",
+			"apiGetPlayerInfo",
+			"fmt",
+			"liwei",
+			"in",
+			"in.",
+			"in.ecard",
+			"apiAddEcard",
+			"addCoupon",
+			"声明",
+			"ECO_DAILY_COUNTER_IAP",
+			"ECO_FORWHAT_IAP",
+			"addEcoRecord",
+			"ECO_FORWHAT_IAP",
+			"apiEcoDailyCount",
+			"addPlayerGoldCoin",
+			"PLAYER_GOLD_COIN",
+			"rc.",
+			"rc",
+			"redis",
+			"re di s",
+			"match",
+			"apiMatchPlayBegin",
+			"begin",
+			"matchend",
+			"BattleHeartZeroTime",
+			"getheart",
+			"timeDiff",
+			"UPDATE",
+			"6",
+			"updatePlayerBattleHeart",
+			"getPlayerInfo",
 			"apiGetPlayerInfo",
 			"getplayerinfo\ngetplayerinfo\ngetplayerinfo",
 			"getplayerinfo\ngetplayerinfo",
@@ -742,67 +852,7 @@
 			"addPrize",
 			"coupon",
 			"addcoupon",
-			"coupon",
-			"apiAddPrizeFromCache",
-			"getCouponCache",
-			"addPrizeTotal",
-			"PLAYER_IAP_SECRET",
-			"apiSetPlayerInfo",
-			"PlayerInfo",
-			"setplayerinfo",
-			"getplayerinfo",
-			"getPlayerInfo",
-			"playerInfo",
-			"getPlayerInfo",
-			"admin",
-			"chall",
-			"cha",
-			"PLAYER_CURR_CHALLENGE_ID",
-			"Email\n",
-			"backupTask",
-			"addCoupon",
-			"PLAYER_COUPON",
-			"addCouponCache",
-			"addCouponTotal",
-			"addCouponCache",
-			"addCoupon",
-			"addCouponCache",
-			"addCoupon",
-			"addCoupon\naddCoupon",
-			"getCouponCache",
-			"addCouponTotal",
-			"glog.info",
-			"like",
-			"listlike",
-			"getMatchPlay",
-			"like",
-			"makeMatchPlaySubkey",
-			"MatchPlay",
-			"extra",
-			"exists",
-			"hexists",
-			"Z_LIKE_MATCH",
-			"apiMatchListHot",
-			"SnsKey",
-			"key",
-			"snsTypes",
-			"token",
-			"K_RESET_PASSWORD",
-			"email",
-			"Email",
-			"apiGetUserInfo",
-			"apiForgotPassword",
-			"set",
-			"ReqHandler",
-			"ServeHTTP",
-			"time.Parse",
-			"getuserin",
-			"OutEcoRecord",
-			"glog.info",
-			"time",
-			"makeEcoDailyCountKey",
-			"H_ECO_DAILY_COUNTER",
-			"Z_ECO_PLAYER_MON"
+			"coupon"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -833,7 +883,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 9,
 			"sheets":
 			[
 				{
@@ -841,15 +891,15 @@
 					"file": "match/store.go",
 					"settings":
 					{
-						"buffer_size": 17954,
+						"buffer_size": 20770,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6967,
-								6967
+								12652,
+								12652
 							]
 						],
 						"settings":
@@ -858,7 +908,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 6173.0,
+						"translation.y": 11485.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -868,15 +918,15 @@
 					"file": "match/admin.go",
 					"settings":
 					{
-						"buffer_size": 4808,
+						"buffer_size": 5028,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2572,
-								2588
+								114,
+								114
 							]
 						],
 						"settings":
@@ -885,7 +935,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2440.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -895,15 +945,15 @@
 					"file": "match/auth.go",
 					"settings":
 					{
-						"buffer_size": 16662,
+						"buffer_size": 16850,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								16204,
-								16210
+								8260,
+								8260
 							]
 						],
 						"settings":
@@ -912,7 +962,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 14026.0,
+						"translation.y": 7006.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -922,15 +972,15 @@
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 13980,
+						"buffer_size": 15269,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1386,
-								1386
+								7255,
+								7255
 							]
 						],
 						"settings":
@@ -939,25 +989,896 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 807.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 4,
-					"file": "match/match.go",
 					"settings":
 					{
-						"buffer_size": 43201,
+						"buffer_size": 118171,
+						"regions":
+						{
+							"match":
+							{
+								"flags": 112,
+								"regions":
+								[
+									[
+										186,
+										190
+									],
+									[
+										431,
+										435
+									],
+									[
+										492,
+										496
+									],
+									[
+										516,
+										520
+									],
+									[
+										527,
+										531
+									],
+									[
+										589,
+										593
+									],
+									[
+										726,
+										730
+									],
+									[
+										872,
+										876
+									],
+									[
+										1000,
+										1004
+									],
+									[
+										1116,
+										1120
+									],
+									[
+										1294,
+										1298
+									],
+									[
+										1552,
+										1556
+									],
+									[
+										1777,
+										1781
+									],
+									[
+										1990,
+										1994
+									],
+									[
+										2251,
+										2255
+									],
+									[
+										2481,
+										2485
+									],
+									[
+										2938,
+										2942
+									],
+									[
+										2943,
+										2947
+									],
+									[
+										3181,
+										3185
+									],
+									[
+										3186,
+										3190
+									],
+									[
+										3751,
+										3755
+									],
+									[
+										3756,
+										3760
+									],
+									[
+										4503,
+										4507
+									],
+									[
+										4915,
+										4919
+									],
+									[
+										5259,
+										5263
+									],
+									[
+										6030,
+										6034
+									],
+									[
+										6374,
+										6378
+									],
+									[
+										6585,
+										6589
+									],
+									[
+										7438,
+										7442
+									],
+									[
+										8291,
+										8295
+									],
+									[
+										8635,
+										8639
+									],
+									[
+										9538,
+										9542
+									],
+									[
+										9882,
+										9886
+									],
+									[
+										10225,
+										10229
+									],
+									[
+										10787,
+										10791
+									],
+									[
+										10998,
+										11002
+									],
+									[
+										11209,
+										11213
+									],
+									[
+										11420,
+										11424
+									],
+									[
+										11583,
+										11587
+									],
+									[
+										11787,
+										11791
+									],
+									[
+										11998,
+										12002
+									],
+									[
+										12503,
+										12507
+									],
+									[
+										12714,
+										12718
+									],
+									[
+										13462,
+										13466
+									],
+									[
+										14059,
+										14063
+									],
+									[
+										14782,
+										14786
+									],
+									[
+										15507,
+										15511
+									],
+									[
+										16230,
+										16234
+									],
+									[
+										16951,
+										16955
+									],
+									[
+										17658,
+										17662
+									],
+									[
+										18361,
+										18365
+									],
+									[
+										19068,
+										19072
+									],
+									[
+										19888,
+										19892
+									],
+									[
+										20619,
+										20623
+									],
+									[
+										21363,
+										21367
+									],
+									[
+										22107,
+										22111
+									],
+									[
+										22927,
+										22931
+									],
+									[
+										23271,
+										23275
+									],
+									[
+										23482,
+										23486
+									],
+									[
+										24283,
+										24287
+									],
+									[
+										25059,
+										25063
+									],
+									[
+										25270,
+										25274
+									],
+									[
+										25481,
+										25485
+									],
+									[
+										26305,
+										26309
+									],
+									[
+										27136,
+										27140
+									],
+									[
+										28033,
+										28037
+									],
+									[
+										28863,
+										28867
+									],
+									[
+										29693,
+										29697
+									],
+									[
+										30523,
+										30527
+									],
+									[
+										31390,
+										31394
+									],
+									[
+										32220,
+										32224
+									],
+									[
+										33088,
+										33092
+									],
+									[
+										33956,
+										33960
+									],
+									[
+										34804,
+										34808
+									],
+									[
+										35143,
+										35147
+									],
+									[
+										35881,
+										35885
+									],
+									[
+										36734,
+										36738
+									],
+									[
+										37536,
+										37540
+									],
+									[
+										38361,
+										38365
+									],
+									[
+										39209,
+										39213
+									],
+									[
+										40034,
+										40038
+									],
+									[
+										40859,
+										40863
+									],
+									[
+										41707,
+										41711
+									],
+									[
+										42444,
+										42448
+									],
+									[
+										43165,
+										43169
+									],
+									[
+										43872,
+										43876
+									],
+									[
+										44579,
+										44583
+									],
+									[
+										45398,
+										45402
+									],
+									[
+										46139,
+										46143
+									],
+									[
+										46956,
+										46960
+									],
+									[
+										47787,
+										47791
+									],
+									[
+										48621,
+										48625
+									],
+									[
+										49284,
+										49288
+									],
+									[
+										49493,
+										49497
+									],
+									[
+										50238,
+										50242
+									],
+									[
+										51073,
+										51077
+									],
+									[
+										51907,
+										51911
+									],
+									[
+										52741,
+										52745
+									],
+									[
+										53575,
+										53579
+									],
+									[
+										54245,
+										54249
+									],
+									[
+										54454,
+										54458
+									],
+									[
+										54663,
+										54667
+									],
+									[
+										55497,
+										55501
+									],
+									[
+										56332,
+										56336
+									],
+									[
+										57166,
+										57170
+									],
+									[
+										58001,
+										58005
+									],
+									[
+										58835,
+										58839
+									],
+									[
+										59498,
+										59502
+									],
+									[
+										60237,
+										60241
+									],
+									[
+										60990,
+										60994
+									],
+									[
+										61201,
+										61205
+									],
+									[
+										61412,
+										61416
+									],
+									[
+										62303,
+										62307
+									],
+									[
+										62718,
+										62722
+									],
+									[
+										62929,
+										62933
+									],
+									[
+										63544,
+										63548
+									],
+									[
+										64377,
+										64381
+									],
+									[
+										65045,
+										65049
+									],
+									[
+										65929,
+										65933
+									],
+									[
+										66794,
+										66798
+									],
+									[
+										67577,
+										67581
+									],
+									[
+										67788,
+										67792
+									],
+									[
+										67999,
+										68003
+									],
+									[
+										68336,
+										68340
+									],
+									[
+										68547,
+										68551
+									],
+									[
+										68710,
+										68714
+									],
+									[
+										68914,
+										68918
+									],
+									[
+										69243,
+										69247
+									],
+									[
+										70069,
+										70073
+									],
+									[
+										70922,
+										70926
+									],
+									[
+										71796,
+										71800
+									],
+									[
+										72140,
+										72144
+									],
+									[
+										72980,
+										72984
+									],
+									[
+										73819,
+										73823
+									],
+									[
+										74296,
+										74300
+									],
+									[
+										74625,
+										74629
+									],
+									[
+										75396,
+										75400
+									],
+									[
+										75740,
+										75744
+									],
+									[
+										76515,
+										76519
+									],
+									[
+										76726,
+										76730
+									],
+									[
+										76937,
+										76941
+									],
+									[
+										77266,
+										77270
+									],
+									[
+										77957,
+										77961
+									],
+									[
+										78796,
+										78800
+									],
+									[
+										79635,
+										79639
+									],
+									[
+										80412,
+										80416
+									],
+									[
+										81144,
+										81148
+									],
+									[
+										82033,
+										82037
+									],
+									[
+										82377,
+										82381
+									],
+									[
+										83139,
+										83143
+									],
+									[
+										83846,
+										83850
+									],
+									[
+										84575,
+										84579
+									],
+									[
+										85407,
+										85411
+									],
+									[
+										85744,
+										85748
+									],
+									[
+										86655,
+										86659
+									],
+									[
+										86992,
+										86996
+									],
+									[
+										87906,
+										87910
+									],
+									[
+										88243,
+										88247
+									],
+									[
+										89092,
+										89096
+									],
+									[
+										89816,
+										89820
+									],
+									[
+										90027,
+										90031
+									],
+									[
+										90798,
+										90802
+									],
+									[
+										91135,
+										91139
+									],
+									[
+										91954,
+										91958
+									],
+									[
+										92661,
+										92665
+									],
+									[
+										93390,
+										93394
+									],
+									[
+										93601,
+										93605
+									],
+									[
+										94490,
+										94494
+									],
+									[
+										94827,
+										94831
+									],
+									[
+										95659,
+										95663
+									],
+									[
+										96457,
+										96461
+									],
+									[
+										97228,
+										97232
+									],
+									[
+										98026,
+										98030
+									],
+									[
+										98915,
+										98919
+									],
+									[
+										99697,
+										99701
+									],
+									[
+										100496,
+										100500
+									],
+									[
+										101443,
+										101447
+									],
+									[
+										102230,
+										102234
+									],
+									[
+										103045,
+										103049
+									],
+									[
+										103840,
+										103844
+									],
+									[
+										104051,
+										104055
+									],
+									[
+										104883,
+										104887
+									],
+									[
+										105220,
+										105224
+									],
+									[
+										106054,
+										106058
+									],
+									[
+										106602,
+										106606
+									],
+									[
+										107288,
+										107292
+									],
+									[
+										108103,
+										108107
+									],
+									[
+										108442,
+										108446
+									],
+									[
+										109380,
+										109384
+									],
+									[
+										109719,
+										109723
+									],
+									[
+										110301,
+										110305
+									],
+									[
+										111121,
+										111125
+									],
+									[
+										111916,
+										111920
+									],
+									[
+										112245,
+										112249
+									],
+									[
+										113072,
+										113076
+									],
+									[
+										113858,
+										113862
+									],
+									[
+										114768,
+										114772
+									],
+									[
+										115602,
+										115606
+									],
+									[
+										116070,
+										116074
+									],
+									[
+										116146,
+										116150
+									],
+									[
+										116170,
+										116174
+									],
+									[
+										116183,
+										116187
+									],
+									[
+										116273,
+										116277
+									],
+									[
+										116364,
+										116368
+									],
+									[
+										116587,
+										116592
+									],
+									[
+										117054,
+										117059
+									],
+									[
+										117297,
+										117302
+									],
+									[
+										117867,
+										117872
+									]
+								],
+								"scope": ""
+							}
+						},
+						"selection":
+						[
+							[
+								116596,
+								116596
+							]
+						],
+						"settings":
+						{
+							"detect_indentation": false,
+							"output_tag": 2,
+							"result_base_dir": "",
+							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
+							"result_line_regex": "^ +([0-9]+):",
+							"scroll_past_end": true,
+							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 38892.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "match/conf.go",
+					"settings":
+					{
+						"buffer_size": 1640,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								30783,
-								30783
+								798,
+								798
 							]
 						],
 						"settings":
@@ -966,25 +1887,52 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 26868.0,
+						"translation.y": 40.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "match/www/api.js",
+					"buffer": 6,
+					"file": "match/match.go",
 					"settings":
 					{
-						"buffer_size": 15048,
+						"buffer_size": 43712,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7953,
-								7965
+								42567,
+								42567
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 35549.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "match/www/api.js",
+					"settings":
+					{
+						"buffer_size": 15121,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								11080,
+								11080
 							]
 						],
 						"settings":
@@ -992,80 +1940,26 @@
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 18.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "match/ecoMonitor.go",
-					"settings":
-					{
-						"buffer_size": 5751,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								843,
-								843
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "match/battle.go",
-					"settings":
-					{
-						"buffer_size": 1167,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								482,
-								482
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 246.0,
+						"translation.x": 2.0,
+						"translation.y": 10837.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 8,
-					"file": "match/main.go",
+					"file": "match/ecoMonitor.go",
 					"settings":
 					{
-						"buffer_size": 1644,
+						"buffer_size": 6239,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1438,
-								1438
+								3693,
+								3693
 							]
 						],
 						"settings":
@@ -1074,25 +1968,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1272.0,
+						"translation.y": 2229.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 9,
-					"file": "match/ssdb/ssdb.go",
+					"file": "match/battle.go",
 					"settings":
 					{
-						"buffer_size": 11917,
+						"buffer_size": 1284,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6273,
-								6283
+								177,
+								213
 							]
 						],
 						"settings":
@@ -1101,7 +1995,88 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 7646.0,
+						"translation.y": 174.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/main.go",
+					"settings":
+					{
+						"buffer_size": 1604,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								174,
+								174
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 28.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "match/util.go",
+					"settings":
+					{
+						"buffer_size": 2133,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								107,
+								107
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "match/db.go",
+					"settings":
+					{
+						"buffer_size": 1533,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								542,
+								551
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 389.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1187,6 +2162,14 @@
 		"selected_items":
 		[
 			[
+				"conf",
+				"SldServer/match/conf.go"
+			],
+			[
+				"player",
+				"SldServer/match/player.go"
+			],
+			[
 				"auth.go",
 				"SldServer/match/auth.go"
 			],
@@ -1221,10 +2204,6 @@
 			[
 				"ssdb",
 				"SldServer/match/ssdb/ssdb.go"
-			],
-			[
-				"player",
-				"SldServer/match/player.go"
 			],
 			[
 				"matchr",
@@ -1265,10 +2244,6 @@
 			[
 				"moni",
 				"SldServer/match/monitor.go"
-			],
-			[
-				"conf",
-				"SldServer/match/conf.json"
 			],
 			[
 				"config",

@@ -4,6 +4,38 @@
 		"selected_items":
 		[
 			[
+				"battle",
+				"BattleHeartZeroTime	int64 ν"
+			],
+			[
+				"bat",
+				"BattleHeartZeroTime	int64 ν"
+			],
+			[
+				"wins",
+				"winStreakMax	int ν"
+			],
+			[
+				"batl",
+				"BattleWinStreakMax	int ν"
+			],
+			[
+				"winstr",
+				"winStreak	int ν"
+			],
+			[
+				"battlep",
+				"battlePoint	 ν"
+			],
+			[
+				"win",
+				"BattleWinStreakMax	int ν"
+			],
+			[
+				"PLAYER_BATTLE_win",
+				"PLAYER_BATTLE_WIN_STREAK_MAX	 Ɩ"
+			],
+			[
 				"mak",
 				"makeBattleResult	 ƒ"
 			],
@@ -475,7 +507,7 @@
 			"file": "home.html",
 			"settings":
 			{
-				"buffer_size": 2194,
+				"buffer_size": 2301,
 				"line_ending": "Unix"
 			}
 		},
@@ -483,7 +515,7 @@
 			"file": "home.js",
 			"settings":
 			{
-				"buffer_size": 509,
+				"buffer_size": 718,
 				"line_ending": "Windows"
 			}
 		},
@@ -499,7 +531,7 @@
 			"file": "hub.go",
 			"settings":
 			{
-				"buffer_size": 5413,
+				"buffer_size": 7022,
 				"line_ending": "Unix"
 			}
 		},
@@ -507,7 +539,7 @@
 			"file": "battle.go",
 			"settings":
 			{
-				"buffer_size": 5533,
+				"buffer_size": 8622,
 				"line_ending": "Unix"
 			}
 		},
@@ -515,7 +547,15 @@
 			"file": "main.go",
 			"settings":
 			{
-				"buffer_size": 1372,
+				"buffer_size": 1065,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "util.go",
+			"settings":
+			{
+				"buffer_size": 1594,
 				"line_ending": "Unix"
 			}
 		},
@@ -526,14 +566,6 @@
 				"buffer_size": 271,
 				"line_ending": "Unix",
 				"name": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgEr"
-			}
-		},
-		{
-			"file": "util.go",
-			"settings":
-			{
-				"buffer_size": 407,
-				"line_ending": "Unix"
 			}
 		}
 	],
@@ -657,6 +689,33 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"pack",
+			"redis.",
+			"rc.Do(",
+			"FIXME",
+			"redis",
+			"ssdb",
+			"BATTLE_PACKID_SET",
+			"text",
+			"fixme",
+			"pendingConnMu",
+			"Unlock",
+			"pendingConnMu",
+			"serveWs",
+			"matchdb",
+			"paired",
+			"paird",
+			"\"paired",
+			"battlePoint",
+			"\\",
+			"battlePoint",
+			"battlePointbattlePointAdd",
+			"battlePoint",
+			"BattlePoint",
+			"BattleResult",
+			"conn",
+			"PLAYER_GOLD_COIN",
+			"getplayer",
 			"make",
 			"ssdbc",
 			"battle.room",
@@ -757,34 +816,7 @@
 			"matchdb",
 			"unlock",
 			"pendingConnMap",
-			"lock",
-			"run",
-			"go ",
-			"pendingConnMap",
-			"c.room",
-			"roomname",
-			"msg",
-			"pendingconn",
-			"m[\"a\"]",
-			"pendingconn",
-			"pendingConn",
-			"sendErr",
-			"addr",
-			"getpac",
-			"H_PACK",
-			"pair",
-			"getPlayerInfo",
-			"getPlayerInfo\n",
-			"battle",
-			"makeBattle",
-			"			// 	}\n	nickName string\n	nickName string\n	nickName string\nmakeBattle",
-			"	nickName string\n	nickName string\n	nickName string\nmakeBattle",
-			"	nickName string\n	nickName string\nmakeBattle",
-			"	nickName string\nmakeBattle",
-			"makeBattle",
-			"battlestart",
-			"sendok",
-			"regHandler"
+			"lock"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -815,7 +847,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -823,15 +855,15 @@
 					"file": "home.html",
 					"settings":
 					{
-						"buffer_size": 2194,
+						"buffer_size": 2301,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2176,
-								2176
+								2062,
+								2062
 							]
 						],
 						"settings":
@@ -841,7 +873,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1653.0,
+						"translation.y": 1720.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -851,15 +883,15 @@
 					"file": "home.js",
 					"settings":
 					{
-						"buffer_size": 509,
+						"buffer_size": 718,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								121,
-								121
+								297,
+								297
 							]
 						],
 						"settings":
@@ -886,8 +918,116 @@
 						"selection":
 						[
 							[
-								221,
-								221
+								3082,
+								3082
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2937.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "hub.go",
+					"settings":
+					{
+						"buffer_size": 7022,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								187,
+								187
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 504.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "battle.go",
+					"settings":
+					{
+						"buffer_size": 8622,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2631,
+								2631
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2986.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "main.go",
+					"settings":
+					{
+						"buffer_size": 1065,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								872,
+								872
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 456.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "util.go",
+					"settings":
+					{
+						"buffer_size": 1594,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								93,
+								59
 							]
 						],
 						"settings":
@@ -902,88 +1042,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 3,
-					"file": "hub.go",
-					"settings":
-					{
-						"buffer_size": 5413,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1559,
-								1559
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1589.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "battle.go",
-					"settings":
-					{
-						"buffer_size": 5533,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3183,
-								3183
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 3855.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "main.go",
-					"settings":
-					{
-						"buffer_size": 1372,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								268,
-								268
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 113.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
+					"buffer": 7,
 					"settings":
 					{
 						"buffer_size": 271,
@@ -1001,33 +1060,6 @@
 						{
 							"auto_name": "{\"Type\":\"authPair\", \"Token\":\"DlgWdxZJTk97w1a18hgEr",
 							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "util.go",
-					"settings":
-					{
-						"buffer_size": 407,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								169,
-								169
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -1119,6 +1151,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"util",
+				"util.go"
+			],
 			[
 				"etc",
 				"SldServer/match/etc.go"
