@@ -524,8 +524,20 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 		pack.Tags = make([]string, 0)
 	}
 
+	//get
+	player, err := getPlayerInfo(ssdb, pack.AuthorId)
+	lwutil.CheckError(err, "err_player")
+
+	out := struct {
+		Pack
+		Author *PlayerInfo
+	}{
+		pack,
+		player,
+	}
+
 	//out
-	lwutil.WriteResponse(w, &pack)
+	lwutil.WriteResponse(w, &out)
 }
 
 type Comment struct {
