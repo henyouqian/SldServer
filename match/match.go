@@ -18,17 +18,15 @@ import (
 
 const (
 	MATCH_SERIAL            = "MATCH_SERIAL"
-	H_MATCH                 = "H_MATCH"         //subkey:matchId value:matchJson
-	H_MATCH_EXTRA           = "H_MATCH_EXTRA"   //key:H_MATCH_EXTRA subkey:matchId/fieldKey value:fieldValue
-	H_MATCH_PLAY            = "H_MATCH_PLAY"    //key:H_MATCH_PLAY subkey:matchId/userId value:match json
-	H_MATCH_RANK            = "H_MATCH_RANK"    //key:H_MATCH_RANK/matchId subkey:rank value:userId
-	Z_MATCH                 = "Z_MATCH"         //subkey:matchId score:beginTime
-	Z_PENDING_MATCH         = "Z_PENDING_MATCH" //subkey:matchId score:beginTime
-	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"  //key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
-	Z_PUBLIC_MATCH          = "Z_PUBLIC_MATCH"  //key:Z_PUBLIC_MATCH/userId subkey:matchId score:publicSerial
-	MATCH_PUBLIC_SERIAL     = "MATCH_PUBLIC_SERIAL"
-	Z_LIKE_MATCH            = "Z_LIKE_MATCH"            //key:Z_LIKE_MATCH/userId subkey:matchId score:likeSerial
-	Z_MY_PLAYED_MATCH       = "Z_MY_PLAYED_MATCH"       //key:Z_MY_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
+	H_MATCH                 = "H_MATCH"                 //subkey:matchId value:matchJson
+	H_MATCH_EXTRA           = "H_MATCH_EXTRA"           //key:H_MATCH_EXTRA subkey:matchId/fieldKey value:fieldValue
+	H_MATCH_PLAY            = "H_MATCH_PLAY"            //key:H_MATCH_PLAY subkey:matchId/userId value:match json
+	H_MATCH_RANK            = "H_MATCH_RANK"            //key:H_MATCH_RANK/matchId subkey:rank value:userId
+	Z_MATCH                 = "Z_MATCH"                 //subkey:matchId score:beginTime
+	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
+	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //original key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
+	Z_LIKE_MATCH            = "Z_LIKE_MATCH"            //key:Z_LIKE_MATCH/userId subkey:matchId score:likeTime
+	Z_PLAYED_MATCH          = "Z_PLAYED_MATCH"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:totalPrize
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
@@ -65,6 +63,7 @@ type Match struct {
 	PromoImage           string
 	Private              bool
 	Hide                 bool
+	Deleted              bool
 }
 
 type MatchExtra struct {
@@ -123,16 +122,12 @@ func makeZPlayerMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_PLAYER_MATCH, userId)
 }
 
-func makeZPublicMatchKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_PUBLIC_MATCH, userId)
-}
-
 func makeZLikeMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_LIKE_MATCH, userId)
 }
 
-func makeMyPlayedMatchKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_MY_PLAYED_MATCH, userId)
+func makeZPlayedMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_PLAYED_MATCH, userId)
 }
 
 func makeMatchPlaySubkey(matchId int64, userId int64) string {
@@ -326,9 +321,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.GoldCoinForPrize*PRIZE_NUM_PER_COIN)
 			lwutil.CheckSsdbError(resp, err)
 
-			//Z_PUBLIC_MATCH
-			score := GenSerial(ssdbc, MATCH_PUBLIC_SERIAL)
-			key := makeZPublicMatchKey(session.Userid)
+			//Z_LIKE_MATCH
+			score := beginTimeUnix
+			key := makeZLikeMatchKey(session.Userid)
 			resp, err = ssdbc.Do("zset", key, matchId, score)
 			lwutil.CheckSsdbError(resp, err)
 		}
@@ -400,12 +395,9 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zdel", zPlayerMatchKey, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
-	key := makeZPublicMatchKey(session.Userid)
-	resp, err = ssdbc.Do("zdel", key, in.MatchId)
-	lwutil.CheckSsdbError(resp, err)
-
-	resp, err = ssdbc.Do("hdel", H_MATCH, in.MatchId)
-	lwutil.CheckSsdbError(resp, err)
+	match.Deleted = true
+	// resp, err = ssdbc.Do("hdel", H_MATCH, in.MatchId)
+	// lwutil.CheckSsdbError(resp, err)
 }
 
 func apiMatchMod(w http.ResponseWriter, r *http.Request) {
@@ -747,7 +739,7 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, matches)
 }
 
-func apiMatchListUserPublic(w http.ResponseWriter, r *http.Request) {
+func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
 
@@ -757,7 +749,7 @@ func apiMatchListUserPublic(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	_, err = findSession(w, r, nil)
+	session, err := findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
 
 	//in
@@ -769,6 +761,10 @@ func apiMatchListUserPublic(w http.ResponseWriter, r *http.Request) {
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
 
 	if in.Limit <= 0 {
 		in.Limit = 20
@@ -799,7 +795,7 @@ func apiMatchListUserPublic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get keys
-	key := makeZPublicMatchKey(in.UserId)
+	key := makeZPlayerMatchKey(in.UserId)
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -875,7 +871,7 @@ func apiMatchListUserPublic(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
-func apiMatchListUserOriginal(w http.ResponseWriter, r *http.Request) {
+func apiMatchListPlayed(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
 
@@ -885,7 +881,7 @@ func apiMatchListUserOriginal(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	_, err = findSession(w, r, nil)
+	session, err := findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
 
 	//in
@@ -897,6 +893,10 @@ func apiMatchListUserOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
 
 	if in.Limit <= 0 {
 		in.Limit = 20
@@ -927,7 +927,7 @@ func apiMatchListUserOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get keys
-	key := makeZPublicMatchKey(in.UserId)
+	key := makeZPlayedMatchKey(in.UserId)
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -1057,7 +1057,7 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get keys
-	key := makeMyPlayedMatchKey(session.Userid)
+	key := makeZPlayedMatchKey(session.Userid)
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.PlayedTime, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -1272,12 +1272,17 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
+		UserId    int64
 		StartId   int64
 		LastScore int64
 		Limit     int
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
 
 	if in.Limit <= 0 {
 		in.Limit = 20
@@ -1308,7 +1313,7 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get keys
-	key := makeZLikeMatchKey(session.Userid)
+	key := makeZLikeMatchKey(in.UserId)
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -1584,8 +1589,8 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", H_MATCH_PLAY, subkey, js)
 	lwutil.CheckSsdbError(resp, err)
 
-	//update Z_MY_PLAYED_MATCH
-	key := makeMyPlayedMatchKey(session.Userid)
+	//update Z_PLAYED_MATCH
+	key := makeZPlayedMatchKey(session.Userid)
 	resp, err = ssdbc.Do("zset", key, in.MatchId, now)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -2016,7 +2021,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//
-	key := makeZPublicMatchKey(session.Userid)
+	key := makeZLikeMatchKey(session.Userid)
 	resp, err = ssdbc.Do("zexists", key, in.MatchId)
 	lwutil.CheckError(err, "")
 	if ssdbCheckExists(resp) {
@@ -2024,7 +2029,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	score := GenSerial(ssdbc, MATCH_PUBLIC_SERIAL)
+	score := lwutil.GetRedisTimeUnix()
 	resp, err = ssdbc.Do("zset", key, in.MatchId, score)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -2069,16 +2074,14 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check match exist
-	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
-	lwutil.CheckError(err, "")
-	if !ssdbCheckExists(resp) {
-		lwutil.SendError("err_match_id", "Can't find match")
+	match := getMatch(ssdbc, in.MatchId)
+	if match.OwnerId == session.Userid {
+		lwutil.SendError("err_owner", "")
 	}
 
 	//
-	key := makeZPublicMatchKey(session.Userid)
-
-	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	key := makeZLikeMatchKey(session.Userid)
+	resp, err := ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//match play
@@ -2111,8 +2114,8 @@ func regMatch() {
 	http.Handle("/match/listMyPlayed", lwutil.ReqHandler(apiMatchListMyPlayed))
 	http.Handle("/match/listHot", lwutil.ReqHandler(apiMatchListHot))
 	http.Handle("/match/listLike", lwutil.ReqHandler(apiMatchListLike))
-	http.Handle("/match/listUserOriginal", lwutil.ReqHandler(apiMatchListUserOriginal))
-	http.Handle("/match/listUserPublic", lwutil.ReqHandler(apiMatchListUserPublic))
+	http.Handle("/match/listOriginal", lwutil.ReqHandler(apiMatchListOriginal))
+	http.Handle("/match/listPlayed", lwutil.ReqHandler(apiMatchListPlayed))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))

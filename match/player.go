@@ -25,6 +25,7 @@ const (
 )
 
 type PlayerInfo struct {
+	UserId              int64
 	NickName            string
 	TeamName            string
 	Gender              int
@@ -217,6 +218,7 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 		return nil, err
 	}
 
+	playerInfo.UserId = userId
 	return &playerInfo, err
 }
 
@@ -309,8 +311,6 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		*PlayerInfo
-		UserId int64
-		// BetCloseBeforeEndSec  int
 		AdsConf              AdsConf
 		ClientConf           map[string]string
 		OwnerPrizeProportion float32
@@ -319,8 +319,6 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		BattleHeartAddSec    int
 	}{
 		playerInfo,
-		session.Userid,
-		// BET_CLOSE_BEFORE_END_SEC,
 		_adsConf,
 		_clientConf,
 		MATCH_OWNER_PRIZE_PROPORTION,
