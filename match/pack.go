@@ -528,12 +528,28 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	player, err := getPlayerInfo(ssdb, pack.AuthorId)
 	lwutil.CheckError(err, "err_player")
 
+	followed := false
+	session, _ := findSession(w, r, nil)
+	if session != nil {
+		followed, err = isFollowed(ssdb, session.Userid, player.UserId)
+		lwutil.CheckError(err, "err_follow")
+	}
+
+	type PlayerInfoPlus struct {
+		*PlayerInfo
+		Followed bool
+	}
+	author := PlayerInfoPlus{
+		player,
+		followed,
+	}
+
 	out := struct {
 		Pack
-		Author *PlayerInfo
+		Author PlayerInfoPlus
 	}{
 		pack,
-		player,
+		author,
 	}
 
 	//out

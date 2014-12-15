@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	H_PLAYER_INFO              = "H_PLAYER_INFO"     //key:H_PLAYER_INFO/<userId> subkey:property
-	H_APP_PLAYER_RATE          = "H_APP_PLAYER_RATE" //subkey:appName/userId value:1
+	H_PLAYER_INFO              = "H_PLAYER_INFO"      //key:H_PLAYER_INFO/<userId> subkey:property
+	H_PLAYER_INFO_LITE         = "H_PLAYER_INFO_LITE" //key:H_PLAYER_INFO_LITE subkey:userId value:playerInfoLite
+	H_APP_PLAYER_RATE          = "H_APP_PLAYER_RATE"  //subkey:appName/userId value:1
 	USER_UPLOAD_BUCKET         = "pintuuserupload"
 	ADS_PERCENT_DEFAUT         = 0.5
 	H_PLAYER_PRIZE_RECORD      = "H_PLAYER_PRIZE_RECORD" //key:H_PLAYER_PRIZE_RECORD subkey:prizeRecordId value prizeRecordJson
@@ -22,7 +23,19 @@ const (
 	SEREAL_PLAYER_PRIZE_RECORD = "SEREAL_PLAYER_PRIZE_RECORD"
 	BATTLE_HEART_TOTAL         = 10
 	BATTLE_HEART_ADD_SEC       = 60 * 5
+	Z_PLAYER_FAN               = "Z_PLAYER_FAN"    //key:Z_PLAYER_FAN/userId subkey:fanUserId score:time
+	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW" //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
 )
+
+type PlayerInfoLite struct {
+	UserId          int64
+	NickName        string
+	TeamName        string
+	Gender          int
+	CustomAvatarKey string
+	GravatarKey     string
+	Text            string
+}
 
 type PlayerInfo struct {
 	UserId              int64
@@ -41,10 +54,13 @@ type PlayerInfo struct {
 	BattleWinStreak     int
 	BattleWinStreakMax  int
 	BattleHeartZeroTime int64
+	FanNum              int
+	FollowNum           int
 }
 
 //player property
 const (
+	PLAYER_NICK_NAME              = "NickName"
 	PLAYER_GOLD_COIN              = "GoldCoin"
 	PLAYER_PRIZE                  = "Prize"
 	PLAYER_PRIZE_CACHE            = "PrizeCache"
@@ -54,6 +70,8 @@ const (
 	PLAYER_BATTLE_WIN_STREAK      = "BattleWinStreak"
 	PLAYER_BATTLE_WIN_STREAK_MAX  = "BattleWinStreakMax"
 	PLAYER_BATTLE_HEART_ZERO_TIME = "BattleHeartZeroTime"
+	PLAYER_FAN_NUM                = "FanNum"
+	PLAYER_FOLLOW_NUM             = "FollowNum"
 )
 
 type PlayerBattleLevel struct {
@@ -209,6 +227,14 @@ func makeAppPlayerRateSubkey(appName string, userId int64) string {
 	return fmt.Sprintf("%s/%d", appName, userId)
 }
 
+func makeZPlayerFanKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_PLAYER_FAN)
+}
+
+func makeZPlayerFollowKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_PLAYER_FOLLOW)
+}
+
 func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	key := makePlayerInfoKey(userId)
 
@@ -219,6 +245,7 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	}
 
 	playerInfo.UserId = userId
+
 	return &playerInfo, err
 }
 
@@ -288,6 +315,19 @@ func addPrizeTotal(ssc *ssdb.Client, playerKey string, prize int) (rPrize int) {
 	return num
 }
 
+func isFollowed(ssdbc *ssdb.Client, fanId int64, followId int64) (bool, error) {
+	key := makeZPlayerFollowKey(fanId)
+	resp, err := ssdbc.Do("zexists", key, followId)
+	if err != nil {
+		return false, err
+	}
+
+	if resp[1] == "1" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -301,11 +341,27 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
+
 	//get info
-	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	playerInfo, err := getPlayerInfo(ssdb, in.UserId)
 	if err != nil {
 		w.WriteHeader(500)
 		return
+	}
+
+	//followed?
+	followed := false
+	if session != nil && session.Userid != in.UserId {
+		followed, err = isFollowed(ssdb, in.UserId, playerInfo.UserId)
+		lwutil.CheckError(err, "err_follow")
 	}
 
 	//out
@@ -317,6 +373,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		BattleLevels         []PlayerBattleLevel
 		BattleHelpText       string
 		BattleHeartAddSec    int
+		Followed             bool
 	}{
 		playerInfo,
 		_adsConf,
@@ -325,6 +382,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		PLAYER_BATTLE_LEVELS,
 		BATTLE_HELP_TEXT,
 		BATTLE_HEART_ADD_SEC,
+		followed,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -395,6 +453,20 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 
 	//get player info
 	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	lwutil.CheckError(err, "")
+
+	//set playerInfoLite
+	var infoLite PlayerInfoLite
+	infoLite.UserId = playerInfo.UserId
+	infoLite.NickName = playerInfo.NickName
+	infoLite.TeamName = playerInfo.TeamName
+	infoLite.Gender = playerInfo.Gender
+	infoLite.CustomAvatarKey = playerInfo.CustomAvatarKey
+	infoLite.GravatarKey = playerInfo.GravatarKey
+
+	js, err := json.Marshal(infoLite)
+	lwutil.CheckError(err, "err_js")
+	resp, err = ssdb.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
 	lwutil.CheckError(err, "")
 
 	//out
@@ -664,6 +736,348 @@ func apiGetPrizeCache(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiPlayerFanList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId    int64
+		StartId   int64
+		LastScore int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.LastScore == 0 {
+		in.LastScore = math.MaxInt64
+	}
+
+	//out
+	out := struct {
+		PlayerInfoLites []*PlayerInfoLite
+		LastKey         int64
+		LastScore       int64
+	}{
+		make([]*PlayerInfoLite, 0, 20),
+		0,
+		0,
+	}
+
+	//get userId list
+	key := makeZPlayerFanKey(session.Userid)
+
+	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	//get infos
+	num := len(resp) / 2
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_PLAYER_INFO_LITE
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		if i == num-1 {
+			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
+			lwutil.CheckError(err, "")
+			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		js := resp[i*2+1]
+		var infoLite PlayerInfoLite
+		err = json.Unmarshal([]byte(js), &infoLite)
+		lwutil.CheckError(err, "err_js")
+		out.PlayerInfoLites = append(out.PlayerInfoLites, &infoLite)
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId    int64
+		StartId   int64
+		LastScore int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.LastScore == 0 {
+		in.LastScore = math.MaxInt64
+	}
+
+	//out
+	out := struct {
+		PlayerInfoLites []*PlayerInfoLite
+		LastKey         int64
+		LastScore       int64
+	}{
+		make([]*PlayerInfoLite, 0, 20),
+		0,
+		0,
+	}
+
+	//get userId list
+	key := makeZPlayerFollowKey(session.Userid)
+
+	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	//get infos
+	num := len(resp) / 2
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_PLAYER_INFO_LITE
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		if i == num-1 {
+			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
+			lwutil.CheckError(err, "")
+			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+	}
+	resp, err = ssdbc.Do(args...)
+	glog.Infof("%+v", args)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		js := resp[i*2+1]
+		var infoLite PlayerInfoLite
+		err = json.Unmarshal([]byte(js), &infoLite)
+		lwutil.CheckError(err, "err_js")
+		out.PlayerInfoLites = append(out.PlayerInfoLites, &infoLite)
+	}
+	lwutil.WriteResponse(w, out)
+
+}
+
+func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//self check
+	if in.UserId == session.Userid {
+		lwutil.SendError("err_self", "self follow")
+	}
+
+	//exist userid
+	if !checkPlayerExist(ssdbc, in.UserId) {
+		lwutil.SendError("err_user", "user not exist")
+	}
+
+	//check follow already
+	followed, err := isFollowed(ssdbc, session.Userid, in.UserId)
+	lwutil.CheckError(err, "err_follow")
+	if followed {
+		lwutil.SendError("err_followed", "fallowed already")
+	}
+
+	//
+	score := lwutil.GetRedisTimeUnix()
+
+	followKey := makeZPlayerFollowKey(session.Userid)
+	resp, err := ssdbc.Do("zset", followKey, in.UserId, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	fanKey := makeZPlayerFanKey(in.UserId)
+	resp, err = ssdbc.Do("zset", fanKey, session.Userid, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	//update nums
+	resp, err = ssdbc.Do("zsize", followKey)
+	lwutil.CheckSsdbError(resp, err)
+	followNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	resp, err = ssdbc.Do("zsize", fanKey)
+	lwutil.CheckSsdbError(resp, err)
+	fanNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	//update num
+	key := makePlayerInfoKey(session.Userid)
+	ssdbc.HSet(key, PLAYER_FOLLOW_NUM, followNum)
+	key = makePlayerInfoKey(in.UserId)
+	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
+
+	//out
+	out := struct {
+		Follow    bool
+		FollowNum int
+		FanNum    int
+	}{
+		true,
+		followNum,
+		fanNum,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiPlayerUnfollow(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	followKey := makeZPlayerFollowKey(session.Userid)
+	resp, err := ssdbc.Do("zdel", followKey, in.UserId)
+	lwutil.CheckSsdbError(resp, err)
+
+	fanKey := makeZPlayerFanKey(in.UserId)
+	resp, err = ssdbc.Do("zdel", fanKey, session.Userid)
+	lwutil.CheckSsdbError(resp, err)
+
+	//update nums
+	resp, err = ssdbc.Do("zsize", followKey)
+	lwutil.CheckSsdbError(resp, err)
+	followNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	resp, err = ssdbc.Do("zsize", fanKey)
+	lwutil.CheckSsdbError(resp, err)
+	fanNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	//update num
+	key := makePlayerInfoKey(session.Userid)
+	ssdbc.HSet(key, PLAYER_FOLLOW_NUM, followNum)
+	key = makePlayerInfoKey(in.UserId)
+	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
+
+	//out
+	out := struct {
+		Follow    bool
+		FollowNum int
+		FanNum    int
+	}{
+		false,
+		followNum,
+		fanNum,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func checkPlayerExist(ssdbc *ssdb.Client, userId int64) bool {
+	key := makePlayerInfoKey(userId)
+	resp, err := ssdbc.Do("hexists", key, PLAYER_NICK_NAME)
+	lwutil.CheckSsdbError(resp, err)
+	if resp[1] != "1" {
+		return false
+	}
+
+	return true
+}
+
 func regPlayer() {
 	http.Handle("/player/getInfo", lwutil.ReqHandler(apiGetPlayerInfo))
 	http.Handle("/player/setInfo", lwutil.ReqHandler(apiSetPlayerInfo))
@@ -673,4 +1087,8 @@ func regPlayer() {
 	http.Handle("/player/listMyEcard", lwutil.ReqHandler(apiListMyEcard))
 	http.Handle("/player/listMyPrize", lwutil.ReqHandler(apiListMyPrize))
 	http.Handle("/player/getPrizeCache", lwutil.ReqHandler(apiGetPrizeCache))
+	http.Handle("/player/fanList", lwutil.ReqHandler(apiPlayerFanList))
+	http.Handle("/player/followList", lwutil.ReqHandler(apiPlayerFollowList))
+	http.Handle("/player/follow", lwutil.ReqHandler(apiPlayerFollow))
+	http.Handle("/player/unfollow", lwutil.ReqHandler(apiPlayerUnfollow))
 }

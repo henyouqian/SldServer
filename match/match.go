@@ -30,6 +30,7 @@ const (
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:totalPrize
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
+	Z_MATCH_LIKER           = "Z_MATCH_LIKER"           //key:Z_MATCH_LIKER/matchId subkey:userId score:time
 
 	PRIZE_NUM_PER_COIN         = 100
 	MIN_PRIZE                  = PRIZE_NUM_PER_COIN
@@ -69,7 +70,14 @@ type Match struct {
 type MatchExtra struct {
 	PlayTimes  int
 	ExtraPrize int
+	LikeNum    int
 }
+
+const (
+	MATCH_EXTRA_PLAY_TIMES = "PlayTimes"
+	MATCH_EXTRA_PRIZE      = "ExtraPrize"
+	MATCH_EXTRA_LIKE_NUM   = "LikeNum"
+)
 
 type MatchPlay struct {
 	PlayerName       string
@@ -87,11 +95,6 @@ type MatchPlay struct {
 	Prize            int
 	Like             bool
 }
-
-const (
-	MATCH_EXTRA_PLAY_TIMES = "PlayTimes"
-	MATCH_EXTRA_PRIZE      = "ExtraPrize"
-)
 
 const (
 	MATCH_LUCKY_PRIZE_PROPORTION = float32(0.00)
@@ -144,6 +147,10 @@ func makeHMatchRankKey(matchId int64) string {
 
 func makeSecretKey(secret string) string {
 	return fmt.Sprintf("%s/%s", "MATCH_SECRET", secret)
+}
+
+func makeZMatchLikerKey(matchId int64) string {
+	return fmt.Sprintf("%s/%d", Z_MATCH_LIKER, matchId)
 }
 
 func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
@@ -565,7 +572,7 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -597,7 +604,8 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -620,6 +628,10 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 				ExtraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = ExtraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -676,7 +688,7 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -708,7 +720,8 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -731,6 +744,10 @@ func apiMatchListMine(w http.ResponseWriter, r *http.Request) {
 				extraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -807,7 +824,7 @@ func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -838,7 +855,8 @@ func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -861,6 +879,10 @@ func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 				extraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -939,7 +961,7 @@ func apiMatchListPlayed(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -970,7 +992,8 @@ func apiMatchListPlayed(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -993,6 +1016,10 @@ func apiMatchListPlayed(w http.ResponseWriter, r *http.Request) {
 				extraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -1069,7 +1096,7 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -1098,7 +1125,8 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -1121,6 +1149,10 @@ func apiMatchListMyPlayed(w http.ResponseWriter, r *http.Request) {
 				extraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -1194,7 +1226,7 @@ func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -1222,7 +1254,8 @@ func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -1245,6 +1278,10 @@ func apiMatchListHot(w http.ResponseWriter, r *http.Request) {
 				extarPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extarPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -1325,7 +1362,7 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 
 	//get matches
 	num := len(resp) / 2
-	args := make([]interface{}, num+2)
+	args := make([]interface{}, 2, num+2)
 	args[0] = "multi_hget"
 	args[1] = H_MATCH
 	for i := 0; i < num; i++ {
@@ -1356,7 +1393,8 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 		for _, v := range matches {
 			playTimesKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PLAY_TIMES)
 			prizeKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_PRIZE)
-			args = append(args, playTimesKey, prizeKey)
+			likeNumKey := makeHMatchExtraSubkey(v.Id, MATCH_EXTRA_LIKE_NUM)
+			args = append(args, playTimesKey, prizeKey, likeNumKey)
 		}
 		resp, err = ssdbc.Do(args...)
 		lwutil.CheckSsdbError(resp, err)
@@ -1379,6 +1417,10 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 				extraPrize, err := strconv.Atoi(resp[i*2+1])
 				lwutil.CheckError(err, "")
 				matches[idx].ExtraPrize = extraPrize
+			} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+				likeNum, err := strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "")
+				matches[idx].LikeNum = likeNum
 			}
 		}
 	}
@@ -1415,13 +1457,15 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	args[1] = H_MATCH_EXTRA
 	playTimesKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PLAY_TIMES)
 	prizeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PRIZE)
-	args = append(args, playTimesKey, prizeKey)
+	likeNumKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
+	args = append(args, playTimesKey, prizeKey, likeNumKey)
 	resp, err := ssdbc.Do(args...)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
 	var playTimes int
 	var extraPrize int
+	var likeNum int
 	num := len(resp) / 2
 	for i := 0; i < num; i++ {
 		if resp[i*2] == playTimesKey {
@@ -1429,6 +1473,9 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 			lwutil.CheckError(err, "")
 		} else if resp[i*2] == prizeKey {
 			extraPrize, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		} else if resp[i*2] == likeNumKey {
+			likeNum, err = strconv.Atoi(resp[i*2+1])
 			lwutil.CheckError(err, "")
 		}
 	}
@@ -1479,12 +1526,14 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	out := struct {
 		PlayTimes  int
 		ExtraPrize int
+		LikeNum    int
 		MyRank     int
 		RankNum    int
 		MatchPlay
 	}{
 		playTimes,
 		extraPrize,
+		likeNum,
 		myRank,
 		rankNum,
 		*play,
@@ -2033,6 +2082,21 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", key, in.MatchId, score)
 	lwutil.CheckSsdbError(resp, err)
 
+	//update matchLiker list
+	key = makeZMatchLikerKey(in.MatchId)
+	resp, err = ssdbc.Do("zset", key, session.Userid, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("zsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	likeNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	glog.Info(likeNum)
+
+	matchLikeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
+	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
+
 	//match play
 	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
 	play.Like = true
@@ -2083,6 +2147,20 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	key := makeZLikeMatchKey(session.Userid)
 	resp, err := ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
+
+	//update matchLike
+	score := lwutil.GetRedisTimeUnix()
+	key = makeZMatchLikerKey(in.MatchId)
+	resp, err = ssdbc.Do("zset", key, session.Userid, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("zsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	likeNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	matchLikeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
+	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
 
 	//match play
 	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
