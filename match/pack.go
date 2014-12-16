@@ -44,6 +44,7 @@ type Pack struct {
 	Cover     string
 	CoverBlur string
 	Images    []Image
+	Thumbs    []string
 	Tags      []string
 	SizeMb    float32
 }
