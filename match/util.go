@@ -114,3 +114,11 @@ func isReleaseServer() bool {
 	u, _ := user.Current()
 	return u.Username != "liwei"
 }
+
+func formateMsec(msec int) string {
+	sec := msec / 1000
+	m := sec / 60
+	s := sec % 60
+	ms := msec % 1000
+	return fmt.Sprintf("%d:%02d.%03d", m, s, ms)
+}

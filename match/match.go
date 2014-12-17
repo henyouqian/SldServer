@@ -31,6 +31,7 @@ const (
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:totalPrize
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 	Z_MATCH_LIKER           = "Z_MATCH_LIKER"           //key:Z_MATCH_LIKER/matchId subkey:userId score:time
+	Q_MATCH_ACTIVITY        = "Q_MATCH_ACTIVITY"        //key:Q_MATCH_ACTIVITY/matchId subkey:userId score:time
 
 	PRIZE_NUM_PER_COIN         = 100
 	MIN_PRIZE                  = PRIZE_NUM_PER_COIN
@@ -39,6 +40,7 @@ const (
 	MATCH_CLOSE_BEFORE_END_SEC = 60
 	MATCH_TIME_SEC             = 60 * 60 * 24
 	// MATCH_TIME_SEC = 60 * 3
+	MATCH_ACTIVITY_Q_LIMIT = 50
 )
 
 type Match struct {
@@ -94,6 +96,12 @@ type MatchPlay struct {
 	LuckyNums        []int64
 	Prize            int
 	Like             bool
+	Played           bool
+}
+
+type MatchActivity struct {
+	Player *PlayerInfoLite
+	Text   string
 }
 
 const (
@@ -151,6 +159,10 @@ func makeSecretKey(secret string) string {
 
 func makeZMatchLikerKey(matchId int64) string {
 	return fmt.Sprintf("%s/%d", Z_MATCH_LIKER, matchId)
+}
+
+func makeQMatchActivityKey(matchId int64) string {
+	return fmt.Sprintf("%s/%d", Q_MATCH_ACTIVITY, matchId)
 }
 
 func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
@@ -1736,6 +1748,7 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 			scoreUpdate = true
 		}
 	}
+	matchPlay.Played = true
 
 	//save match play
 	js, err := json.Marshal(matchPlay)
@@ -1768,6 +1781,12 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 	// 	recaculateTeamScore(ssdbc, rc, in.EventId)
 	// }
 
+	//activity
+	msec := -in.Score
+	t := formateMsec(msec)
+	text := fmt.Sprintf("进行了一场比赛，用时%s", t)
+	addMatchActivity(ssdbc, in.MatchId, session.Userid, text)
+
 	//out
 	out := struct {
 		MyRank  uint32
@@ -1779,6 +1798,114 @@ func apiMatchPlayEnd(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	lwutil.WriteResponse(w, out)
+}
+
+func addMatchActivity(ssdbc *ssdb.Client, matchId int64, userId int64, text string) {
+	//get playerInfoLite
+	playerL, err := getPlayerInfoLite(ssdbc, userId, nil)
+	lwutil.CheckError(err, "err_player")
+
+	//add to qMatchActivity
+	key := makeQMatchActivityKey(matchId)
+	var activity MatchActivity
+	activity.Player = playerL
+	activity.Text = text
+	js, err := json.Marshal(activity)
+
+	resp, err := ssdbc.Do("qpush_front", key, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("zsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	num, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+	if num > MATCH_ACTIVITY_Q_LIMIT {
+		resp, err = ssdbc.Do("qtrim_back", key, num-MATCH_ACTIVITY_Q_LIMIT)
+		lwutil.CheckError(err, "err_ssdb_trim")
+	}
+}
+
+func apiMatchFreePlay(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+		Score   int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check score
+	if in.Score > -2000 {
+		lwutil.SendError("err_score", "invalid score")
+	}
+
+	//check match play
+	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	if play.Played == false {
+		play.Played = true
+
+		//save match play
+		matchPlayKey := makeMatchPlaySubkey(in.MatchId, session.Userid)
+		js, err := json.Marshal(play)
+		resp, err := ssdbc.Do("hset", H_MATCH_PLAY, matchPlayKey, js)
+		lwutil.CheckSsdbError(resp, err)
+	}
+
+	//activity
+	msec := -in.Score
+	t := formateMsec(msec)
+	text := fmt.Sprintf("玩了一盘，用时%s", t)
+
+	addMatchActivity(ssdbc, in.MatchId, session.Userid, text)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiMatchListActivity(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	key := makeQMatchActivityKey(in.MatchId)
+	resp, err := ssdbc.Do("qrange", key, 0, MATCH_ACTIVITY_Q_LIMIT)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp = resp[1:]
+	activities := make([]*MatchActivity, 0, 10)
+	for _, v := range resp {
+		var activity MatchActivity
+		err := json.Unmarshal([]byte(v), &activity)
+		lwutil.CheckError(err, "err_json")
+		activities = append(activities, &activity)
+	}
+
+	//
+	lwutil.WriteResponse(w, activities)
 }
 
 func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
@@ -2092,8 +2219,6 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	likeNum, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "err_strconv")
 
-	glog.Info(likeNum)
-
 	matchLikeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
 	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
 
@@ -2102,6 +2227,11 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	play.Like = true
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
+	//activity
+	text := "喜欢这组拼图❤️"
+	addMatchActivity(ssdbc, in.MatchId, session.Userid, text)
+
+	//out
 	lwutil.WriteResponse(w, in)
 
 	//battle
@@ -2197,6 +2327,8 @@ func regMatch() {
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
+	http.Handle("/match/freePlay", lwutil.ReqHandler(apiMatchFreePlay))
+	http.Handle("/match/listActivity", lwutil.ReqHandler(apiMatchListActivity))
 
 	http.Handle("/match/getDynamicData", lwutil.ReqHandler(apiMatchGetDynamicData))
 	http.Handle("/match/getRanks", lwutil.ReqHandler(apiMatchGetRanks))

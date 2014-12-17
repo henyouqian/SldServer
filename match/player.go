@@ -249,6 +249,41 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	return &playerInfo, err
 }
 
+func getPlayerInfoLite(ssdbc *ssdb.Client, userId int64, playerInfo *PlayerInfo) (*PlayerInfoLite, error) {
+	resp, err := ssdbc.Do("hget", H_PLAYER_INFO_LITE, userId)
+	var playerInfoLite PlayerInfoLite
+	if resp[0] == ssdb.NOT_FOUND {
+		if playerInfo == nil {
+			playerInfo, err = getPlayerInfo(ssdbc, userId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		playerInfoLite.UserId = playerInfo.UserId
+		playerInfoLite.NickName = playerInfo.NickName
+		playerInfoLite.TeamName = playerInfo.TeamName
+		playerInfoLite.Gender = playerInfo.Gender
+		playerInfoLite.CustomAvatarKey = playerInfo.CustomAvatarKey
+		playerInfoLite.GravatarKey = playerInfo.GravatarKey
+		playerInfoLite.Text = ""
+
+		js, err := json.Marshal(playerInfoLite)
+		if err != nil {
+			return nil, err
+		}
+		_, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, userId, js)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = json.Unmarshal([]byte(resp[1]), &playerInfoLite)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &playerInfoLite, nil
+}
+
 func addPlayerGoldCoin(ssc *ssdb.Client, playerKey string, addNum int) (rNum int) {
 	resp, err := ssc.Do("hincr", playerKey, PLAYER_GOLD_COIN, addNum)
 	lwutil.CheckSsdbError(resp, err)
