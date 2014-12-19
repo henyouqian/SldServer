@@ -945,7 +945,6 @@ func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	resp, err = ssdbc.Do(args...)
-	glog.Infof("%+v", args)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 	if len(resp) == 0 {

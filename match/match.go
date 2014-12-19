@@ -1863,6 +1863,10 @@ func apiMatchFreePlay(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckSsdbError(resp, err)
 	}
 
+	playNumKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PLAY_TIMES)
+	resp, err := ssdbc.Do("hincr", H_MATCH_EXTRA, playNumKey, 1)
+	lwutil.CheckSsdbError(resp, err)
+
 	//activity
 	msec := -in.Score
 	t := formateMsec(msec)
@@ -2228,7 +2232,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
 	//activity
-	text := "喜欢这组拼图❤️"
+	text := "❤️喜欢这组拼图"
 	addMatchActivity(ssdbc, in.MatchId, session.Userid, text)
 
 	//out
