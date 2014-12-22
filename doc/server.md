@@ -2,12 +2,22 @@
 
 * adduser henyouqian
 * vim /etc/sudoers
-** 增加 your_user_name ALL=(ALL) ALL
+** 增加 henyouqian ALL=(ALL) ALL
 * sudo apt-get update
 * sudo apt-get upgrade
 
+- 配置ufw
+sudo ufw enable
+sudo ufw default deny 
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 9977
+
 - 安装redis
-* sudo apt-get install redis
+* sudo apt-get install redis-server
+
+- 安装unzip
 
 - 安装ssdb
 wget --no-check-certificate https://github.com/ideawu/ssdb/archive/master.zip
@@ -33,8 +43,6 @@ export PATH=$PATH:$GOPATH/bin
 
 mkdir $HOME/go
 
-- git clone https://github.com/henyouqian/SldServer.git
-
 - 安装go packege
 go get github.com/henyouqian/lwutil
 go get github.com/henyouqian/ssdbgo
@@ -47,17 +55,11 @@ go get github.com/gorilla/websocket
 - 安装nginx
 sudo apt-get install nginx
 
-- 配置ufw
-sudo ufw enable
-sudo ufw default deny 
-sudo ufw allow 22
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 9977
-
 - ubuntu安全更新
 sudo cp /etc/apt/sources.list /etc/apt/security.sources.list
 sudo apt-get upgrade -o Dir::Etc::SourceList=/etc/apt/security.sources.list
 
 - 启动redis
 redis-server redis.conf
+
+- git clone https://github.com/henyouqian/SldServer.git

@@ -4,16 +4,64 @@
 		"selected_items":
 		[
 			[
+				"id",
+				"Id	int64 ν"
+			],
+			[
+				"get",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
+				"playerin",
+				"playerInfoLite	PlayerInfoLite ν"
+			],
+			[
+				"In",
+				"Infof	 ƒ"
+			],
+			[
+				"getredis",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
+				"z_matc",
+				"Z_MATCH_LIKER	 Ɩ"
+			],
+			[
+				"match_ex",
+				"MATCH_EXTRA_LIKE_NUM	 Ɩ"
+			],
+			[
+				"playerfan",
+				"PLAYER_FAN_NUM	 Ɩ"
+			],
+			[
+				"makezplayer",
+				"makeZPlayerFollowKey	string ƒ"
+			],
+			[
+				"PlayerIn",
+				"PlayerInfoLite	struct ʈ"
+			],
+			[
+				"H_player_",
+				"H_PLAYER_INFO_LITE	 Ɩ"
+			],
+			[
+				"h_player",
+				"H_PLAYER_INFO_LITE	 Ɩ"
+			],
+			[
+				"getred",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
 				"h",
 				"Header	http.Header ƒ"
 			],
 			[
 				"addgold",
 				"addPlayerGoldCoin	rNum int ƒ"
-			],
-			[
-				"In",
-				"Info	 ƒ"
 			],
 			[
 				"string",
@@ -114,10 +162,6 @@
 			[
 				"PROV",
 				"ECARD_PROVIDERS	map[string]Provider ν"
-			],
-			[
-				"getredis",
-				"GetRedisTime	time.Time ƒ"
 			],
 			[
 				"Pr",
@@ -470,26 +514,6 @@
 			[
 				"rewa",
 				"challageRewards	[]int ν"
-			],
-			[
-				"min",
-				"MinInt32	 Ɩ"
-			],
-			[
-				"game",
-				"gameCoinPack	GameCoinPack ν"
-			],
-			[
-				"getreds",
-				"GetRedisTimeUnix	int64 ƒ"
-			],
-			[
-				"enco",
-				"EncodeToString	string ƒ"
-			],
-			[
-				"sprin",
-				"Sprintf	string ƒ"
 			]
 		]
 	},
@@ -523,7 +547,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 15269,
+				"buffer_size": 25803,
 				"line_ending": "Unix"
 			}
 		},
@@ -539,7 +563,7 @@
 			"file": "match/match.go",
 			"settings":
 			{
-				"buffer_size": 50118,
+				"buffer_size": 60955,
 				"line_ending": "Unix"
 			}
 		},
@@ -555,8 +579,41 @@
 			"file": "match/pack.go",
 			"settings":
 			{
-				"buffer_size": 14977,
+				"buffer_size": 15303,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/ssdb/ssdb.go",
+			"settings":
+			{
+				"buffer_size": 11917,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/util.go",
+			"settings":
+			{
+				"buffer_size": 2287,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/social.go",
+			"settings":
+			{
+				"buffer_size": 6657,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "0x180d48d0",
+			"settings":
+			{
+				"buffer_size": 10,
+				"line_ending": "Unix",
+				"name": "0x180d48d0"
 			}
 		}
 	],
@@ -600,12 +657,12 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/battle.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ecoMonitor.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
@@ -672,7 +729,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 99.0,
+		"height": 0.0,
 		"where_history":
 		[
 			""
@@ -683,134 +740,134 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"apiMatchListUserPublic",
-			"apiMatchListUserOriginal",
-			"session",
-			"apiMatchListUserPublic",
-			"apiMatchListMine",
-			"Z_PUBLIC_MATCH",
-			"Z_OPEN_MATCH",
-			"MATCH_PUBLIC_SERIAL",
-			"gense",
-			"Z_PUBLIC_MATCH",
-			"apiMatchNew",
-			"apiMatchLike",
-			"apiMatchListLike",
-			"makeZPublicMatchKey",
-			"if i == num-1 {\n			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)\n			lwutil.CheckError(err, \"\")\n		}",
-			"LastScore",
-			"apiMatchListPublic",
-			"apiMatchLike",
-			"LastScore",
-			"apiMatchListLike",
-			"MatchExtra",
-			"apiMatchListPublic",
-			"Z_PUBLIC_MATCH",
-			"apiMatchListPublic",
-			"apiMatchListUser",
-			"apiMatchListHot",
-			"makeZPlayerMatchKey",
-			"apiMatchListUser",
-			"apiGetPack",
-			"getpack",
-			"apiMatchNew",
-			"Match",
-			"apiMatchListUser",
-			"listUser",
-			"apiMatchListUser",
-			"apiMatchListMine",
-			"check",
-			"uuid/",
-			"uuid",
-			"panic",
-			"apiGetPlayerInfo",
-			"PLAYER_PRIZE_CACHE",
-			"PLAYER_PRIZE_CACHE\n`",
-			"PLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE",
-			"PLAYER_PRIZE_CACHE\nPLAYER_PRIZE_CACHE",
-			"PLAYER_PRIZE_CACHE",
-			"getPrizeCache",
-			"apiMatchListMine",
-			"ssdbc",
-			"playerinfo",
-			"setPlayerInfo",
-			"getPlayerInfo",
-			"setplayerinf",
-			"checksum",
-			"key",
-			"apiAuthLoginSns",
-			"BATTLE_PACK_USER",
-			"rc.",
-			"redis.  ",
-			"rc.Do(",
-			"RedisHost",
 			"redis",
-			"BATTLE_PACKID_SET",
-			"#email",
-			"localStorage",
-			"_clientConf",
-			"apiGetPlayerInfo",
-			"fmt",
-			"liwei",
-			"in",
-			"in.",
-			"in.ecard",
-			"apiAddEcard",
-			"addCoupon",
-			"声明",
-			"ECO_DAILY_COUNTER_IAP",
-			"ECO_FORWHAT_IAP",
-			"addEcoRecord",
-			"ECO_FORWHAT_IAP",
-			"apiEcoDailyCount",
-			"addPlayerGoldCoin",
-			"PLAYER_GOLD_COIN",
-			"rc.",
-			"rc",
-			"redis",
-			"re di s",
-			"match",
-			"apiMatchPlayBegin",
-			"begin",
-			"matchend",
-			"BattleHeartZeroTime",
-			"getheart",
-			"timeDiff",
-			"UPDATE",
-			"6",
-			"updatePlayerBattleHeart",
-			"getPlayerInfo",
-			"apiGetPlayerInfo",
-			"getplayerinfo\ngetplayerinfo\ngetplayerinfo",
-			"getplayerinfo\ngetplayerinfo",
+			"upload",
+			"apiMatchListLike",
+			"apiMatchLike",
+			"zdel",
+			"*",
+			"matchdel",
+			"apiMatchNew",
+			"v",
+			"apiMatchDel",
+			"makeZPlayedMatchKey",
+			"makeZPlayedAllKey",
+			"apiMatchListPlayedAll",
+			"apiMatchListPlayedMatch",
+			"Z_PLAYED_MATCH",
+			"Z_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime\nZ_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime",
+			"Z_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime",
+			"Z_PLAYED_MATCH",
+			"makeZPlayedMatchKey",
+			"apiMatchListPlayed",
+			"makeZPlayedMatchKey",
+			"apiMatchListPlayed",
+			"MATCH_EXTRA_PLAY_TIMES",
+			"playend",
+			"freeplay",
+			"MATCH_EXTRA_PLAY_TIMES",
+			"apiMatchGetDynamicData",
+			"getDynamicData",
+			"LikeNum",
+			"matchextra",
+			"图集",
+			"glog.inf",
+			"//in",
+			"makeQMatchActivityKey",
+			"apiMatchListActivity",
+			"addMatchActivity",
+			"li ke",
+			"playend",
+			"freeplay",
+			"free",
+			"喜欢",
+			"apiMatchListActivity",
+			"apiMatchPlayEnd",
+			"playend",
+			"MATCH_PLAY_RECORD_Q_LIMIT",
+			"makeQMatch",
+			"makeQMatchActivityKey",
+			"Q_MATCH_",
+			"activity",
+			"apiMatchListPlayRecord",
+			"apiMatchFreePlay",
+			"freeplay",
 			"getplayerinfo",
-			"PLAYER_BATTLE_LEVELS",
-			"apigetplayerinfo",
-			"matchCron",
-			"updateBattleRoomPlayerNumTask",
-			"matchCron",
-			"ssdbc",
-			"PLAYER_GOLD_COIN",
-			"addgold",
-			"makePlayerInfoKey",
-			"kv",
-			"battle",
-			"MIN_PRIZE",
-			"60",
-			"MATCH_TRY_EXPIRE_SECONDS",
-			"apiMatchPlayBegin",
-			"Price",
-			"prizePrice",
-			"couponPrise",
-			"checkadmin\ncheckadmin",
-			"checkadmin",
-			"hexist",
-			"getPlayerInfo",
-			"H_PLAYER_REWARD",
-			"makeZPlayerRewardKey",
-			"RewardRecord",
+			"resp",
+			"PlayerInfoLite",
+			"makeZMatchPlayerKey",
+			"Z_MATCH_PLAYER",
+			"makeZMatchLikerKey",
+			"xxxx",
+			"Z_MATCH_LIKER",
+			"makeZMatchLikerKey",
+			"Z_MATCH_LIKER",
+			"getMatchPlay",
+			"now",
+			"apiMatchPlayEnd",
+			"apiGetPack",
+			"newPack",
 			"apiMatchNew",
-			"extraPrize"
+			"apiMatchGetDynamicData",
+			"makeZMatchLikerKey",
+			"fieldKey == MATCH_EXTRA_LIKE_NUM",
+			"apiMatchListLike",
+			"MATCH_EXTRA_PLAY_TIMES",
+			"MATCH_EXTRA_LIKE_NUM",
+			"MATCH_EXTRA_PLAY_TIMES",
+			"likeNum",
+			"MATCH_EXTRA_PLAY_TIMES",
+			"PlayTimes",
+			"MATCH_EXTRA_PRIZE",
+			"ExtraPrize",
+			"apiGetPlayerInfo",
+			"session",
+			"in",
+			"apiGetPlayerInfo",
+			"apiPlayerFollowList",
+			"playerinfo",
+			"apiPlayerFollowList",
+			"apiPlayerFollow",
+			"follownum",
+			"ssdb.",
+			"setplayer",
+			"isFollowed",
+			"session",
+			"apigetplayerinf",
+			"getPlayerInfo",
+			"makeZPlayerFollowKey",
+			"PLAYER_NICK_NAME",
+			"PLAYER_USER_ID",
+			"checkPlayerExist",
+			"apiPlayerFollow",
+			"apiPlayerUnfollow",
+			"apiPlayerFollow",
+			"getplayer",
+			"findSession",
+			"\"1\"",
+			"exist",
+			"getPlayerInfo",
+			"exist",
+			"make([]interface{}",
+			"PlayerInfoLite",
+			"apiMatchListPlayed",
+			"getPlayerInfo",
+			"apiGetPlayerInfo",
+			"BattlePoint",
+			"makePlayedMatchKey",
+			"makeZPlayedMatchKey",
+			"apiMatchListMyPlayed",
+			"apiMatchListOriginal",
+			"apiGetPack",
+			"apiMatchListLike",
+			"listLike\nlistLike",
+			"listLike",
+			"listori",
+			"matchlistori",
+			"apiMatchListLike",
+			"getMatch",
+			"apiMatchListOriginal",
+			"Z_MY_PLAYED_MATCH"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -818,6 +875,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			"makeZPlayedMatchKey",
 			"MATCH_EXTRA_REWARD_COUPON",
 			"RewardCoupon",
 			"ExtraCoupon",
@@ -841,7 +899,7 @@
 	"groups":
 	[
 		{
-			"selected": 5,
+			"selected": 11,
 			"sheets":
 			[
 				{
@@ -910,8 +968,8 @@
 						"selection":
 						[
 							[
-								14013,
-								14013
+								6326,
+								6326
 							]
 						],
 						"settings":
@@ -919,8 +977,8 @@
 							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 0.0,
-						"translation.y": 12234.0,
+						"translation.x": 2.0,
+						"translation.y": 5184.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -930,15 +988,15 @@
 					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 15269,
+						"buffer_size": 25803,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7255,
-								7255
+								21157,
+								21157
 							]
 						],
 						"settings":
@@ -947,7 +1005,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1011.0,
+						"translation.y": 19564.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -984,15 +1042,15 @@
 					"file": "match/match.go",
 					"settings":
 					{
-						"buffer_size": 50118,
+						"buffer_size": 60955,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								19891,
-								19891
+								57503,
+								57503
 							]
 						],
 						"settings":
@@ -1001,7 +1059,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 16613.0,
+						"translation.y": 50493.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1038,15 +1096,15 @@
 					"file": "match/pack.go",
 					"settings":
 					{
-						"buffer_size": 14977,
+						"buffer_size": 15303,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								11372,
-								11372
+								11792,
+								11792
 							]
 						],
 						"settings":
@@ -1055,7 +1113,114 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 10829.0,
+						"translation.y": 11349.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "match/ssdb/ssdb.go",
+					"settings":
+					{
+						"buffer_size": 11917,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5034,
+								5034
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/util.go",
+					"settings":
+					{
+						"buffer_size": 2287,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2139,
+								2150
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1993.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "match/social.go",
+					"settings":
+					{
+						"buffer_size": 6657,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6347,
+								6347
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 5983.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"settings":
+					{
+						"buffer_size": 10,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10,
+								10
+							]
+						],
+						"settings":
+						{
+							"auto_name": "0x180d48d0",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
