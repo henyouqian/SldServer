@@ -59,7 +59,8 @@ sudo apt-get install nginx
 sudo cp /etc/apt/sources.list /etc/apt/security.sources.list
 sudo apt-get upgrade -o Dir::Etc::SourceList=/etc/apt/security.sources.list
 
+- git clone https://github.com/henyouqian/SldServer.git
+
 - 启动redis
 redis-server redis.conf
 
-- git clone https://github.com/henyouqian/SldServer.git
