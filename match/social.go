@@ -96,7 +96,8 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	if len(resp) == 2 {
 		var socialPack SocialPack
 		err = json.Unmarshal([]byte(resp[1]), &socialPack)
-		lwutil.CheckError(err, resp[1])
+		glog.Errorf(resp[0], resp[1])
+		lwutil.CheckError(err, "")
 
 		if in.Msec > 0 {
 			if socialPack.Ranks == nil {
