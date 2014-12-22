@@ -93,10 +93,9 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	//check exist
 	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, subkey)
 	lwutil.CheckError(err, "")
-	if len(resp) == 2 {
+	if resp[1] == ssdb.OK {
 		var socialPack SocialPack
 		err = json.Unmarshal([]byte(resp[1]), &socialPack)
-		glog.Errorf(resp[0], resp[1])
 		lwutil.CheckError(err, "")
 
 		if in.Msec > 0 {
