@@ -13,16 +13,14 @@
     var lastMatchTime
     var lastMatchId
 
-    var url = HOST + "match/listUser"
+    var url = HOST + "match/listUserWeb"
     var limit = 3
     var data = {
         "UserId": parseInt(getUrlParam("u")),
         "StartId": 0,
-        "BeginTime": 0,
+        "LastScore": 0,
         "Limit": limit
     }
-
-    
 
     $.post(url, JSON.stringify(data), function(resp){
         console.log(resp)

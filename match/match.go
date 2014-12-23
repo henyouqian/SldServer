@@ -1598,7 +1598,7 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 	if len(delMatcheIds) > 0 {
 		args := make([]interface{}, 2, len(delMatcheIds)+2)
 		args[0] = "multi_zdel"
-		key := makeZLikeMatchKey(session.Userid)
+		key := makeZLikeMatchKey(in.UserId)
 		args[1] = key
 		for _, v := range delMatcheIds {
 			args = append(args, v)
@@ -1610,6 +1610,87 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out.Matches = outMatches
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiMatchListUserWeb(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId    int64
+		StartId   int64
+		LastScore int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.StartId == 0 {
+		in.StartId = math.MaxInt64
+	}
+	if in.LastScore == 0 {
+		in.LastScore = math.MaxInt64
+	}
+
+	type Out struct {
+		Matches   []*Match
+		LastScore int64
+	}
+	out := Out{
+		[]*Match{},
+		0,
+	}
+
+	//get keys
+	key := makeZLikeMatchKey(in.UserId)
+	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	if len(resp) == 1 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+	resp = resp[1:]
+
+	//get matches
+	num := len(resp) / 2
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		if i == num-1 {
+			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	matches := make([]*Match, len(resp)/2)
+	for i, _ := range matches {
+		packjs := resp[i*2+1]
+		err = json.Unmarshal([]byte(packjs), &matches[i])
+		lwutil.CheckError(err, "")
+	}
+
+	//out
+	out.Matches = matches
 
 	lwutil.WriteResponse(w, out)
 }
@@ -2513,6 +2594,7 @@ func regMatch() {
 	http.Handle("/match/listOriginal", lwutil.ReqHandler(apiMatchListOriginal))
 	http.Handle("/match/listPlayedMatch", lwutil.ReqHandler(apiMatchListPlayedMatch))
 	http.Handle("/match/listPlayedAll", lwutil.ReqHandler(apiMatchListPlayedAll))
+	http.Handle("/match/listUserWeb", lwutil.ReqHandler(apiMatchListUserWeb))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
