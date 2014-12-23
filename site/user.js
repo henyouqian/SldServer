@@ -10,11 +10,13 @@
     var RES_HOST = "http://dn-pintuuserupload.qbox.me/"
     var HTML5_HOST = "http://pintuhtml5.qiniudn.com/"
 
-    var lastMatchTime
     var lastMatchId
+    var lastScore
 
-    var url = HOST + "match/listUserWeb"
-    var limit = 3
+    var api = "match/listUserWeb"
+
+    var url = HOST + api
+    var limit = 6
     var data = {
         "UserId": parseInt(getUrlParam("u")),
         "StartId": 0,
@@ -22,51 +24,43 @@
         "Limit": limit
     }
 
-    $.post(url, JSON.stringify(data), function(resp){
-        console.log(resp)
-        for (var i in resp) {
-            var match = resp[i]
+    var onMatchList = function(resp){
+        var matches = resp.Matches
+        for (var i in matches) {
+            var match = matches[i]
             var thumbUrl = RES_HOST + match.Thumb
             $("#thumbRoot").append( '\
-                <a href="'+HTML5_HOST+'index.html?key=' + match.Id + '" class="thumbnail">\
-                  <img src="' + thumbUrl +'">\
-                </a>\
+                <div class="col-xs-4 col-sm-3 col-md-2">\
+                    <a href="'+HTML5_HOST+'index.html?key=' + match.Id + '" class="thumbnail">\
+                        <img src="' + thumbUrl +'">\
+                    </a>\
+                </div>\
                 ' );
-            lastMatchTime = match.BeginTime
+            lastScore = resp.LastScore
             lastMatchId = match.Id
         }
+        if (matches.length < limit) {
+            $("#loadMore").text("后面没有了")
+            $("#loadMore").prop('class', "btn btn-default")
+        } else {
+            $("#loadMore").prop('disabled', false)
+        }
+    }
 
-    }, "json")
+    $("#loadMore").prop('disabled', true)
+    $.post(url, JSON.stringify(data), onMatchList, "json")
     
     $("#loadMore").click(function() {
-        var url = HOST + "match/listUser"
+        var url = HOST + api
         var data = {
             "UserId": parseInt(getUrlParam("u")),
             "StartId": lastMatchId,
-            "BeginTime": lastMatchTime,
+            "LastScore": lastScore,
             "Limit": limit
         }
 
         $("#loadMore").prop('disabled', true)
 
-        $.post(url, JSON.stringify(data), function(resp){
-            console.log(resp)
-            for (var i in resp) {
-                var match = resp[i]
-                var thumbUrl = RES_HOST + match.Thumb
-                $("#thumbRoot").append( '\
-                    <a href="'+HTML5_HOST+'index.html?key=' + match.Id + '" class="thumbnail">\
-                      <img src="' + thumbUrl +'">\
-                    </a>\
-                    ' );
-                lastMatchTime = match.BeginTime
-                lastMatchId = match.Id
-            }
-            if (resp.length < limit) {
-                $("#loadMore").text("没有更多了")
-            } else {
-                $("#loadMore").prop('disabled', false)
-            }
-        }, "json")
+        $.post(url, JSON.stringify(data), onMatchList, "json")
     });
 })();

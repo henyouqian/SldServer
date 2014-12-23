@@ -353,13 +353,13 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 			//Z_HOT_MATCH
 			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.GoldCoinForPrize*PRIZE_NUM_PER_COIN)
 			lwutil.CheckSsdbError(resp, err)
-
-			//Z_LIKE_MATCH
-			score := beginTimeUnix
-			key := makeZLikeMatchKey(session.Userid)
-			resp, err = ssdbc.Do("zset", key, matchId, score)
-			lwutil.CheckSsdbError(resp, err)
 		}
+
+		//Z_LIKE_MATCH
+		score := beginTimeUnix
+		key := makeZLikeMatchKey(session.Userid)
+		resp, err = ssdbc.Do("zset", key, matchId, score)
+		lwutil.CheckSsdbError(resp, err)
 
 		//Z_OPEN_MATCH
 		resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
