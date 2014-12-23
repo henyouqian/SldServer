@@ -93,7 +93,7 @@ func matchCron() {
 				respPrize, err := ssdbc.Do("hget", H_MATCH_EXTRA, extraPrizeSubkey)
 				checkError(err)
 				extraPrize := 0
-				if len(respPrize) == 2 {
+				if respPrize[0] == "ok" {
 					extraPrize, err = strconv.Atoi(respPrize[1])
 					checkError(err)
 				}
