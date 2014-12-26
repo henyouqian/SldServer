@@ -249,6 +249,21 @@ func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
 	return &playerInfo, err
 }
 
+func getPlayerFanFollowNum(ssdbc *ssdb.Client, userId int64) (fanNum, followNum int) {
+	fanNum = 0
+	followNum = 0
+	key := makePlayerInfoKey(userId)
+	resp, err := ssdbc.Do("multi_hget", key, PLAYER_FAN_NUM, PLAYER_FOLLOW_NUM)
+	if len(resp) == 3 {
+		lwutil.CheckSsdbError(resp, err)
+		fanNum, err = strconv.Atoi(resp[1])
+		lwutil.CheckError(err, "err_strconv")
+		followNum, err = strconv.Atoi(resp[2])
+		lwutil.CheckError(err, "err_strconv")
+	}
+	return
+}
+
 func getPlayerInfoLite(ssdbc *ssdb.Client, userId int64, playerInfo *PlayerInfo) (*PlayerInfoLite, error) {
 	resp, err := ssdbc.Do("hget", H_PLAYER_INFO_LITE, userId)
 	var playerInfoLite PlayerInfoLite
@@ -1012,6 +1027,10 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zset", fanKey, session.Userid, score)
 	lwutil.CheckSsdbError(resp, err)
 
+	//getPlayerInfoLite
+	playerInfoLite, err := getPlayerInfoLite(ssdbc, in.UserId, nil)
+	lwutil.CheckError(err, "err_player_info_lite")
+
 	//update nums
 	resp, err = ssdbc.Do("zsize", followKey)
 	lwutil.CheckSsdbError(resp, err)
@@ -1031,13 +1050,15 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out := struct {
-		Follow    bool
-		FollowNum int
-		FanNum    int
+		Follow         bool
+		FollowNum      int
+		FanNum         int
+		PlayerInfoLite *PlayerInfoLite
 	}{
 		true,
 		followNum,
 		fanNum,
+		playerInfoLite,
 	}
 	lwutil.WriteResponse(w, out)
 }

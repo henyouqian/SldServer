@@ -9,7 +9,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -17,7 +16,6 @@ const (
 	ADMIN_USERID    = uint64(0)
 	H_PACK          = "H_PACK"          //subkey:packId value:packJson
 	Z_USER_PACK_PRE = "Z_USER_PACK_PRE" //name:Z_USER_PACK_PRE/userId, key:packid, score:packid
-	Z_TAG_PRE       = "Z_TAG_PRE"       //name:Z_TAG_PRE/tag, key:packid, score:packid
 	Z_COMMENT       = "Z_COMMENT"       //name:Z_COMMENT/packid, key:commentId, score:commentId
 	H_COMMENT       = "H_COMMENT"       //key:commentId, value:commentData
 )
@@ -45,7 +43,6 @@ type Pack struct {
 	CoverBlur string
 	Images    []Image
 	Thumbs    []string
-	Tags      []string
 	SizeMb    float32
 }
 
@@ -83,9 +80,6 @@ func getPack(ssdbc *ssdb.Client, packId int64) (*Pack, error) {
 
 	err = json.Unmarshal([]byte(resp[1]), &pack)
 	lwutil.CheckError(err, "")
-	if pack.Tags == nil {
-		pack.Tags = make([]string, 0)
-	}
 
 	return &pack, err
 }
@@ -103,11 +97,6 @@ func init() {
 	glog.Info("init")
 }
 
-func makeTagName(tag string) (outName string) {
-	s := Z_TAG_PRE + "/" + tag
-	return strings.ToLower(s)
-}
-
 func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
 	if len(pack.Images) < 4 {
 		lwutil.SendError("err_images", "len(pack.Images) < 4")
@@ -118,12 +107,6 @@ func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
 	now := time.Now()
 	pack.Time = now.Format(time.RFC3339)
 	pack.TimeUnix = now.Unix()
-	if len(pack.Tags) > 8 {
-		pack.Tags = pack.Tags[:8]
-	}
-	if pack.Tags == nil {
-		pack.Tags = make([]string, 0)
-	}
 
 	//gen packid
 	resp, err := ssdbc.Do("hincr", H_SERIAL, "userPack", 1)
@@ -135,18 +118,6 @@ func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
 	jsPack, _ := json.Marshal(&pack)
 	resp, err = ssdbc.Do("hset", H_PACK, pack.Id, jsPack)
 	lwutil.CheckSsdbError(resp, err)
-
-	// //add to user pack zset
-	// name := fmt.Sprintf("%s/%d", Z_USER_PACK_PRE, pack.AuthorId)
-	// resp, err = ssdbc.Do("zset", name, pack.Id, pack.Id)
-	// lwutil.CheckSsdbError(resp, err)
-
-	//tags
-	for _, v := range pack.Tags {
-		tagName := makeTagName(v)
-		resp, err = ssdbc.Do("zset", tagName, pack.Id, pack.Id)
-		lwutil.CheckSsdbError(resp, err)
-	}
 }
 
 func apiNewPack(w http.ResponseWriter, r *http.Request) {
@@ -177,137 +148,6 @@ func apiNewPack(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	lwutil.WriteResponse(w, pack)
-}
-
-func apiModPack(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	//in
-	var pack Pack
-	err = lwutil.DecodeRequestBody(r, &pack)
-	lwutil.CheckError(err, "err_decode_body")
-	now := time.Now()
-	pack.Time = now.Format(time.RFC3339)
-	pack.TimeUnix = now.Unix()
-	if len(pack.Tags) > 8 {
-		pack.Tags = pack.Tags[:8]
-	}
-
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
-
-	//get old pack
-	resp, err := ssdb.Do("hget", H_PACK, pack.Id)
-	lwutil.CheckSsdbError(resp, err)
-	var oldPack Pack
-	err = json.Unmarshal([]byte(resp[1]), &oldPack)
-	lwutil.CheckError(err, "")
-
-	//check owner
-	if isAdmin(session.Username) {
-		pack.AuthorId = 0
-	} else {
-		pack.AuthorId = session.Userid
-	}
-
-	if oldPack.AuthorId != pack.AuthorId {
-		lwutil.SendError("err_owner", "you are not own this pack")
-	}
-
-	//tags
-	///del from old tags list
-	for _, v := range oldPack.Tags {
-		resp, err = ssdb.Do("zdel", makeTagName(v), pack.Id)
-		lwutil.CheckSsdbError(resp, err)
-	}
-
-	///add back
-	for _, v := range pack.Tags {
-		tagName := makeTagName(v)
-		resp, err = ssdb.Do("zset", tagName, pack.Id, pack.Id)
-		lwutil.CheckSsdbError(resp, err)
-	}
-
-	// //lock images
-	// pack.Images = oldPack.Images
-
-	//add to hash
-	jsPack, _ := json.Marshal(&pack)
-	resp, err = ssdb.Do("hset", H_PACK, pack.Id, jsPack)
-	lwutil.CheckSsdbError(resp, err)
-
-	//add to user pack zset
-	name := fmt.Sprintf("%s/%d", Z_USER_PACK_PRE, session.Userid)
-	resp, err = ssdb.Do("zset", name, pack.Id, pack.Id)
-	lwutil.CheckSsdbError(resp, err)
-
-	//out
-	lwutil.WriteResponse(w, pack)
-}
-
-func apiDelPack(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	//in
-	var in struct {
-		Id    uint64
-		Force bool
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	//check force
-	if in.Force == false {
-		lwutil.SendError("err_force", "This operation is dangerous. Use <Force> param")
-	}
-
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
-
-	//check owner
-	name := fmt.Sprintf("%s/%d", Z_USER_PACK_PRE, session.Userid)
-	resp, err := ssdb.Do("zexists", name, in.Id)
-	lwutil.CheckSsdbError(resp, err)
-	if resp[1] == "0" {
-		lwutil.SendError("err_not_exist", fmt.Sprintf("not own the pack: userId=%d, packId=%d", session.Userid, in.Id))
-	}
-
-	//del from tags list
-	resp, err = ssdb.Do("hget", H_PACK, in.Id)
-	lwutil.CheckSsdbError(resp, err)
-	var pack Pack
-	err = json.Unmarshal([]byte(resp[1]), &pack)
-	lwutil.CheckError(err, "")
-
-	for _, v := range pack.Tags {
-		resp, err = ssdb.Do("zdel", makeTagName(v), in.Id)
-		lwutil.CheckSsdbError(resp, err)
-	}
-
-	//del from owner list
-	resp, err = ssdb.Do("zdel", name, in.Id)
-	lwutil.CheckSsdbError(resp, err)
-
-	//del pack data
-	resp, err = ssdb.Do("hdel", H_PACK, in.Id)
-	lwutil.CheckSsdbError(resp, err)
-
-	//out
-	lwutil.WriteResponse(w, in)
 }
 
 func apiListPack(w http.ResponseWriter, r *http.Request) {
@@ -361,9 +201,6 @@ func apiListPack(w http.ResponseWriter, r *http.Request) {
 		packjs := resp[i*2+1]
 		err = json.Unmarshal([]byte(packjs), &packs[i])
 		lwutil.CheckError(err, "")
-		if packs[i].Tags == nil {
-			packs[i].Tags = make([]string, 0)
-		}
 	}
 
 	//out
@@ -426,72 +263,6 @@ func apiListMatchPack(w http.ResponseWriter, r *http.Request) {
 		packjs := resp[i*2+1]
 		err = json.Unmarshal([]byte(packjs), &packs[i])
 		lwutil.CheckError(err, "")
-		if packs[i].Tags == nil {
-			packs[i].Tags = make([]string, 0)
-		}
-	}
-
-	//out
-	lwutil.WriteResponse(w, &packs)
-}
-
-func apiListPackByTag(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//in
-	var in struct {
-		Tag     string
-		StartId uint32
-		Limit   uint32
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
-
-	//get keys
-	name := makeTagName(in.Tag)
-	var start interface{}
-	if in.StartId == 0 {
-		start = ""
-	} else {
-		start = in.StartId
-	}
-
-	resp, err := ssdb.Do("zrscan", name, start, start, "", in.Limit)
-	lwutil.CheckSsdbError(resp, err)
-
-	if len(resp) == 1 {
-		lwutil.SendError("err_not_found", fmt.Sprintf("in:%+v", in))
-	}
-
-	//get packs
-	resp = resp[1:]
-	packNum := (len(resp)) / 2
-	args := make([]interface{}, packNum+2)
-	args[0] = "multi_hget"
-	args[1] = H_PACK
-	for i, _ := range args {
-		if i >= 2 {
-			args[i] = resp[(i-2)*2]
-		}
-	}
-	resp, err = ssdb.Do(args...)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-
-	packs := make([]Pack, len(resp)/2)
-	for i, _ := range packs {
-		packjs := resp[i*2+1]
-		err = json.Unmarshal([]byte(packjs), &packs[i])
-		lwutil.CheckError(err, "")
-		if packs[i].Tags == nil {
-			packs[i].Tags = make([]string, 0)
-		}
 	}
 
 	//out
@@ -521,9 +292,6 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	var pack Pack
 	err = json.Unmarshal([]byte(resp[1]), &pack)
 	lwutil.CheckError(err, "")
-	if pack.Tags == nil {
-		pack.Tags = make([]string, 0)
-	}
 
 	//get
 	player, err := getPlayerInfo(ssdb, pack.AuthorId)
@@ -687,11 +455,8 @@ func apiGetComments(w http.ResponseWriter, r *http.Request) {
 
 func regPack() {
 	http.Handle("/pack/new", lwutil.ReqHandler(apiNewPack))
-	http.Handle("/pack/mod", lwutil.ReqHandler(apiModPack))
-	http.Handle("/pack/del", lwutil.ReqHandler(apiDelPack))
 	http.Handle("/pack/list", lwutil.ReqHandler(apiListPack))
 	http.Handle("/pack/listMatch", lwutil.ReqHandler(apiListMatchPack))
-	http.Handle("/pack/listByTag", lwutil.ReqHandler(apiListPackByTag))
 	http.Handle("/pack/get", lwutil.ReqHandler(apiGetPack))
 	http.Handle("/pack/addComment", lwutil.ReqHandler(apiAddComment))
 	http.Handle("/pack/getComments", lwutil.ReqHandler(apiGetComments))

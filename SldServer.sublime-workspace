@@ -547,15 +547,18 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 25803,
+				"buffer_size": 25976,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "match/conf.go",
+			"contents": "{\n	// A list of URLs that each contain a JSON file with a list of repositories.\n	// The repositories from these channels are placed in order after the\n	// repositories from the \"repositories\" setting\n	\"channels\": [\n		\"https://packagecontrol.io/channel_v3.json\"\n	],\n\n	// A list of URLs that contain a packages JSON file. These repositories\n	// are placed in order before repositories from the \"channels\"\n	// setting\n	\"repositories\": [],\n\n	// A list of packages to install pre-release versions for. Versions\n	// under 1.0.0 are not considered pre-release, only those using the SemVer\n	// -prerelease suffixes will be ignored if the package is not in this\n	// list.\n	\"install_prereleases\": [],\n\n	// If debugging information for HTTP/HTTPS connections should be printed\n	// to the Sublime Text console\n	\"debug\": false,\n\n	// This helps solve naming issues where a repository it not named the\n	// same as the package should be. This is primarily only useful for\n	// GitHub and BitBucket repositories. This mapping will override the\n	// mapping that is retrieved from the repository channels.\n	\"package_name_map\": {},\n\n	// If package install, upgrade and removal info should be submitted to\n	// the channel for aggregated statistics\n	\"submit_usage\": true,\n\n	// The URL to post install, upgrade and removal notices to\n	\"submit_url\": \"https://packagecontrol.io/submit\",\n\n	// If packages should be automatically upgraded when ST starts\n	\"auto_upgrade\": true,\n\n	// If missing packages should be automatically installed when ST starts\n	\"install_missing\": true,\n\n	// If a package was installed by Package Control (has a\n	// package-metadata.json file) but is not in installed_packages, remove it\n	// based upon the assumption that it was removed on another machine and\n	// the Package Control.sublime-settings file was synced to this machine.\n	\"remove_orphaned\": true,\n\n	// The minimum frequency in hours in which to check for automatic upgrades,\n	// setting this to 0 will always check for automatic upgrades\n	\"auto_upgrade_frequency\": 1,\n\n	// Packages to not auto upgrade\n	\"auto_upgrade_ignore\": [],\n\n	// Timeout for downloading channels, repositories and packages. Doesn't\n	// have an effect on Windows due to a bug in WinINet.\n	\"timeout\": 30,\n\n	// The number of seconds to cache repository and package info for\n	\"cache_length\": 300,\n\n	// An HTTP proxy server to use for requests. Not used on Windows since the\n	// system proxy configuration is utilized via WinINet.\n	\"http_proxy\": \"\",\n	// An HTTPS proxy server to use for requests - this will inherit from\n	// http_proxy if it is set to \"\" or null and http_proxy has a value. You\n	// can set this to false to prevent inheriting from http_proxy. Not used on\n	// Windows since the system proxy configuration is utilized via WinINet.\n	\"https_proxy\": \"\",\n\n	// Username and password for both http_proxy and https_proxy. May be used\n	// with WinINet to set credentials for system-level proxy config.\n	\"proxy_username\": \"\",\n	\"proxy_password\": \"\",\n\n	// If HTTP responses should be cached to disk\n	\"http_cache\": true,\n\n	// Number of seconds to cache HTTP responses for, defaults to one week\n	\"http_cache_length\": 604800,\n\n	// User agent for HTTP requests. If \"%s\" is present, will be replaced\n	// with the current version.\n	\"user_agent\": \"Package Control v%s\",\n\n	// Setting this to true will cause Package Control to ignore all git\n	// and hg repositories - this may help if trying to list packages to install\n	// hangs\n	\"ignore_vcs_packages\": false,\n\n	// Custom path(s) to \"git\" binary for when it can't be automatically\n	// found on the system and a package includes a .git metadata directory.\n	// Supports more than one path to allow users to sync settings across\n	// operating systems.\n	\"git_binary\": [],\n\n	// This should NOT contain the name of the remote or branch - that will\n	// be automatically determined.\n	\"git_update_command\": [\"pull\", \"--ff\", \"--commit\"],\n\n	// Custom path(s) to \"hg\" binary for when it can't be automatically\n	// found on the system and a package includes a .hg metadata directory.\n	// Supports more than one path to allow users to sync settings across\n	// operating systems.\n	\"hg_binary\": [],\n\n	// For HG repositories, be sure to use \"default\" as the remote URL.\n	// This is the default behavior when cloning an HG repo.\n	\"hg_update_command\": [\"pull\", \"--update\"],\n\n	// Additional packages to ignore when listing unmanaged packages.\n	\"unmanaged_packages_ignore\": [],\n\n	// Directories to ignore when creating a package\n	\"dirs_to_ignore\": [\n		\".hg\", \".git\", \".svn\", \"_darcs\", \"CVS\"\n	],\n\n	// Files to ignore when creating a package\n	\"files_to_ignore\": [\n		\"*.pyc\", \".hgignore\", \".gitignore\", \".bzrignore\",\n		\"*.sublime-project\", \"*.sublime-workspace\", \"*.tmTheme.cache\"\n	],\n\n	// Files to include, even if they match a pattern in files_to_ignore\n	\"files_to_include\": [],\n\n	// When a package is created, copy it to this folder - defaults to Desktop\n	\"package_destination\": \"\",\n\n	// A way to create different packaging profiles for different types of\n	// package releases, such as for different platforms or binary-only\n	// releases.\n	//\n	// The key of the object will be the profile name and a list of them will\n	// be presenting when running the \"Create Package File\" command. The\n	// profile \"Default\" will use the top-level version on the following\n	// settings:\n	//\n	// - \"dirs_to_ignore\"\n	// - \"files_to_ignore\"\n	// - \"files_to_include\"\n	// - \"package_destination\"\n	//\n	// If a profile does not include one of those three setting, it will fall\n	// back to the top-level settings.\n	\"package_profiles\": {\n		\"Binaries Only\": {\n			// Exclude all .py files, but consequently include all .pyc files\n			\"files_to_ignore\": [\n				\"*.py\", \".hgignore\", \".gitignore\", \".bzrignore\",\n				\"*.sublime-project\", \"*.sublime-workspace\", \"*.tmTheme.cache\"\n			],\n\n			// Include __init__.py so Sublime Text will load the package\n			\"files_to_include\": [\n				\"__init__.py\"\n			]\n		}\n	},\n\n	// Enable the ability to run the tests - this is only for development\n	\"enable_tests\": false\n}\n",
+			"file": "/Users/liwei/Library/Application Support/Sublime Text 2/Packages/Package Control/Package Control.sublime-settings",
+			"file_size": 6023,
+			"file_write_time": 1419604253000000,
 			"settings":
 			{
-				"buffer_size": 1640,
+				"buffer_size": 6023,
 				"line_ending": "Unix"
 			}
 		},
@@ -563,7 +566,7 @@
 			"file": "match/match.go",
 			"settings":
 			{
-				"buffer_size": 60955,
+				"buffer_size": 61696,
 				"line_ending": "Unix"
 			}
 		},
@@ -579,7 +582,7 @@
 			"file": "match/pack.go",
 			"settings":
 			{
-				"buffer_size": 15303,
+				"buffer_size": 9856,
 				"line_ending": "Unix"
 			}
 		},
@@ -592,37 +595,68 @@
 			}
 		},
 		{
-			"file": "match/util.go",
-			"settings":
-			{
-				"buffer_size": 2287,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "match/social.go",
 			"settings":
 			{
-				"buffer_size": 6657,
+				"buffer_size": 6661,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "0x180d48d0",
+			"file": "match/backup.go",
 			"settings":
 			{
-				"buffer_size": 10,
-				"line_ending": "Unix",
-				"name": "0x180d48d0"
+				"buffer_size": 2079,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/collection.go",
+			"settings":
+			{
+				"buffer_size": 5988,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/conf.go",
+			"settings":
+			{
+				"buffer_size": 1640,
+				"line_ending": "Unix"
 			}
 		}
 	],
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 47.0,
+		"height": 147.0,
 		"selected_items":
 		[
+			[
+				"pa c",
+				"Preferences: Browse Packages"
+			],
+			[
+				"Package Contr",
+				"Preferences: Package Control Settings – Default"
+			],
+			[
+				"gosublime",
+				"GoSublime: Activate 9o"
+			],
+			[
+				"pack",
+				"Preferences: Browse Packages"
+			],
+			[
+				"gos",
+				"GoSublime: Goto Definition"
+			],
+			[
+				"setg",
+				"Set Syntax: GoSublime: Go"
+			],
 			[
 				"main",
 				"Snippet: main()"
@@ -640,7 +674,7 @@
 				"Package Control: Install Package"
 			]
 		],
-		"width": 467.0
+		"width": 449.0
 	},
 	"console":
 	{
@@ -657,14 +691,18 @@
 	},
 	"file_history":
 	[
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/GoSublime/Default (OSX).sublime-keymap",
+		"/usr/local/go/src/pkg/builtin/builtin.go",
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/User/GoSublime.sublime-settings",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/battle.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ecoMonitor.go",
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/backup.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/etc.go",
@@ -673,7 +711,6 @@
 		"/Users/liwei/Documents/projects/2014/delight/tools/packUploader/packUploader",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/auth.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/match.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/monitor.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/player.go",
@@ -740,6 +777,42 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"+b",
+			"playerInfo",
+			"PlayerInfoLite",
+			"apiPlayerFollow",
+			"like",
+			"Pack",
+			"apiGetPack",
+			"makeZPlayedMatchKey",
+			"apiMatchListPlayedMatch",
+			"Private",
+			"apiMatchMod",
+			"apiPlayerFollow",
+			"tag",
+			"apiListPackByTag",
+			"tag",
+			"apiDelPack",
+			"tag",
+			"hide",
+			"Hide",
+			"thumbs",
+			"tag",
+			"apiMatchNew",
+			"match/new",
+			"tag",
+			"ta g",
+			"loginSns",
+			"Access-Control-Allow",
+			"matchnew",
+			"apiMatchListUserWeb",
+			"apiMatchNew",
+			"makeZLikeMatchKey",
+			"LastScore",
+			"out",
+			"apiMatchListLike",
+			"session",
+			"apiMatchListLike",
 			"redis",
 			"upload",
 			"apiMatchListLike",
@@ -831,43 +904,7 @@
 			"follownum",
 			"ssdb.",
 			"setplayer",
-			"isFollowed",
-			"session",
-			"apigetplayerinf",
-			"getPlayerInfo",
-			"makeZPlayerFollowKey",
-			"PLAYER_NICK_NAME",
-			"PLAYER_USER_ID",
-			"checkPlayerExist",
-			"apiPlayerFollow",
-			"apiPlayerUnfollow",
-			"apiPlayerFollow",
-			"getplayer",
-			"findSession",
-			"\"1\"",
-			"exist",
-			"getPlayerInfo",
-			"exist",
-			"make([]interface{}",
-			"PlayerInfoLite",
-			"apiMatchListPlayed",
-			"getPlayerInfo",
-			"apiGetPlayerInfo",
-			"BattlePoint",
-			"makePlayedMatchKey",
-			"makeZPlayedMatchKey",
-			"apiMatchListMyPlayed",
-			"apiMatchListOriginal",
-			"apiGetPack",
-			"apiMatchListLike",
-			"listLike\nlistLike",
-			"listLike",
-			"listori",
-			"matchlistori",
-			"apiMatchListLike",
-			"getMatch",
-			"apiMatchListOriginal",
-			"Z_MY_PLAYED_MATCH"
+			"isFollowed"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -899,7 +936,7 @@
 	"groups":
 	[
 		{
-			"selected": 11,
+			"selected": 4,
 			"sheets":
 			[
 				{
@@ -968,62 +1005,8 @@
 						"selection":
 						[
 							[
-								6326,
-								6326
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 2.0,
-						"translation.y": 5184.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "match/player.go",
-					"settings":
-					{
-						"buffer_size": 25803,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								21157,
-								21157
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 19564.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "match/conf.go",
-					"settings":
-					{
-						"buffer_size": 1640,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								629,
-								629
+								973,
+								973
 							]
 						],
 						"settings":
@@ -1038,19 +1021,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "match/match.go",
+					"buffer": 3,
+					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 60955,
+						"buffer_size": 25976,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								57503,
-								57503
+								5207,
+								5207
 							]
 						],
 						"settings":
@@ -1059,7 +1042,61 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 50493.0,
+						"translation.y": 4318.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/Users/liwei/Library/Application Support/Sublime Text 2/Packages/Package Control/Package Control.sublime-settings",
+					"settings":
+					{
+						"buffer_size": 6023,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5431,
+								5431
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2836.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "match/match.go",
+					"settings":
+					{
+						"buffer_size": 61696,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								987,
+								989
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1096,15 +1133,15 @@
 					"file": "match/pack.go",
 					"settings":
 					{
-						"buffer_size": 15303,
+						"buffer_size": 9856,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								11792,
-								11792
+								757,
+								757
 							]
 						],
 						"settings":
@@ -1113,7 +1150,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 11349.0,
+						"translation.y": 566.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1130,8 +1167,8 @@
 						"selection":
 						[
 							[
-								5034,
-								5034
+								138,
+								138
 							]
 						],
 						"settings":
@@ -1147,18 +1184,18 @@
 				},
 				{
 					"buffer": 9,
-					"file": "match/util.go",
+					"file": "match/social.go",
 					"settings":
 					{
-						"buffer_size": 2287,
+						"buffer_size": 6661,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2139,
-								2150
+								6464,
+								6470
 							]
 						],
 						"settings":
@@ -1167,25 +1204,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1993.0,
+						"translation.y": 5948.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 10,
-					"file": "match/social.go",
+					"file": "match/backup.go",
 					"settings":
 					{
-						"buffer_size": 6657,
+						"buffer_size": 2079,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6347,
-								6347
+								1311,
+								1311
 							]
 						],
 						"settings":
@@ -1194,30 +1231,58 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5983.0,
+						"translation.y": 1180.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 11,
+					"file": "match/collection.go",
 					"settings":
 					{
-						"buffer_size": 10,
+						"buffer_size": 5988,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								10,
-								10
+								5558,
+								5558
 							]
 						],
 						"settings":
 						{
-							"auto_name": "0x180d48d0",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4761.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "match/conf.go",
+					"settings":
+					{
+						"buffer_size": 1640,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								345,
+								414
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -1306,16 +1371,32 @@
 		"selected_items":
 		[
 			[
+				"conf",
+				"SldServer/match/conf.go"
+			],
+			[
 				"pack",
 				"SldServer/match/pack.go"
 			],
 			[
-				"match",
-				"SldServer/match/match.go"
+				"collecti",
+				"SldServer/match/collection.go"
 			],
 			[
-				"conf",
-				"SldServer/match/conf.go"
+				"backu",
+				"SldServer/match/backup.go"
+			],
+			[
+				"ssdb.g",
+				"SldServer/match/ssdb/ssdb.go"
+			],
+			[
+				"matchcro",
+				"SldServer/match/matchCron.go"
+			],
+			[
+				"match",
+				"SldServer/match/match.go"
 			],
 			[
 				"player",
@@ -1364,10 +1445,6 @@
 			[
 				"store",
 				"SldServer/match/store.go"
-			],
-			[
-				"matchcro",
-				"SldServer/match/matchCron.go"
 			],
 			[
 				"main.go",

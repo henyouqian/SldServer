@@ -66,7 +66,6 @@ type Match struct {
 	PromoUrl             string
 	PromoImage           string
 	Private              bool
-	Hide                 bool
 	Deleted              bool
 }
 
@@ -264,6 +263,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		PromoUrl         string
 		PromoImage       string
 		Private          bool
+		Tags             []string
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -272,6 +272,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		in.SliderNum = 3
 	} else if in.SliderNum > 9 {
 		in.SliderNum = 9
+	}
+	if len(in.Tags) > 8 {
+		in.Tags = in.Tags[:8]
 	}
 
 	stringLimit(&in.Title, 100)
@@ -333,7 +336,6 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		PromoUrl:             in.PromoUrl,
 		PromoImage:           in.PromoImage,
 		Private:              in.Private,
-		Hide:                 false,
 	}
 
 	//json
@@ -462,38 +464,41 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check time
-	now := lwutil.GetRedisTimeUnix()
-	if now > match.EndTime {
-		lwutil.WriteResponse(w, match)
-		return
-	}
+	// now := lwutil.GetRedisTimeUnix()
+	// if now > match.EndTime {
+	// 	lwutil.WriteResponse(w, match)
+	// 	return
+	// }
 
 	//private
 	if match.Private != in.Private {
 		match.Private = in.Private
 		if match.Private {
+			glog.Info("xxxxxx")
 			resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
 			lwutil.CheckSsdbError(resp, err)
 
 			resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
 			lwutil.CheckSsdbError(resp, err)
 		} else {
-			if !match.Hide {
+			if !match.Deleted {
 				//add to Z_MATCH
 				resp, err := ssdbc.Do("zset", Z_MATCH, match.Id, match.BeginTime)
 				lwutil.CheckSsdbError(resp, err)
 
-				//Z_HOT_MATCH
-				prizeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PRIZE)
-				resp, err = ssdbc.Do("hget", H_MATCH_EXTRA, prizeKey)
-				extraPrize := 0
-				if resp[0] == "ok" {
-					extraPrize, err = strconv.Atoi(resp[1])
-					lwutil.CheckError(err, "")
-				}
+				if !match.HasResult {
+					//Z_HOT_MATCH
+					prizeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PRIZE)
+					resp, err = ssdbc.Do("hget", H_MATCH_EXTRA, prizeKey)
+					extraPrize := 0
+					if resp[0] == "ok" {
+						extraPrize, err = strconv.Atoi(resp[1])
+						lwutil.CheckError(err, "")
+					}
 
-				resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.Prize+extraPrize)
-				lwutil.CheckSsdbError(resp, err)
+					resp, err = ssdbc.Do("zset", Z_HOT_MATCH, in.MatchId, match.Prize+extraPrize)
+					lwutil.CheckSsdbError(resp, err)
+				}
 			}
 		}
 	}
@@ -827,9 +832,13 @@ func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 	type Out struct {
 		Matches   []OutMatch
 		LastScore int64
+		FanNum    int
+		FollowNum int
 	}
 	out := Out{
 		[]OutMatch{},
+		0,
+		0,
 		0,
 	}
 
@@ -909,8 +918,11 @@ func apiMatchListOriginal(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//out
+	//out matches
 	out.Matches = matches
+
+	//
+	out.FanNum, out.FollowNum = getPlayerFanFollowNum(ssdbc, in.UserId)
 
 	lwutil.WriteResponse(w, out)
 }
@@ -964,9 +976,13 @@ func apiMatchListPlayedMatch(w http.ResponseWriter, r *http.Request) {
 	type Out struct {
 		Matches   []OutMatch
 		LastScore int64
+		FanNum    int
+		FollowNum int
 	}
 	out := Out{
 		[]OutMatch{},
+		0,
+		0,
 		0,
 	}
 
@@ -1048,6 +1064,7 @@ func apiMatchListPlayedMatch(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out.Matches = matches
+	out.FanNum, out.FollowNum = getPlayerFanFollowNum(ssdbc, in.UserId)
 
 	lwutil.WriteResponse(w, out)
 }
@@ -1101,9 +1118,13 @@ func apiMatchListPlayedAll(w http.ResponseWriter, r *http.Request) {
 	type Out struct {
 		Matches   []OutMatch
 		LastScore int64
+		FanNum    int
+		FollowNum int
 	}
 	out := Out{
 		[]OutMatch{},
+		0,
+		0,
 		0,
 	}
 
@@ -1185,6 +1206,7 @@ func apiMatchListPlayedAll(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out.Matches = matches
+	out.FanNum, out.FollowNum = getPlayerFanFollowNum(ssdbc, in.UserId)
 
 	lwutil.WriteResponse(w, out)
 }
@@ -1502,9 +1524,13 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 	type Out struct {
 		Matches   []*OutMatch
 		LastScore int64
+		FanNum    int
+		FollowNum int
 	}
 	out := Out{
 		[]*OutMatch{},
+		0,
+		0,
 		0,
 	}
 
@@ -1610,6 +1636,7 @@ func apiMatchListLike(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out.Matches = outMatches
+	out.FanNum, out.FollowNum = getPlayerFanFollowNum(ssdbc, in.UserId)
 
 	lwutil.WriteResponse(w, out)
 }
@@ -1908,7 +1935,7 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 
 	//update Z_PLAYED_MATCH
 	key := makeZPlayedMatchKey(session.Userid)
-	resp, err = ssdbc.Do("zset", key, in.MatchId, now)
+	resp, err = ssdbc.Do("zset", key, in.MatchId, match.BeginTime)
 	lwutil.CheckSsdbError(resp, err)
 
 	key = makeZPlayedAllKey(session.Userid)
@@ -2392,53 +2419,6 @@ func apiMatchReport(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, &in)
 }
 
-func apiMatchHide(w http.ResponseWriter, r *http.Request) {
-	lwutil.CheckMathod(r, "POST")
-	var err error
-
-	//ssdb
-	ssdbc, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbc.Close()
-
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
-
-	//
-	checkAdmin(session)
-
-	//in
-	var in struct {
-		MatchId int64
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	//get match
-	match := getMatch(ssdbc, in.MatchId)
-
-	//hide
-	if !match.Hide {
-		match.Hide = true
-
-		resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
-		lwutil.CheckSsdbError(resp, err)
-
-		resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
-		lwutil.CheckSsdbError(resp, err)
-	}
-
-	//save
-	js, err := json.Marshal(match)
-	lwutil.CheckError(err, "")
-	resp, err := ssdbc.Do("hset", H_MATCH, in.MatchId, js)
-	lwutil.CheckSsdbError(resp, err)
-
-	//out
-	lwutil.WriteResponse(w, match)
-}
-
 func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -2605,7 +2585,6 @@ func regMatch() {
 	http.Handle("/match/getRanks", lwutil.ReqHandler(apiMatchGetRanks))
 
 	http.Handle("/match/report", lwutil.ReqHandler(apiMatchReport))
-	http.Handle("/match/hide", lwutil.ReqHandler(apiMatchHide))
 
 	http.Handle("/match/like", lwutil.ReqHandler(apiMatchLike))
 	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))

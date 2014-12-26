@@ -235,9 +235,6 @@ func apiListCollectionPack(w http.ResponseWriter, r *http.Request) {
 		if i%2 == 1 {
 			err = json.Unmarshal([]byte(v), &packs[i/2])
 			lwutil.CheckError(err, v)
-			if packs[i/2].Tags == nil {
-				packs[i/2].Tags = make([]string, 0)
-			}
 		}
 	}
 
