@@ -16,7 +16,6 @@ const (
 	H_PLAYER_INFO              = "H_PLAYER_INFO"      //key:H_PLAYER_INFO/<userId> subkey:property
 	H_PLAYER_INFO_LITE         = "H_PLAYER_INFO_LITE" //key:H_PLAYER_INFO_LITE subkey:userId value:playerInfoLite
 	H_APP_PLAYER_RATE          = "H_APP_PLAYER_RATE"  //subkey:appName/userId value:1
-	USER_UPLOAD_BUCKET         = "pintuuserupload"
 	ADS_PERCENT_DEFAUT         = 0.5
 	H_PLAYER_PRIZE_RECORD      = "H_PLAYER_PRIZE_RECORD" //key:H_PLAYER_PRIZE_RECORD subkey:prizeRecordId value prizeRecordJson
 	Z_PLAYER_PRIZE_RECORD      = "Z_PLAYER_PRIZE_RECORD" //key:Z_PLAYER_PRIZE_RECORD/userId subkey:prizeRecordId score:timeUnix
@@ -254,12 +253,18 @@ func getPlayerFanFollowNum(ssdbc *ssdb.Client, userId int64) (fanNum, followNum 
 	followNum = 0
 	key := makePlayerInfoKey(userId)
 	resp, err := ssdbc.Do("multi_hget", key, PLAYER_FAN_NUM, PLAYER_FOLLOW_NUM)
-	if len(resp) == 3 {
-		lwutil.CheckSsdbError(resp, err)
-		fanNum, err = strconv.Atoi(resp[1])
-		lwutil.CheckError(err, "err_strconv")
-		followNum, err = strconv.Atoi(resp[2])
-		lwutil.CheckError(err, "err_strconv")
+	if len(resp) > 1 {
+		n := len(resp)
+		for i := 0; i < n/2; i++ {
+			k := resp[i*2]
+			if k == PLAYER_FAN_NUM {
+				fanNum, err = strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "err_strconv")
+			} else if k == PLAYER_FOLLOW_NUM {
+				followNum, err = strconv.Atoi(resp[i*2+1])
+				lwutil.CheckError(err, "err_strconv")
+			}
+		}
 	}
 	return
 }
@@ -609,6 +614,38 @@ func apiGetUptoken(w http.ResponseWriter, r *http.Request) {
 		Token string
 	}{
 		putPolicy.Token(nil),
+	}
+
+	lwutil.WriteResponse(w, &out)
+}
+
+func apiGetPrivateUptoken(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//session
+	_, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//
+	scope := fmt.Sprintf("%s", USER_UPLOAD_BUCKET)
+	putPolicy := rs.PutPolicy{
+		Scope: scope,
+	}
+	token := putPolicy.Token(nil)
+
+	scope = fmt.Sprintf("%s", USER_PRIVATE_UPLOAD_BUCKET)
+	putPolicy = rs.PutPolicy{
+		Scope: scope,
+	}
+	privateToken := putPolicy.Token(nil)
+
+	//out
+	out := struct {
+		Token        string
+		PrivateToken string
+	}{
+		token,
+		privateToken,
 	}
 
 	lwutil.WriteResponse(w, &out)
@@ -1139,6 +1176,7 @@ func regPlayer() {
 	http.Handle("/player/addPrizeFromCache", lwutil.ReqHandler(apiAddPrizeFromCache))
 	http.Handle("/player/getUptokens", lwutil.ReqHandler(apiGetUptokens))
 	http.Handle("/player/getUptoken", lwutil.ReqHandler(apiGetUptoken))
+	http.Handle("/player/getPrivateUptoken", lwutil.ReqHandler(apiGetPrivateUptoken))
 	http.Handle("/player/listMyEcard", lwutil.ReqHandler(apiListMyEcard))
 	http.Handle("/player/listMyPrize", lwutil.ReqHandler(apiListMyPrize))
 	http.Handle("/player/getPrizeCache", lwutil.ReqHandler(apiGetPrizeCache))

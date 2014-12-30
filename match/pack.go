@@ -4,12 +4,14 @@ import (
 	"./ssdb"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/glog"
-	"github.com/henyouqian/lwutil"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/golang/glog"
+	"github.com/henyouqian/lwutil"
+	qiniurs "github.com/qiniu/api/rs"
 )
 
 const (
@@ -25,10 +27,8 @@ func makeZCommentName(packId int64) (name string) {
 }
 
 type Image struct {
-	File  string
-	Key   string
-	Title string
-	Text  string
+	Key string
+	Url string
 }
 
 type Pack struct {
@@ -269,6 +269,12 @@ func apiListMatchPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, &packs)
 }
 
+func makeImagePrivateUrl(key string) string {
+	baseUrl := qiniurs.MakeBaseUrl(QINIU_PRIVATE_DOMAIN, key)
+	policy := qiniurs.GetPolicy{}
+	return policy.MakeRequest(baseUrl, nil)
+}
+
 func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -311,6 +317,15 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	author := PlayerInfoPlus{
 		player,
 		followed,
+	}
+
+	//pack url
+	for i, image := range pack.Images {
+		if len(image.Url) > 0 {
+			pack.Images[i].Url = makeImagePrivateUrl(image.Key)
+		} else {
+			break
+		}
 	}
 
 	out := struct {
