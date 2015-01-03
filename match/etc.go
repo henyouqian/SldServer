@@ -7,6 +7,8 @@ import (
 	"math"
 	"net/http"
 	"time"
+
+	"github.com/qiniu/api/rs"
 )
 
 const (
@@ -174,9 +176,47 @@ func apiListAdvice(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, &advices)
 }
 
+func apiCheckPrivateFilesExist(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		FileKeys []string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	out := map[string]bool{}
+
+	entryPathes := []rs.EntryPath{}
+
+	for _, key := range in.FileKeys {
+		entryPath := rs.EntryPath{
+			Bucket: USER_PRIVATE_UPLOAD_BUCKET,
+			Key:    key,
+		}
+		entryPathes = append(entryPathes, entryPath)
+	}
+
+	rsCli := rs.New(nil)
+
+	var batchStatRets []rs.BatchStatItemRet
+	batchStatRets, err = rsCli.BatchStat(nil, entryPathes)
+	for i, item := range batchStatRets {
+		if item.Code == 200 {
+			out[in.FileKeys[i]] = true
+		}
+	}
+
+	//out
+	lwutil.WriteResponse(w, out)
+}
+
 func regEtc() {
 	http.Handle("/etc/betHelp", lwutil.ReqHandler(apiBetHelp))
 	http.Handle("/etc/addAdvice", lwutil.ReqHandler(apiAddAdvice))
 	http.Handle("/etc/listAdvice", lwutil.ReqHandler(apiListAdvice))
+	http.Handle("/etc/checkPrivateFilesExist", lwutil.ReqHandler(apiCheckPrivateFilesExist))
 	// http.Handle("/etc/getAppConf", lwutil.ReqHandler(apiGetAppConf))
 }
