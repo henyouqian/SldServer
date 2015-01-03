@@ -253,6 +253,7 @@ func getPlayerFanFollowNum(ssdbc *ssdb.Client, userId int64) (fanNum, followNum 
 	followNum = 0
 	key := makePlayerInfoKey(userId)
 	resp, err := ssdbc.Do("multi_hget", key, PLAYER_FAN_NUM, PLAYER_FOLLOW_NUM)
+	resp = resp[1:]
 	if len(resp) > 1 {
 		n := len(resp)
 		for i := 0; i < n/2; i++ {
@@ -266,6 +267,7 @@ func getPlayerFanFollowNum(ssdbc *ssdb.Client, userId int64) (fanNum, followNum 
 			}
 		}
 	}
+
 	return
 }
 
