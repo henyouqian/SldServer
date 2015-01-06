@@ -73,6 +73,7 @@ func main() {
 	regSocial()
 	regEcoMonitor()
 	regBattle()
+	regTumblr()
 	// regEvent()
 	// regChallenge()
 	// regUserPack()

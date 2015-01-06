@@ -67,6 +67,7 @@ type Match struct {
 	PromoImage           string
 	Private              bool
 	Deleted              bool
+	Source               string
 }
 
 type MatchExtra struct {

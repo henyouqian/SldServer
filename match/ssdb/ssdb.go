@@ -8,6 +8,7 @@ import (
 	"net"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -628,6 +629,231 @@ func (c *Client) HGetMapAll(key string, mp interface{}) (rErr error) {
 			return fmt.Errorf("bad arguments")
 		}
 	}
+
+	return nil
+}
+
+func (c *Client) TableSetRow(tableName string, key interface{}, obj interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	objVal := reflect.ValueOf(obj)
+
+	objType := objVal.Type()
+	if objVal.Kind() != reflect.Struct {
+		return fmt.Errorf("need struct")
+	}
+
+	numField := objType.NumField()
+	cmds := make([]interface{}, 2, 2+numField*2)
+	cmds[0] = "multi_hset"
+	cmds[1] = tableName
+	for i := 0; i < numField; i++ {
+		field := objType.Field(i)
+		val := objVal.Field(i)
+		subkey := fmt.Sprintf("%v^%v", key, field.Name)
+		cmds = append(cmds, subkey)
+		cmds = append(cmds, val.Interface())
+	}
+
+	resp, err := c.Do(cmds...)
+
+	if err != nil {
+		return err
+	}
+	if len(resp) > 0 && resp[0] == "ok" {
+		return nil
+	}
+
+	return fmt.Errorf("bad response")
+}
+
+func (c *Client) TableGetRow(tableName string, key string, objPtr interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	objVal := reflect.ValueOf(objPtr)
+
+	objVal = objVal.Elem()
+	if objVal.Kind() != reflect.Struct {
+		return fmt.Errorf("need struct pointer")
+	}
+
+	objType := objVal.Type()
+
+	numField := objType.NumField()
+	cmds := make([]interface{}, 2, 2+numField)
+	cmds[0] = "multi_hget"
+	cmds[1] = tableName
+	for i := 0; i < numField; i++ {
+		field := objType.Field(i)
+		subkey := fmt.Sprintf("%v^%v", key, field.Name)
+		cmds = append(cmds, subkey)
+	}
+
+	resp, err := c.Do(cmds...)
+
+	if err != nil {
+		return err
+	}
+	if resp[0] != "ok" {
+		return fmt.Errorf("%s", resp[0])
+	}
+	if len(resp) == 1 {
+		return fmt.Errorf("not_found")
+	}
+
+	resp = resp[1:]
+	numResp := len(resp)
+	for i := 0; i < numResp/2; i++ {
+		k := resp[i*2]
+
+		strs := strings.Split(k, "^")
+		if len(strs) != 2 {
+			return fmt.Errorf("string_split")
+		}
+		k = strs[1]
+		v := resp[i*2+1]
+		fieldValue := objVal.FieldByName(k)
+		if !fieldValue.IsValid() {
+			continue
+		}
+		switch fieldValue.Interface().(type) {
+		case string:
+			fieldValue.SetString(v)
+		case []byte:
+			fieldValue.SetBytes([]byte(v))
+		case int, int8, int16, int32, int64:
+			intv, _ := strconv.ParseInt(v, 0, 64)
+			fieldValue.SetInt(intv)
+		case uint, uint8, uint16, uint32, uint64:
+			intv, _ := strconv.ParseUint(v, 0, 64)
+			fieldValue.SetUint(intv)
+		case float32, float64:
+			intv, _ := strconv.ParseFloat(v, 64)
+			fieldValue.SetFloat(intv)
+		case bool:
+			b := true
+			if v == "0" || v == "false" {
+				b = false
+			}
+			fieldValue.SetBool(b)
+		default:
+			return fmt.Errorf("bad arguments")
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) TableGetRows(tableName string, keys []string, objs interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	objsVal := reflect.ValueOf(objs).Elem()
+	if objsVal.Kind() != reflect.Slice {
+		return fmt.Errorf("need slice")
+	}
+
+	elemType := objsVal.Type().Elem()
+	if elemType.Kind() != reflect.Struct {
+		return fmt.Errorf("must be slice of struct")
+	}
+
+	elems := reflect.MakeSlice(objsVal.Type(), 0, 16)
+
+	numRow := len(keys)
+	numField := elemType.NumField()
+	cmds := make([]interface{}, 2, 2+numField)
+	cmds[0] = "multi_hget"
+	cmds[1] = tableName
+	for i := 0; i < numRow; i++ {
+		for j := 0; j < numField; j++ {
+			key := keys[i]
+			field := elemType.Field(j)
+			subkey := fmt.Sprintf("%v^%v", key, field.Name)
+			cmds = append(cmds, subkey)
+		}
+	}
+
+	resp, err := c.Do(cmds...)
+
+	if err != nil {
+		return err
+	}
+	if resp[0] != "ok" {
+		return fmt.Errorf("%s", resp[0])
+	}
+	if len(resp) == 1 {
+		return fmt.Errorf("not_found")
+	}
+
+	resp = resp[1:]
+	numResp := len(resp)
+	lastKey := ""
+	var objValue reflect.Value
+	hasValue := false
+	for i := 0; i < numResp/2; i++ {
+		k := resp[i*2]
+
+		strs := strings.Split(k, "^")
+		if len(strs) != 2 {
+			return fmt.Errorf("string_split")
+		}
+		key := strs[0]
+		if key != lastKey {
+			if hasValue {
+				elems = reflect.Append(elems, objValue)
+			}
+			lastKey = key
+			objValue = reflect.New(elemType).Elem()
+			hasValue = true
+		}
+		fieldName := strs[1]
+		fieldValue := objValue.FieldByName(fieldName)
+		if !fieldValue.IsValid() {
+			continue
+		}
+
+		v := resp[i*2+1]
+		switch fieldValue.Interface().(type) {
+		case string:
+			fieldValue.SetString(v)
+		case []byte:
+			fieldValue.SetBytes([]byte(v))
+		case int, int8, int16, int32, int64:
+			intv, _ := strconv.ParseInt(v, 0, 64)
+			fieldValue.SetInt(intv)
+		case uint, uint8, uint16, uint32, uint64:
+			intv, _ := strconv.ParseUint(v, 0, 64)
+			fieldValue.SetUint(intv)
+		case float32, float64:
+			intv, _ := strconv.ParseFloat(v, 64)
+			fieldValue.SetFloat(intv)
+		case bool:
+			b := true
+			if v == "0" || v == "false" {
+				b = false
+			}
+			fieldValue.SetBool(b)
+		default:
+			return fmt.Errorf("bad arguments")
+		}
+	}
+	if hasValue {
+		elems = reflect.Append(elems, objValue)
+	}
+
+	objsVal.Set(elems)
 
 	return nil
 }

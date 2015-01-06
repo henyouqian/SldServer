@@ -107,43 +107,6 @@ function Controller($scope, $http) {
 				}
 			]
 		},{
-			"tab":"collection",
-			"path":"collection",
-			"apis":[
-				{
-					"name": "new",
-					"method": "POST",
-					"data": {
-						"Title":"",
-						"Text":"",
-						"Thumb":"qiniuThumb=.jpg",
-						"Packs":[1, 2, 3]
-					}
-				},{
-					"name": "del",
-					"method": "POST",
-					"data": {"Id": 0}
-				},{
-					"name": "mod",
-					"method": "POST",
-					"data": {
-						"Id":0,
-						"Title":"",
-						"Text":"",
-						"Thumb":"qiniuThumb=.jpg",
-						"Packs":[1, 2, 3]
-					}
-				},{
-					"name": "list",
-					"method": "POST",
-					"data": {"UserId": 0, "StartId": 0, "Limit":12}
-				},{
-					"name": "listPack",
-					"method": "POST",
-					"data": {"Id": 0}
-				}
-			]
-		},{
 			"tab":"player",
 			"path":"player",
 			"apis":[
@@ -524,6 +487,20 @@ function Controller($scope, $http) {
 					"name": "ecoDailyCount",
 					"method": "POST",
 					"data":{"Date": "2006-01-02"}
+				}
+			]
+		},{
+			"tab":"tumblr",
+			"path":"tumblr",
+			"apis":[
+				{
+					"name": "listBlog",
+					"method": "POST",
+					"data": {"LastKey":"", "LastScore":0, "Limit":20}
+				},{
+					"name": "listImage",
+					"method": "POST",
+					"data": {"BlogName":"", "LastKey":"", "LastScore":0, "Limit":20}
 				}
 			]
 		}
