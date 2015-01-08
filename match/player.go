@@ -40,6 +40,7 @@ type PlayerInfo struct {
 	UserId              int64
 	NickName            string
 	TeamName            string
+	Description         string
 	Gender              int
 	CustomAvatarKey     string
 	GravatarKey         string
@@ -513,13 +514,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	//set playerInfoLite
-	var infoLite PlayerInfoLite
-	infoLite.UserId = playerInfo.UserId
-	infoLite.NickName = playerInfo.NickName
-	infoLite.TeamName = playerInfo.TeamName
-	infoLite.Gender = playerInfo.Gender
-	infoLite.CustomAvatarKey = playerInfo.CustomAvatarKey
-	infoLite.GravatarKey = playerInfo.GravatarKey
+	infoLite := makePlayerInfoLite(playerInfo)
 
 	js, err := json.Marshal(infoLite)
 	lwutil.CheckError(err, "err_js")
@@ -533,6 +528,17 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		*playerInfo,
 	}
 	lwutil.WriteResponse(w, out)
+}
+
+func makePlayerInfoLite(playerInfo *PlayerInfo) *PlayerInfoLite {
+	var infoLite PlayerInfoLite
+	infoLite.UserId = playerInfo.UserId
+	infoLite.NickName = playerInfo.NickName
+	infoLite.TeamName = playerInfo.TeamName
+	infoLite.Gender = playerInfo.Gender
+	infoLite.CustomAvatarKey = playerInfo.CustomAvatarKey
+	infoLite.GravatarKey = playerInfo.GravatarKey
+	return &infoLite
 }
 
 func apiAddPrizeFromCache(w http.ResponseWriter, r *http.Request) {

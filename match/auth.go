@@ -30,6 +30,7 @@ const (
 	K_RESET_PASSWORD   = "K_RESET_PASSWORD" //key:K_RESET_PASSWORD/<resetKey> value:accountEmail
 	RESET_PASSWORD_TTL = 60 * 60
 	NOTIFICATION       = ""
+	ACCOUNT_SERIAL     = "account"
 )
 
 var (
@@ -163,7 +164,7 @@ func apiAuthRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//add account
-	id := GenSerial(ssdb, "account")
+	id := GenSerial(ssdb, ACCOUNT_SERIAL)
 	js, err := json.Marshal(in)
 	lwutil.CheckError(err, "")
 	_, err = ssdb.Do("hset", H_ACCOUNT, id, js)
@@ -333,7 +334,7 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hget", H_SNS_ACCONT, key)
 	var userId int64
 	if resp[0] == ssdb.NOT_FOUND {
-		userId = GenSerial(ssdbc, "account")
+		userId = GenSerial(ssdbc, ACCOUNT_SERIAL)
 
 		resp, err = ssdbc.Do("hset", H_SNS_ACCONT, key, userId)
 		lwutil.CheckSsdbError(resp, err)

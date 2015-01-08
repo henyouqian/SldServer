@@ -1,14 +1,22 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
-	"github.com/golang/glog"
-	"github.com/henyouqian/lwutil"
+	"io/ioutil"
 	"math"
 	"net/http"
+	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 
-	"github.com/qiniu/api/rs"
+	"github.com/golang/glog"
+	"github.com/henyouqian/lwutil"
+	qiniuio "github.com/qiniu/api/io"
+	qiniurs "github.com/qiniu/api/rs"
 )
 
 const (
@@ -189,19 +197,19 @@ func apiCheckPrivateFilesExist(w http.ResponseWriter, r *http.Request) {
 
 	out := map[string]bool{}
 
-	entryPathes := []rs.EntryPath{}
+	entryPathes := []qiniurs.EntryPath{}
 
 	for _, key := range in.FileKeys {
-		entryPath := rs.EntryPath{
+		entryPath := qiniurs.EntryPath{
 			Bucket: USER_PRIVATE_UPLOAD_BUCKET,
 			Key:    key,
 		}
 		entryPathes = append(entryPathes, entryPath)
 	}
 
-	rsCli := rs.New(nil)
+	rsCli := qiniurs.New(nil)
 
-	var batchStatRets []rs.BatchStatItemRet
+	var batchStatRets []qiniurs.BatchStatItemRet
 	batchStatRets, err = rsCli.BatchStat(nil, entryPathes)
 	for i, item := range batchStatRets {
 		if item.Code == 200 {
@@ -213,10 +221,93 @@ func apiCheckPrivateFilesExist(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func genImageKey(data []byte, ext string) (outKey string) {
+	h := sha1.New()
+	h.Write(data)
+	shaBytes := h.Sum(nil)
+
+	ext = strings.ToLower(ext)
+	if ext == "jpeg" {
+		ext = "jpg"
+	}
+	outKey = base64.URLEncoding.EncodeToString(shaBytes) + ext
+	return
+}
+
+func apiDownloadFilesToQiniu(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		Urls []string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	fileMap := make(map[string]string)
+
+	//
+	var wg sync.WaitGroup
+	for _, url := range in.Urls {
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+			res, err := http.Get(url)
+			if err != nil {
+				return
+			}
+			defer res.Body.Close()
+			data, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return
+			}
+			ext := filepath.Ext(url)
+			imgkey := genImageKey(data, ext)
+
+			//checkexists
+			rsCli := qiniurs.New(nil)
+
+			ret, err := rsCli.Stat(nil, QINIU_TMP_BUCKET, imgkey)
+			if err == nil {
+				glog.Infof("%+v", ret)
+				fileMap[url] = imgkey
+				return
+			}
+
+			//upload
+			putPolicy := qiniurs.PutPolicy{
+				Scope: QINIU_TMP_BUCKET,
+			}
+			token := putPolicy.Token(nil)
+
+			var putRet qiniuio.PutRet
+			err = qiniuio.Put(nil, &putRet, token, imgkey, bytes.NewReader(data), nil)
+			if err != nil {
+				glog.Errorf("%+v", err)
+				return
+			}
+
+			fileMap[url] = imgkey
+		}(url)
+	}
+	wg.Wait()
+
+	//out
+	out := struct {
+		FileMap map[string]string
+	}{
+		fileMap,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
 func regEtc() {
 	http.Handle("/etc/betHelp", lwutil.ReqHandler(apiBetHelp))
 	http.Handle("/etc/addAdvice", lwutil.ReqHandler(apiAddAdvice))
 	http.Handle("/etc/listAdvice", lwutil.ReqHandler(apiListAdvice))
 	http.Handle("/etc/checkPrivateFilesExist", lwutil.ReqHandler(apiCheckPrivateFilesExist))
 	// http.Handle("/etc/getAppConf", lwutil.ReqHandler(apiGetAppConf))
+	http.Handle("/etc/downloadFilesToQiniu", lwutil.ReqHandler(apiDownloadFilesToQiniu))
 }

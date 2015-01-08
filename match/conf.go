@@ -17,6 +17,7 @@ const (
 	QINIU_PRIVATE_DOMAIN       = "7tebsf.com1.z0.glb.clouddn.com"
 	USER_UPLOAD_BUCKET         = "pintuuserupload"
 	USER_PRIVATE_UPLOAD_BUCKET = "pintuprivate"
+	QINIU_TMP_BUCKET           = "lwswap"
 )
 
 type Conf struct {

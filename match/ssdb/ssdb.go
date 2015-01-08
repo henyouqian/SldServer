@@ -671,6 +671,70 @@ func (c *Client) TableSetRow(tableName string, key interface{}, obj interface{})
 	return fmt.Errorf("bad response")
 }
 
+func (c *Client) TableSetRowWithMap(tableName string, key interface{}, mp map[string]interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	num := len(mp)
+	cmds := make([]interface{}, 2, 2+num*2)
+	cmds[0] = "multi_hset"
+	cmds[1] = tableName
+	for k, v := range mp {
+		subkey := fmt.Sprintf("%v^%v", key, k)
+		cmds = append(cmds, subkey)
+		cmds = append(cmds, v)
+	}
+	resp, err := c.Do(cmds...)
+
+	if err != nil {
+		return err
+	}
+	if len(resp) > 0 && resp[0] == "ok" {
+		return nil
+	}
+
+	return fmt.Errorf("bad response")
+}
+
+func (c *Client) TableDelRow(tableName string, key interface{}, obj interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	objVal := reflect.ValueOf(obj)
+
+	objType := objVal.Type()
+	if objVal.Kind() != reflect.Struct {
+		return fmt.Errorf("need struct")
+	}
+
+	numField := objType.NumField()
+	cmds := make([]interface{}, 2, 2+numField*2)
+	cmds[0] = "multi_hdel"
+	cmds[1] = tableName
+	for i := 0; i < numField; i++ {
+		field := objType.Field(i)
+		subkey := fmt.Sprintf("%v^%v", key, field.Name)
+		cmds = append(cmds, subkey)
+	}
+
+	resp, err := c.Do(cmds...)
+
+	if err != nil {
+		return err
+	}
+	if len(resp) > 0 && resp[0] == "ok" {
+		return nil
+	}
+
+	return fmt.Errorf("bad response")
+}
+
 func (c *Client) TableGetRow(tableName string, key string, objPtr interface{}) (rErr error) {
 	defer func() {
 		if rErr != nil {
