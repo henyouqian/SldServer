@@ -81,6 +81,15 @@ func getPack(ssdbc *ssdb.Client, packId int64) (*Pack, error) {
 	err = json.Unmarshal([]byte(resp[1]), &pack)
 	lwutil.CheckError(err, "")
 
+	//pack url
+	for i, image := range pack.Images {
+		if len(image.Url) > 0 {
+			pack.Images[i].Url = makeImagePrivateUrl(image.Key)
+		} else {
+			break
+		}
+	}
+
 	return &pack, err
 }
 
