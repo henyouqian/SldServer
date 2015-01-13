@@ -64,3 +64,5 @@ sudo apt-get upgrade -o Dir::Etc::SourceList=/etc/apt/security.sources.list
 - 启动redis
 redis-server redis.conf
 
+
+

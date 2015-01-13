@@ -12,6 +12,9 @@ import (
 )
 
 func backupTask() {
+	if !isReleaseServer() {
+		return
+	}
 	defer handleError()
 
 	//mkdir

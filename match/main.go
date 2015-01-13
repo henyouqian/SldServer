@@ -83,6 +83,7 @@ func main() {
 	glog.Infof("Server running: cpu=%d, port=%d", runtime.NumCPU(), _conf.Port)
 
 	runMatchCron()
+	backupTask()
 
 	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", _conf.Port), nil))
 }
