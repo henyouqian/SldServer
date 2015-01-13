@@ -651,12 +651,12 @@ func (c *Client) TableSetRow(tableName string, key interface{}, obj interface{})
 	cmds := make([]interface{}, 2, 2+numField*2)
 	cmds[0] = "multi_hset"
 	cmds[1] = tableName
+	cmds = append(cmds, key, 1)
 	for i := 0; i < numField; i++ {
 		field := objType.Field(i)
 		val := objVal.Field(i)
 		subkey := fmt.Sprintf("%v^%v", key, field.Name)
-		cmds = append(cmds, subkey)
-		cmds = append(cmds, val.Interface())
+		cmds = append(cmds, subkey, val.Interface())
 	}
 
 	resp, err := c.Do(cmds...)
@@ -717,6 +717,7 @@ func (c *Client) TableDelRow(tableName string, key interface{}, obj interface{})
 	cmds := make([]interface{}, 2, 2+numField*2)
 	cmds[0] = "multi_hdel"
 	cmds[1] = tableName
+	cmds = append(cmds, key)
 	for i := 0; i < numField; i++ {
 		field := objType.Field(i)
 		subkey := fmt.Sprintf("%v^%v", key, field.Name)

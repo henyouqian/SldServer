@@ -228,11 +228,11 @@ func makeAppPlayerRateSubkey(appName string, userId int64) string {
 }
 
 func makeZPlayerFanKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_PLAYER_FAN)
+	return fmt.Sprintf("%s/%d", Z_PLAYER_FAN, userId)
 }
 
 func makeZPlayerFollowKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_PLAYER_FOLLOW)
+	return fmt.Sprintf("%s/%d", Z_PLAYER_FOLLOW, userId)
 }
 
 func getPlayerInfo(ssdb *ssdb.Client, userId int64) (*PlayerInfo, error) {
@@ -883,7 +883,7 @@ func apiPlayerFanList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get userId list
-	key := makeZPlayerFanKey(session.Userid)
+	key := makeZPlayerFanKey(in.UserId)
 
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
@@ -979,7 +979,7 @@ func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get userId list
-	key := makeZPlayerFollowKey(session.Userid)
+	key := makeZPlayerFollowKey(in.UserId)
 
 	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)

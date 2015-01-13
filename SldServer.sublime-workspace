@@ -4,6 +4,26 @@
 		"selected_items":
 		[
 			[
+				"a",
+				"Avartar64	string ν"
+			],
+			[
+				"H_tumb",
+				"H_TUMBLR_BLOG	 Ɩ"
+			],
+			[
+				"Blog",
+				"BlogImageOffsets	map[string]int ν"
+			],
+			[
+				"las",
+				"LastScore	int64 ν"
+			],
+			[
+				"getred",
+				"GetRedisTimeUnix	int64 ƒ"
+			],
+			[
 				"id",
 				"Id	int64 ν"
 			],
@@ -50,10 +70,6 @@
 			[
 				"h_player",
 				"H_PLAYER_INFO_LITE	 Ɩ"
-			],
-			[
-				"getred",
-				"GetRedisTimeUnix	int64 ƒ"
 			],
 			[
 				"h",
@@ -498,22 +514,6 @@
 			[
 				"parse",
 				"ParseInt	i int64, err error ƒ"
-			],
-			[
-				"INI",
-				"INIT_GAME_COIN_NUM	 Ɩ"
-			],
-			[
-				"rank",
-				"rankNum	 ν"
-			],
-			[
-				"Prin",
-				"Printf	n int, err error ƒ"
-			],
-			[
-				"rewa",
-				"challageRewards	[]int ν"
 			]
 		]
 	},
@@ -528,18 +528,10 @@
 			}
 		},
 		{
-			"file": "match/admin.go",
-			"settings":
-			{
-				"buffer_size": 5028,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "match/auth.go",
 			"settings":
 			{
-				"buffer_size": 16849,
+				"buffer_size": 16891,
 				"line_ending": "Unix"
 			}
 		},
@@ -547,7 +539,7 @@
 			"file": "match/player.go",
 			"settings":
 			{
-				"buffer_size": 26458,
+				"buffer_size": 27377,
 				"line_ending": "Unix"
 			}
 		},
@@ -555,15 +547,7 @@
 			"file": "match/match.go",
 			"settings":
 			{
-				"buffer_size": 62153,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
-			"settings":
-			{
-				"buffer_size": 16491,
+				"buffer_size": 62182,
 				"line_ending": "Unix"
 			}
 		},
@@ -571,7 +555,7 @@
 			"file": "match/www/api.js",
 			"settings":
 			{
-				"buffer_size": 15121,
+				"buffer_size": 14749,
 				"line_ending": "Unix"
 			}
 		},
@@ -579,18 +563,8 @@
 			"file": "match/pack.go",
 			"settings":
 			{
-				"buffer_size": 9856,
+				"buffer_size": 10198,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "Searching 516 files for \"qiniu\"\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/battle.js:\n   17      var HOST = \"http://localhost:9998/\"\n   18      var RES_HOST = \"http://dn-pintuuserupload.qbox.me/\"\n   19:     var HTML5_HOST = \"http://pintuhtml5.qiniudn.com/\"\n   20  \n   21      var conn\n\n/Users/liwei/Documents/projects/2014/SldServer/battle/home.html:\n    3  <head>\n    4  <title>Chat Example</title>\n    5: <!--script src=\"http://lwswap.qiniudn.com/jquery.min.js\"></script-->\n    6  <script src=\"jquery.min.js\"></script>\n    7  <script type=\"text/javascript\">\n\n/Users/liwei/Documents/projects/2014/SldServer/doc/server.md:\n   50  go get github.com/garyburd/redigo/redis\n   51  go get github.com/robfig/cron\n   52: go get github.com/qiniu/api/rs\n   53  go get github.com/gorilla/websocket\n   54  \n\n/Users/liwei/Documents/projects/2014/SldServer/match/backup.go:\n    8  \n    9  	\"github.com/golang/glog\"\n   10: 	qiniuio \"github.com/qiniu/api/io\"\n   11: 	qiniurs \"github.com/qiniu/api/rs\"\n   12  )\n   13  \n   ..\n   74  	redisPath := to\n   75  \n   76: 	//upload to qiniu\n   77  	upload := func(key string, path string) {\n   78: 		putPolicy := qiniurs.PutPolicy{\n   79  			Scope: BACKUP_BUCKET,\n   80  		}\n   ..\n   82  \n   83  		//upload\n   84: 		var ret qiniuio.PutRet\n   85: 		err = qiniuio.PutFile(nil, &ret, token, key, path, nil)\n   86  		checkError(err)\n   87  		glog.Infof(\"upload image ok: path=%s\", path)\n\n/Users/liwei/Documents/projects/2014/SldServer/match/collection.go:\n    7  	// \"github.com/golang/glog\"\n    8  	\"github.com/henyouqian/lwutil\"\n    9: 	//. \"github.com/qiniu/api/conf\"\n   10: 	//\"github.com/qiniu/api/rs\"\n   11  	\"net/http\"\n   12  	\"strconv\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/conf.go:\n   13  	APP_STORE_URL = \"https://itunes.apple.com/cn/app/man-pin-de/id923531990?l=zh&ls=1&mt=8\"\n   14  	BACKUP_BUCKET = \"pintubackup\"\n   15: 	QINIU_KEY     = \"zkDlO9eqB8oyXqv7CLhy5qmzjkirdwZZjpNjCkbm\"\n   16: 	QINIU_SEC     = \"E-ptuzmtK5gzuMmeLttndkNxqIhnhJFfXOGo7HD-\"\n   17  )\n   18  \n   ..\n   35  		\"UploadHost\":     \"http://dn-pintuuserupload.qbox.me\",\n   36  		\"StoreId\":        \"923531990\",\n   37: 		\"Html5Url\":       \"http://pintuhtml5.qiniudn.com/index.html\",\n   38  		\"FlurryKey\":      \"2P9DTVNTFZS8YBZ36QBZ\",\n   39  		\"MogoKey\":        \"8c0728f759464dcda07c81afb00d3bf5\",\n\n/Users/liwei/Documents/projects/2014/SldServer/match/main.go:\n    6  	\"github.com/golang/glog\"\n    7  	//\"github.com/henyouqian/lwutil\"\n    8: 	qiniuconf \"github.com/qiniu/api/conf\"\n    9  	\"github.com/robfig/cron\"\n   10  	\"net/http\"\n   ..\n   17  \n   18  func init() {\n   19: 	qiniuconf.ACCESS_KEY = QINIU_KEY\n   20: 	qiniuconf.SECRET_KEY = QINIU_SEC\n   21  }\n   22  \n\n/Users/liwei/Documents/projects/2014/SldServer/match/player.go:\n    7  	\"github.com/golang/glog\"\n    8  	\"github.com/henyouqian/lwutil\"\n    9: 	\"github.com/qiniu/api/rs\"\n   10  	\"math\"\n   11  	\"net/http\"\n\n/Users/liwei/Documents/projects/2014/SldServer/match/www/api.js:\n   51  							{\n   52  								\"File\": \"aaa.jpg\",\n   53: 								\"Key\": \"qiniuImage=.jpg\",\n   54  								\"Title\": \"\",\n   55  								\"Text\": \"\"\n   ..\n   65  						\"Title\":\"\",\n   66  						\"Text\":\"\",\n   67: 						\"Thumb\":\"qiniuThumb=.jpg\",\n   68: 						\"Cover\":\"qiniuImage=.jpg\",\n   69  						\"Images\":[\n   70  							{\n   71  								\"File\": \"aaa.jpg\",\n   72: 								\"Key\": \"qiniuImage=.jpg\",\n   73  								\"Title\": \"\",\n   74  								\"Text\": \"\"\n   ..\n  117  						\"Title\":\"\",\n  118  						\"Text\":\"\",\n  119: 						\"Thumb\":\"qiniuThumb=.jpg\",\n  120  						\"Packs\":[1, 2, 3]\n  121  					}\n  ...\n  131  						\"Title\":\"\",\n  132  						\"Text\":\"\",\n  133: 						\"Thumb\":\"qiniuThumb=.jpg\",\n  134  						\"Packs\":[1, 2, 3]\n  135  					}\n\n/Users/liwei/Documents/projects/2014/SldServer/site/index.js:\n    3      // var HOST = \"http://localhost:9998/\"\n    4      var RES_HOST = \"http://dn-pintuuserupload.qbox.me/\"\n    5:     var HTML5_HOST = \"http://pintuhtml5.qiniudn.com/\"\n    6  \n    7      var url = HOST + \"match/list\"\n\n/Users/liwei/Documents/projects/2014/SldServer/site/match.html:\n   84    	<!-- <div class=\"container-fluid\">\n   85  	  	<a href=\"https://itunes.apple.com/cn/app/man-pin-de/id923531990?l=zh&ls=1&mt=8\">\n   86: 	  		<img style=\"height:60px\" src=\"http://pintuuserupload.qiniudn.com/lw-appStore1.png\" class=\"img-responsive\">\n   87  	  	</a>\n   88  	</div> -->\n\n/Users/liwei/Documents/projects/2014/SldServer/site/match.js:\n    9      // var HOST = \"http://localhost:9998/\"\n   10      var RES_HOST = \"http://dn-pintuuserupload.qbox.me/\"\n   11:     var HTML5_HOST = \"http://pintuhtml5.qiniudn.com/\"\n   12  \n   13      var lastMatchId\n\n/Users/liwei/Documents/projects/2014/SldServer/site/user.html:\n   78  		<!-- <div class=\"container-fluid\">\n   79  			<a href=\"https://itunes.apple.com/cn/app/man-pin-de/id923531990?l=zh&ls=1&mt=8\">\n   80: 				<img style=\"height:60px\" src=\"http://pintuuserupload.qiniudn.com/lw-appStore1.png\" class=\"img-responsive\">\n   81  			</a>\n   82  	</div> -->\n\n/Users/liwei/Documents/projects/2014/SldServer/site/user.js:\n    9      // var HOST = \"http://localhost:9998/\"\n   10      var RES_HOST = \"http://dn-pintuuserupload.qbox.me/\"\n   11:     var HTML5_HOST = \"http://pintuhtml5.qiniudn.com/\"\n   12  \n   13      var lastMatchId\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/conf.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://sld.pintugame.com/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/confLocal.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://localhost:9998/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/confServer.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://sld.pintugame.com/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/packUploader/main.go:\n    9  	\"fmt\"\n   10  	\"github.com/golang/glog\"\n   11: 	qiniuconf \"github.com/qiniu/api/conf\"\n   12: 	qiniuio \"github.com/qiniu/api/io\"\n   13: 	qiniurs \"github.com/qiniu/api/rs\"\n   14  	\"io\"\n   15  	\"io/ioutil\"\n   ..\n   43  	Password    string\n   44  	ServerHost  string\n   45: 	QiniuBucket string\n   46  }\n   47  \n   48  func init() {\n   49: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   50: 	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   51  \n   52  	//conf\n   ..\n  224  	}\n  225  \n  226: 	//upload to qiniu\n  227  	glog.Info(\"upload begin\")\n  228  \n  ...\n  259  \n  260  	///upload\n  261: 	rsCli := qiniurs.New(nil)\n  262  	imgNum := len(uploadImgs)\n  263: 	entryPathes := make([]qiniurs.EntryPath, imgNum)\n  264  	imgExists := make([]bool, imgNum)\n  265  	for i, img := range uploadImgs {\n  266: 		entryPathes[i].Bucket = _conf.QiniuBucket\n  267  		entryPathes[i].Key = img.Key\n  268  		imgExists[i] = false\n  269  	}\n  270: 	var batchStatRets []qiniurs.BatchStatItemRet\n  271  	batchStatRets, _ = rsCli.BatchStat(nil, entryPathes)\n  272  \n  ...\n  278  \n  279  	///gen token\n  280: 	putPolicy := qiniurs.PutPolicy{\n  281: 		Scope: _conf.QiniuBucket,\n  282  	}\n  283  	token := putPolicy.Token(nil)\n  ...\n  289  			continue\n  290  		}\n  291: 		var ret qiniuio.PutRet\n  292: 		err = qiniuio.PutFile(nil, &ret, token, img.Key, img.File, nil)\n  293  		checkErr(err)\n  294  		glog.Infof(\"upload image ok: %s\", img.File)\n  ...\n  425  	}\n  426  \n  427: 	//upload to qiniu\n  428  	glog.Info(\"upload begin\")\n  429  \n  ...\n  460  \n  461  	///upload\n  462: 	rsCli := qiniurs.New(nil)\n  463  	imgNum := len(uploadImgs)\n  464: 	entryPathes := make([]qiniurs.EntryPath, imgNum)\n  465  	imgExists := make([]bool, imgNum)\n  466  	for i, img := range uploadImgs {\n  467: 		entryPathes[i].Bucket = _conf.QiniuBucket\n  468  		entryPathes[i].Key = img.Key\n  469  		imgExists[i] = false\n  470  	}\n  471: 	var batchStatRets []qiniurs.BatchStatItemRet\n  472  	batchStatRets, _ = rsCli.BatchStat(nil, entryPathes)\n  473  \n  ...\n  479  \n  480  	///gen token\n  481: 	putPolicy := qiniurs.PutPolicy{\n  482: 		Scope: _conf.QiniuBucket,\n  483  	}\n  484  	token := putPolicy.Token(nil)\n  ...\n  490  			continue\n  491  		}\n  492: 		var ret qiniuio.PutRet\n  493: 		err = qiniuio.PutFile(nil, &ret, token, img.Key, img.File, nil)\n  494  		checkErr(err)\n  495  		glog.Infof(\"upload image ok: %s\", img.File)\n  ...\n  699  \n  700  	//gen token\n  701: 	putPolicy := qiniurs.PutPolicy{\n  702: 		Scope: _conf.QiniuBucket,\n  703  	}\n  704  	token := putPolicy.Token(nil)\n  705  \n  706  	//upload\n  707: 	var ret qiniuio.PutRet\n  708: 	err := qiniuio.PutFile(nil, &ret, token, key, path, nil)\n  709  	checkErr(err)\n  710  	glog.Infof(\"upload image ok: path=%s\", path)\n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/conf.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://localhost:9998/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/confLocal.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://localhost:9998/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/confServer.json:\n    3  	\"Password\": \"Nmmgb808313\",\n    4  	\"ServerHost\": \"http://sld.pintugame.com/\",\n    5: 	\"QiniuBucket\": \"pintugame\"\n    6  }\n\n/Users/liwei/Documents/projects/2014/delight/tools/pickSideUploader/main.go:\n    9  	\"fmt\"\n   10  	\"github.com/golang/glog\"\n   11: 	qiniuconf \"github.com/qiniu/api/conf\"\n   12: 	qiniuio \"github.com/qiniu/api/io\"\n   13: 	qiniurs \"github.com/qiniu/api/rs\"\n   14  	\"io/ioutil\"\n   15  	\"net/http\"\n   ..\n   41  	Password    string\n   42  	ServerHost  string\n   43: 	QiniuBucket string\n   44  }\n   45  \n   ..\n   73  \n   74  func init() {\n   75: 	qiniuconf.ACCESS_KEY = \"XLlx3EjYfZJ-kYDAmNZhnH109oadlGjrGsb4plVy\"\n   76: 	qiniuconf.SECRET_KEY = \"FQfB3pG4UCkQZ3G7Y9JW8az2BN1aDkIJ-7LKVwTJ\"\n   77  \n   78  	//conf\n   ..\n  208  	}\n  209  \n  210: 	//upload to qiniu\n  211  	glog.Info(\"upload begin\")\n  212  \n  ...\n  243  \n  244  	///upload\n  245: 	rsCli := qiniurs.New(nil)\n  246  	imgNum := len(uploadImgs)\n  247: 	entryPathes := make([]qiniurs.EntryPath, imgNum)\n  248  	imgExists := make([]bool, imgNum)\n  249  	for i, img := range uploadImgs {\n  250: 		entryPathes[i].Bucket = _conf.QiniuBucket\n  251  		entryPathes[i].Key = img.Key\n  252  		imgExists[i] = false\n  253  	}\n  254: 	var batchStatRets []qiniurs.BatchStatItemRet\n  255  	batchStatRets, _ = rsCli.BatchStat(nil, entryPathes)\n  256  \n  ...\n  262  \n  263  	///gen token\n  264: 	putPolicy := qiniurs.PutPolicy{\n  265: 		Scope: _conf.QiniuBucket,\n  266  	}\n  267  	token := putPolicy.Token(nil)\n  ...\n  273  			continue\n  274  		}\n  275: 		var ret qiniuio.PutRet\n  276: 		err = qiniuio.PutFile(nil, &ret, token, img.Key, img.File, nil)\n  277  		checkErr(err)\n  278  		glog.Infof(\"upload image ok: %s\", img.File)\n  ...\n  398  \n  399  	//gen token\n  400: 	putPolicy := qiniurs.PutPolicy{\n  401: 		Scope: _conf.QiniuBucket,\n  402  	}\n  403  	token := putPolicy.Token(nil)\n  404  \n  405  	//upload\n  406: 	var ret qiniuio.PutRet\n  407: 	err := qiniuio.PutFile(nil, &ret, token, key, path, nil)\n  408  	checkErr(err)\n  409  	glog.Infof(\"upload image ok: path=%s\", path)\n\n93 matches across 22 files\n",
-			"settings":
-			{
-				"buffer_size": 11279,
-				"line_ending": "Unix",
-				"name": "Find Results",
-				"scratch": true
 			}
 		},
 		{
@@ -602,26 +576,10 @@
 			}
 		},
 		{
-			"file": "match/ssdb/ssdb.go",
+			"file": "match/tumblr.go",
 			"settings":
 			{
-				"buffer_size": 11917,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "match/social.go",
-			"settings":
-			{
-				"buffer_size": 6661,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "match/collection.go",
-			"settings":
-			{
-				"buffer_size": 5988,
+				"buffer_size": 12928,
 				"line_ending": "Unix"
 			}
 		},
@@ -629,18 +587,31 @@
 			"file": "match/conf.go",
 			"settings":
 			{
-				"buffer_size": 1640,
+				"buffer_size": 1975,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "package main\n\nimport (\n	\"./ssdb\"\n	\"encoding/json\"\n	\"fmt\"\n	\"github.com/golang/glog\"\n	\"github.com/henyouqian/lwutil\"\n	\"net/http\"\n	\"strconv\"\n)\n\nfunc glogTumblr() {\n	glog.Info(\"\")\n}\n\ntype TumblrImage struct{\n	BlogName string\n	PostId   int64\n	\n}\n\nfunc apiTumblrAddImage(w http.ResponseWriter, r *http.Request) {\n	var err error\n	lwutil.CheckMathod(r, \"POST\")\n\n	//in\n	var in struct {\n		UserName string\n		PostId   int64\n	}\n	err = lwutil.DecodeRequestBody(r, &in)\n	lwutil.CheckError(err, \"err_decode_body\")\n	if in.UserId == 0 {\n		in.UserId = ADMIN_USERID\n	}\n	if in.Limit > 60 {\n		in.Limit = 60\n	}\n\n	//ssdb\n	ssdb, err := ssdbPool.Get()\n	lwutil.CheckError(err, \"\")\n	defer ssdb.Close()\n\n}\n\nfunc regTumblr() {\n	http.Handle(\"/tumblr/addImage\", lwutil.ReqHandler(apiTumblrAddImage))\n}\n",
-			"file": "match/tumblr.go",
-			"file_size": 723,
-			"file_write_time": 1419885513000000,
+			"file": "match/etc.go",
 			"settings":
 			{
-				"buffer_size": 770,
+				"buffer_size": 6238,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/liwei/Documents/projects/2014/delight/tools/matchUploader/main.go",
+			"settings":
+			{
+				"buffer_size": 8667,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "match/ssdb/ssdb.go",
+			"settings":
+			{
+				"buffer_size": 17931,
 				"line_ending": "Unix"
 			}
 		}
@@ -709,18 +680,23 @@
 	},
 	"file_history":
 	[
-		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/GoSublime/Default (OSX).sublime-keymap",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
+		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
+		"/Users/liwei/Desktop/music.py",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/battle/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/backup.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/collection.go",
+		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
+		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/GoSublime/Default (OSX).sublime-keymap",
 		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/Package Control/Package Control.sublime-settings",
 		"/usr/local/go/src/pkg/builtin/builtin.go",
 		"/Users/liwei/Library/Application Support/Sublime Text 2/Packages/User/GoSublime.sublime-settings",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/matchCron.go",
-		"/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/util.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/ssdb/ssdb.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/db.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/main.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/battle.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/ecoMonitor.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/deprecate/event.go",
@@ -733,10 +709,8 @@
 		"/Users/liwei/Documents/projects/2014/SldServer/match/conf.json",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/monitor.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/player.go",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/social.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/store.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/confOrig.json",
-		"/Users/liwei/Documents/projects/2014/SldServer/match/admin.go",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/statistics.go",
 		"/Users/liwei/Desktop/aaaaaa.html",
 		"/Users/liwei/Documents/projects/2014/SldServer/match/event.go",
@@ -796,6 +770,76 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"info",
+			"+v",
+			"rs",
+			"_conf",
+			"exist",
+			"genImageKey",
+			"rsCli",
+			"qiniuconf",
+			"QINIU_KEY",
+			"QINIU_ACCESS_KEY",
+			"table",
+			"Do(\"hset\", H_ACCOUNT",
+			"SETPLAYERI",
+			"\"account\"",
+			"H_TUMBLR_ACCONT",
+			"sns",
+			"snslog",
+			"addPlayerGoldCoin",
+			"apiAuthLoginSns",
+			"elems",
+			"IsNil",
+			"make",
+			"objPtr",
+			"key",
+			"TUMBLR_IMAGE_SEREAL",
+			"PlayerInfoLite",
+			"info",
+			"ImageFetchOffsets",
+			"apiTumblrListBlog",
+			"info",
+			"zkey",
+			"makeZTumblrBlogImageKey",
+			"makeTumblrImageKey",
+			"makeZTumblrBlogImageKey",
+			"Z_TUMBLR_BLOG_IMAGE",
+			"apiTumblrAddImages",
+			"apiTumblrListBlog",
+			"H_TUMBLR_BLOG_IMAGE_OFFSET",
+			"offset",
+			"glog.inf",
+			"glog.info",
+			"apiTumblrAddBlog",
+			"Generator_Bass",
+			"strcon",
+			"strconv",
+			"zrscan",
+			"session",
+			"PLAYER_FOLLOW_NUM",
+			"getPlayerFanFollowNum",
+			"apiPlayerFollowList",
+			"PLAYER_FOLLOW_NUM",
+			"FollowNum",
+			"PlayerInfo",
+			"apiGetPlayerInfo",
+			"getPlayerFanFollowNum",
+			"apiMatchGetDynamicData",
+			"qiniurs",
+			"github.com/qiniu/api/rs",
+			"rscli",
+			"qiniurs",
+			"apiGetPack",
+			"apiGetPrivateUptoken",
+			"getuptoken",
+			"setitem",
+			"apiGetPack",
+			"qiniurs",
+			"qiniu",
+			"pack",
+			"newpack",
+			"newPack",
 			"qiniu",
 			"+g",
 			"gs9o_build",
@@ -853,77 +897,7 @@
 			"apiMatchListLike",
 			"apiMatchLike",
 			"zdel",
-			"*",
-			"matchdel",
-			"apiMatchNew",
-			"v",
-			"apiMatchDel",
-			"makeZPlayedMatchKey",
-			"makeZPlayedAllKey",
-			"apiMatchListPlayedAll",
-			"apiMatchListPlayedMatch",
-			"Z_PLAYED_MATCH",
-			"Z_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime\nZ_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime",
-			"Z_PLAYED_MATCH          = \"Z_PLAYED_MATCH\"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime",
-			"Z_PLAYED_MATCH",
-			"makeZPlayedMatchKey",
-			"apiMatchListPlayed",
-			"makeZPlayedMatchKey",
-			"apiMatchListPlayed",
-			"MATCH_EXTRA_PLAY_TIMES",
-			"playend",
-			"freeplay",
-			"MATCH_EXTRA_PLAY_TIMES",
-			"apiMatchGetDynamicData",
-			"getDynamicData",
-			"LikeNum",
-			"matchextra",
-			"图集",
-			"glog.inf",
-			"//in",
-			"makeQMatchActivityKey",
-			"apiMatchListActivity",
-			"addMatchActivity",
-			"li ke",
-			"playend",
-			"freeplay",
-			"free",
-			"喜欢",
-			"apiMatchListActivity",
-			"apiMatchPlayEnd",
-			"playend",
-			"MATCH_PLAY_RECORD_Q_LIMIT",
-			"makeQMatch",
-			"makeQMatchActivityKey",
-			"Q_MATCH_",
-			"activity",
-			"apiMatchListPlayRecord",
-			"apiMatchFreePlay",
-			"freeplay",
-			"getplayerinfo",
-			"resp",
-			"PlayerInfoLite",
-			"makeZMatchPlayerKey",
-			"Z_MATCH_PLAYER",
-			"makeZMatchLikerKey",
-			"xxxx",
-			"Z_MATCH_LIKER",
-			"makeZMatchLikerKey",
-			"Z_MATCH_LIKER",
-			"getMatchPlay",
-			"now",
-			"apiMatchPlayEnd",
-			"apiGetPack",
-			"newPack",
-			"apiMatchNew",
-			"apiMatchGetDynamicData",
-			"makeZMatchLikerKey",
-			"fieldKey == MATCH_EXTRA_LIKE_NUM",
-			"apiMatchListLike",
-			"MATCH_EXTRA_PLAY_TIMES",
-			"MATCH_EXTRA_LIKE_NUM",
-			"MATCH_EXTRA_PLAY_TIMES",
-			"likeNum"
+			"*"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -987,18 +961,18 @@
 				},
 				{
 					"buffer": 1,
-					"file": "match/admin.go",
+					"file": "match/auth.go",
 					"settings":
 					{
-						"buffer_size": 5028,
+						"buffer_size": 16891,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								114,
-								114
+								6871,
+								6883
 							]
 						],
 						"settings":
@@ -1007,25 +981,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 5915.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "match/auth.go",
+					"file": "match/player.go",
 					"settings":
 					{
-						"buffer_size": 16849,
+						"buffer_size": 27377,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								973,
-								973
+								1399,
+								1410
 							]
 						],
 						"settings":
@@ -1034,25 +1008,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 748.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 3,
-					"file": "match/player.go",
+					"file": "match/match.go",
 					"settings":
 					{
-						"buffer_size": 26458,
+						"buffer_size": 62182,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6413,
-								6413
+								126,
+								126
 							]
 						],
 						"settings":
@@ -1061,79 +1035,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 4971.0,
+						"translation.y": 2318.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 4,
-					"file": "match/match.go",
-					"settings":
-					{
-						"buffer_size": 62153,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								39268,
-								39268
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "/Users/liwei/Documents/go/src/github.com/henyouqian/lwutil/util.go",
-					"settings":
-					{
-						"buffer_size": 16491,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4000,
-								4000
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 3604.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
 					"file": "match/www/api.js",
 					"settings":
 					{
-						"buffer_size": 15121,
+						"buffer_size": 14749,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								11080,
-								11080
+								10643,
+								10643
 							]
 						],
 						"settings":
@@ -1141,26 +1061,26 @@
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 2.0,
-						"translation.y": 0.0,
+						"translation.x": 0.0,
+						"translation.y": 10176.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 5,
 					"file": "match/pack.go",
 					"settings":
 					{
-						"buffer_size": 9856,
+						"buffer_size": 10198,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								134,
-								134
+								2844,
+								2918
 							]
 						],
 						"settings":
@@ -1169,424 +1089,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2445.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 8,
-					"settings":
-					{
-						"buffer_size": 11279,
-						"regions":
-						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										255,
-										260
-									],
-									[
-										449,
-										454
-									],
-									[
-										744,
-										749
-									],
-									[
-										922,
-										927
-									],
-									[
-										942,
-										947
-									],
-									[
-										964,
-										969
-									],
-									[
-										984,
-										989
-									],
-									[
-										1073,
-										1078
-									],
-									[
-										1151,
-										1156
-									],
-									[
-										1262,
-										1267
-									],
-									[
-										1292,
-										1297
-									],
-									[
-										1589,
-										1594
-									],
-									[
-										1627,
-										1632
-									],
-									[
-										1883,
-										1888
-									],
-									[
-										1950,
-										1955
-									],
-									[
-										2182,
-										2187
-									],
-									[
-										2466,
-										2471
-									],
-									[
-										2488,
-										2493
-									],
-									[
-										2599,
-										2604
-									],
-									[
-										2622,
-										2627
-									],
-									[
-										2640,
-										2645
-									],
-									[
-										2663,
-										2668
-									],
-									[
-										2847,
-										2852
-									],
-									[
-										3034,
-										3039
-									],
-									[
-										3183,
-										3188
-									],
-									[
-										3223,
-										3228
-									],
-									[
-										3338,
-										3343
-									],
-									[
-										3487,
-										3492
-									],
-									[
-										3627,
-										3632
-									],
-									[
-										3913,
-										3918
-									],
-									[
-										4243,
-										4248
-									],
-									[
-										4555,
-										4560
-									],
-									[
-										4867,
-										4872
-									],
-									[
-										5177,
-										5182
-									],
-									[
-										5397,
-										5402
-									],
-									[
-										5605,
-										5610
-									],
-									[
-										5817,
-										5822
-									],
-									[
-										5981,
-										5986
-									],
-									[
-										6003,
-										6008
-									],
-									[
-										6027,
-										6032
-									],
-									[
-										6047,
-										6052
-									],
-									[
-										6069,
-										6074
-									],
-									[
-										6089,
-										6094
-									],
-									[
-										6204,
-										6209
-									],
-									[
-										6269,
-										6274
-									],
-									[
-										6343,
-										6348
-									],
-									[
-										6476,
-										6481
-									],
-									[
-										6573,
-										6578
-									],
-									[
-										6654,
-										6659
-									],
-									[
-										6803,
-										6808
-									],
-									[
-										6921,
-										6926
-									],
-									[
-										7071,
-										7076
-									],
-									[
-										7112,
-										7117
-									],
-									[
-										7226,
-										7231
-									],
-									[
-										7256,
-										7261
-									],
-									[
-										7434,
-										7439
-									],
-									[
-										7531,
-										7536
-									],
-									[
-										7612,
-										7617
-									],
-									[
-										7761,
-										7766
-									],
-									[
-										7879,
-										7884
-									],
-									[
-										8029,
-										8034
-									],
-									[
-										8070,
-										8075
-									],
-									[
-										8184,
-										8189
-									],
-									[
-										8214,
-										8219
-									],
-									[
-										8403,
-										8408
-									],
-									[
-										8444,
-										8449
-									],
-									[
-										8546,
-										8551
-									],
-									[
-										8576,
-										8581
-									],
-									[
-										8873,
-										8878
-									],
-									[
-										9085,
-										9090
-									],
-									[
-										9301,
-										9306
-									],
-									[
-										9469,
-										9474
-									],
-									[
-										9491,
-										9496
-									],
-									[
-										9515,
-										9520
-									],
-									[
-										9535,
-										9540
-									],
-									[
-										9557,
-										9562
-									],
-									[
-										9577,
-										9582
-									],
-									[
-										9698,
-										9703
-									],
-									[
-										9777,
-										9782
-									],
-									[
-										9851,
-										9856
-									],
-									[
-										9984,
-										9989
-									],
-									[
-										10081,
-										10086
-									],
-									[
-										10162,
-										10167
-									],
-									[
-										10311,
-										10316
-									],
-									[
-										10429,
-										10434
-									],
-									[
-										10579,
-										10584
-									],
-									[
-										10620,
-										10625
-									],
-									[
-										10734,
-										10739
-									],
-									[
-										10764,
-										10769
-									],
-									[
-										10953,
-										10958
-									],
-									[
-										10994,
-										10999
-									],
-									[
-										11096,
-										11101
-									],
-									[
-										11126,
-										11131
-									]
-								],
-								"scope": ""
-							}
-						},
-						"selection":
-						[
-							[
-								982,
-								982
-							]
-						],
-						"settings":
-						{
-							"detect_indentation": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 257.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 9,
+					"buffer": 6,
 					"file": "match/backup.go",
 					"settings":
 					{
@@ -1597,8 +1106,8 @@
 						"selection":
 						[
 							[
-								149,
-								149
+								118,
+								125
 							]
 						],
 						"settings":
@@ -1607,106 +1116,106 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 38.0,
+						"translation.y": 127.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "match/tumblr.go",
+					"settings":
+					{
+						"buffer_size": 12928,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								11895,
+								11895
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 10275.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "match/conf.go",
+					"settings":
+					{
+						"buffer_size": 1975,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								776,
+								792
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 3.0,
+						"translation.y": 166.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "match/etc.go",
+					"settings":
+					{
+						"buffer_size": 6238,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5303,
+								5303
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 5455.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 10,
-					"file": "match/ssdb/ssdb.go",
+					"file": "/Users/liwei/Documents/projects/2014/delight/tools/matchUploader/main.go",
 					"settings":
 					{
-						"buffer_size": 11917,
+						"buffer_size": 8667,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7357,
-								7367
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 8475.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 11,
-					"file": "match/social.go",
-					"settings":
-					{
-						"buffer_size": 6661,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6464,
-								6470
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 5948.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 12,
-					"file": "match/collection.go",
-					"settings":
-					{
-						"buffer_size": 5988,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5558,
-								5558
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 4761.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 13,
-					"file": "match/conf.go",
-					"settings":
-					{
-						"buffer_size": 1640,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								345,
-								414
+								164,
+								232
 							]
 						],
 						"settings":
@@ -1721,19 +1230,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 14,
-					"file": "match/tumblr.go",
+					"buffer": 11,
+					"file": "match/ssdb/ssdb.go",
 					"settings":
 					{
-						"buffer_size": 770,
+						"buffer_size": 17931,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								621,
-								621
+								12882,
+								12882
 							]
 						],
 						"settings":
@@ -1742,7 +1251,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 361.0,
+						"translation.y": 14086.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1786,6 +1295,10 @@
 		"height": 124.0
 	},
 	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/match":
+	{
+		"height": 136.0
+	},
+	"output.9o:///Users/liwei/Documents/projects/2014/SldServer/match/ssdb":
 	{
 		"height": 136.0
 	},
@@ -1836,6 +1349,14 @@
 				"SldServer/match/pack.go"
 			],
 			[
+				"player",
+				"SldServer/match/player.go"
+			],
+			[
+				"conf.go",
+				"SldServer/match/conf.go"
+			],
+			[
 				"tum",
 				"SldServer/match/tumblr.go"
 			],
@@ -1862,10 +1383,6 @@
 			[
 				"match",
 				"SldServer/match/match.go"
-			],
-			[
-				"player",
-				"SldServer/match/player.go"
 			],
 			[
 				"auth.go",
@@ -1950,10 +1467,6 @@
 			[
 				"conf.json",
 				"SldServer/match/conf.json"
-			],
-			[
-				"conf.go",
-				"SldServer/match/conf.go"
 			],
 			[
 				"so",

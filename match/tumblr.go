@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
+	qiniurs "github.com/qiniu/api/rs"
 )
 
 func glogTumblr() {
@@ -20,10 +21,11 @@ func glogTumblr() {
 const (
 	H_TUMBLR_BLOG              = "H_TUMBLR_BLOG"              //key:H_TUMBLR_BLOG subkey:blogName
 	Z_TUMBLR_BLOG              = "Z_TUMBLR_BLOG"              //key:Z_TUMBLR_BLOG subkey:blogName score:addTime
-	H_TUMBLR_IMAGE             = "H_TUMBLR_IMAGE"             //key:H_TUMBLR_IMAGE subkey:imageId
+	H_TUMBLR_IMAGE             = "H_TUMBLR_IMAGE"             //key:H_TUMBLR_IMAGE subkey:imageKey
 	Z_TUMBLR_BLOG_IMAGE        = "Z_TUMBLR_BLOG_IMAGE"        //key:Z_TUMBLR_BLOG_IMAGE/blogName subkey:imageKey score:postId
 	H_TUMBLR_BLOG_IMAGE_OFFSET = "H_TUMBLR_BLOG_IMAGE_OFFSET" //key:H_TUMBLR_BLOG_IMAGE_OFFSET subkey:blogName value:offset
 	H_TUMBLR_ACCONT            = "H_TUMBLR_ACCONT"            //key:H_TUMBLR_ACCONT subkey:blogName value:userId
+	Z_TUMBLR_DELETED_IMAGE     = "Z_TUMBLR_DELETED_IMAGE"     //key:Z_TUMBLR_DELETED_IMAGE/blogName subkey:imageKey score:time
 )
 
 type TumblrBlog struct {
@@ -39,8 +41,10 @@ type TumblrBlog struct {
 }
 
 type TumblrImage struct {
-	PostId int64
-	Sizes  []struct {
+	Key         string
+	PostId      int64
+	IndexInPost int
+	Sizes       []struct {
 		Width  int
 		Height int
 		Url    string
@@ -51,8 +55,16 @@ func makeTumblrImageKey(postId int64, imageIndex int) string {
 	return fmt.Sprintf("%d/%d", postId, imageIndex)
 }
 
-func makeZTumblrBlogImageKey(blogName string) string {
-	return fmt.Sprintf("%s/%s", Z_TUMBLR_BLOG_IMAGE, blogName)
+func makeZTumblrBlogImageKey(blogName string, isPortrait bool) string {
+	if isPortrait {
+		return fmt.Sprintf("%s/%s/p", Z_TUMBLR_BLOG_IMAGE, blogName)
+	} else {
+		return fmt.Sprintf("%s/%s/l", Z_TUMBLR_BLOG_IMAGE, blogName)
+	}
+}
+
+func makeZTumblrDeletedImageKey(blogName string) string {
+	return fmt.Sprintf("%s/%s", Z_TUMBLR_DELETED_IMAGE, blogName)
 }
 
 func checkTumblrSecret(secret string) bool {
@@ -87,40 +99,23 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 	//checkExist
 	resp, err := ssdbc.Do("hexists", H_TUMBLR_BLOG, in.Name)
 	lwutil.CheckSsdbError(resp, err)
-	if resp[0] == "1" {
-		lwutil.SendError("err_exist", "")
+	if resp[1] != "1" {
+		//hset
+		err = ssdbc.TableSetRow(H_TUMBLR_BLOG, in.Name, in.TumblrBlog)
+		lwutil.CheckError(err, "err_table_set_row")
 	}
-
-	//hset
-	err = ssdbc.TableSetRow(H_TUMBLR_BLOG, in.Name, in.TumblrBlog)
-	lwutil.CheckError(err, "err_table_set_row")
-
-	// js, err := json.Marshal(in.TumblrBlog)
-	// resp, err := ssdbc.Do("hset", H_TUMBLR_BLOG, in.Name, js)
-	// lwutil.CheckSsdbError(resp, err)
 
 	//zset
 	resp, err = ssdbc.Do("zset", Z_TUMBLR_BLOG, in.Name, lwutil.GetRedisTimeUnix())
 	lwutil.CheckSsdbError(resp, err)
 
-	// resp, err = ssdbc.Do("hget", H_TUMBLR_BLOG_IMAGE_OFFSET, in.Name)
-	// lwutil.CheckSsdbError(resp, err)
-	// offset, err := strconv.Atoi(resp[1])
-	// lwutil.CheckError(err, "err_strconv")
-	// out := struct {
-	// 	ImageFetchOffset int
-	// }{
-	// 	offset,
-	// }
-	// lwutil.WriteResponse(w, out)
-
 	//add user
 	resp, err = ssdbc.Do("hget", H_TUMBLR_ACCONT, in.Name)
 	var userId int64
 	if resp[0] == ssdb.NOT_FOUND {
-		userId = GenSerial(ssdbc, ACCOUNT_SERIAL)
+		userId = GenSerial(ssdbAuth, ACCOUNT_SERIAL)
 
-		resp, err = ssdbAuth.Do("hset", H_TUMBLR_ACCONT, in.Name, userId)
+		resp, err = ssdbc.Do("hset", H_TUMBLR_ACCONT, in.Name, userId)
 		lwutil.CheckSsdbError(resp, err)
 
 		//set account
@@ -130,29 +125,35 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckError(err, "")
 		_, err = ssdbAuth.Do("hset", H_ACCOUNT, userId, js)
 		lwutil.CheckError(err, "")
-
-		//set player
-		playerKey := makePlayerInfoKey(userId)
-		addPlayerGoldCoin(ssdbc, playerKey, 20)
-
-		//
-		var player PlayerInfo
-		err = ssdbc.HSetStruct(playerKey, player)
-		lwutil.CheckError(err, "")
-		player.NickName = in.Name
-		player.CustomAvatarKey = in.Avartar128
-		player.Description = in.Description
-
-		infoLite := makePlayerInfoLite(&player)
-		js, err = json.Marshal(infoLite)
-		lwutil.CheckError(err, "err_json")
-		resp, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
-		lwutil.CheckError(err, "")
-
 	} else {
 		lwutil.CheckSsdbError(resp, err)
 		userId, err = strconv.ParseInt(resp[1], 10, 64)
 	}
+
+	//set player
+	playerKey := makePlayerInfoKey(userId)
+
+	//
+	var player PlayerInfo
+	player.UserId = userId
+	player.NickName = in.Name
+	player.CustomAvatarKey = in.Avartar128
+	player.Description = in.Description
+	err = ssdbc.HSetStruct(playerKey, player)
+	lwutil.CheckError(err, "")
+
+	infoLite := makePlayerInfoLite(&player)
+	js, err := json.Marshal(infoLite)
+	lwutil.CheckError(err, "err_json")
+	resp, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
+	lwutil.CheckError(err, "")
+
+	//out
+	out := struct {
+		Blog TumblrBlog
+	}{}
+	ssdbc.TableGetRow(H_TUMBLR_BLOG, in.Name, &out.Blog)
+	lwutil.WriteResponse(w, out)
 }
 
 func apiTumblrDelBlog(w http.ResponseWriter, r *http.Request) {
@@ -176,17 +177,23 @@ func apiTumblrDelBlog(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_secret", "")
 	}
 
-	//hdel
-	var blog TumblrBlog
-	err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
-	lwutil.CheckError(err, "err_table_del_row")
-
-	// resp, err := ssdbc.Do("hdel", H_TUMBLR_BLOG, in.BlogName)
-	// lwutil.CheckSsdbError(resp, err)
-
-	//zset
+	//zdel
 	resp, err := ssdbc.Do("zdel", Z_TUMBLR_BLOG, in.BlogName)
 	lwutil.CheckSsdbError(resp, err)
+
+	// //hdel
+	// var blog TumblrBlog
+	// err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
+	// lwutil.CheckError(err, "err_table_del_row")
+
+	// //zclear
+	// key := makeZTumblrBlogImageKey(in.BlogName, true)
+	// resp, err := ssdbc.Do("zclear", key)
+	// lwutil.CheckSsdbError(resp, err)
+
+	// key = makeZTumblrBlogImageKey(in.BlogName, false)
+	// resp, err = ssdbc.Do("zclear", key)
+	// lwutil.CheckSsdbError(resp, err)
 }
 
 // func apiTumblrListBlog(w http.ResponseWriter, r *http.Request) {
@@ -374,21 +381,28 @@ func apiTumblrAddImages(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_ssdb")
 
 	//
-	zkey := makeZTumblrBlogImageKey(in.BlogName)
-	for i, image := range in.Images {
+	zPortraitKey := makeZTumblrBlogImageKey(in.BlogName, true)
+	zLandscapeKey := makeZTumblrBlogImageKey(in.BlogName, false)
+	for _, image := range in.Images {
 		if len(image.Sizes) == 0 {
 			glog.Error("tumblr image no sizes")
 			continue
 		}
-		imageKey := makeTumblrImageKey(image.PostId, i)
+		imageKey := makeTumblrImageKey(image.PostId, image.IndexInPost)
+		image.Key = imageKey
 
 		jsb, err := json.Marshal(image)
 		lwutil.CheckError(err, "err_json")
 		resp, err := ssdbc.Do("hset", H_TUMBLR_IMAGE, imageKey, jsb)
 		lwutil.CheckSsdbError(resp, err)
 
-		resp, err = ssdbc.Do("zset", zkey, imageKey, image.PostId)
-		lwutil.CheckSsdbError(resp, err)
+		if image.Sizes[0].Width <= image.Sizes[0].Height {
+			resp, err = ssdbc.Do("zset", zPortraitKey, imageKey, image.PostId)
+			lwutil.CheckSsdbError(resp, err)
+		} else {
+			resp, err = ssdbc.Do("zset", zLandscapeKey, imageKey, image.PostId)
+			lwutil.CheckSsdbError(resp, err)
+		}
 
 		if image.PostId > blog.MaxPostId {
 			mp := map[string]interface{}{
@@ -409,6 +423,47 @@ func apiTumblrAddImages(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_table_set_row")
 }
 
+func apiTumblrDelImage(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		BlogName string
+		Key      string
+		Secret   string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if !checkTumblrSecret(in.Secret) {
+		lwutil.SendError("err_secret", "")
+	}
+
+	//get image
+	resp, err := ssdbc.Do("hget", H_TUMBLR_IMAGE, in.Key)
+	lwutil.CheckSsdbError(resp, err)
+	var image TumblrImage
+	err = json.Unmarshal([]byte(resp[1]), &image)
+	lwutil.CheckError(err, "err_json")
+
+	//
+	zkey := makeZTumblrBlogImageKey(in.BlogName, true)
+	if image.Sizes[0].Width > image.Sizes[0].Height {
+		zkey = makeZTumblrBlogImageKey(in.BlogName, false)
+	}
+	resp, err = ssdbc.Do("zdel", zkey, in.Key)
+	lwutil.CheckSsdbError(resp, err)
+	zDeletedKey := makeZTumblrDeletedImageKey(in.BlogName)
+	resp, err = ssdbc.Do("zset", zDeletedKey, in.Key, lwutil.GetRedisTimeUnix())
+	lwutil.CheckSsdbError(resp, err)
+}
+
 func apiTumblrListImage(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -420,10 +475,11 @@ func apiTumblrListImage(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		BlogName  string
-		LastKey   string
-		LastScore int64
-		Limit     int
+		BlogName   string
+		LastKey    string
+		LastScore  int64
+		Limit      int
+		IsPortrait bool
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -438,7 +494,7 @@ func apiTumblrListImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//zrscan
-	zkey := makeZTumblrBlogImageKey(in.BlogName)
+	zkey := makeZTumblrBlogImageKey(in.BlogName, in.IsPortrait)
 	resp, err := ssdbc.Do("zrscan", zkey, in.LastKey, in.LastScore, "", in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
@@ -456,6 +512,7 @@ func apiTumblrListImage(w http.ResponseWriter, r *http.Request) {
 	resp = resp[1:]
 	if len(resp) == 0 {
 		lwutil.WriteResponse(w, out)
+		return
 	}
 
 	num := len(resp) / 2
@@ -508,13 +565,203 @@ func apiTumblrSetFetchFinish(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_table_set_row")
 }
 
+func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		Pack
+		BeginTimeStr     string
+		SliderNum        int
+		GoldCoinForPrize int
+		Private          bool
+		Tags             []string
+		BlogName         string
+		ImageKeys        []string
+		Secret           string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if !checkTumblrSecret(in.Secret) {
+		lwutil.SendError("err_secret", "")
+	}
+
+	if len(in.ImageKeys) != len(in.Images) {
+		lwutil.SendError("err_len_match", "len(in.ImageKeys) != len(in.Images)")
+	}
+
+	if in.SliderNum < 3 {
+		in.SliderNum = 3
+	} else if in.SliderNum > 8 {
+		in.SliderNum = 8
+	}
+	stringLimit(&in.Title, 100)
+	stringLimit(&in.Text, 1000)
+
+	//
+	if in.GoldCoinForPrize != 0 {
+		lwutil.SendError("err_gold_coin", "")
+	}
+
+	//get userId
+	resp, err := ssdbc.Do("hget", H_TUMBLR_ACCONT, in.BlogName)
+	lwutil.CheckSsdbError(resp, err)
+	userId, err := strconv.ParseInt(resp[1], 10, 64)
+
+	//
+	playerKey := makePlayerInfoKey(userId)
+
+	//new pack
+	newPack(ssdbc, &in.Pack, userId)
+
+	//new match
+	matchId := GenSerial(ssdbc, MATCH_SERIAL)
+
+	beginTime := lwutil.GetRedisTime()
+	beginTimeUnix := beginTime.Unix()
+	beginTimeStr := beginTime.Format("2006-01-02T15:04:05")
+	endTimeUnix := beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
+
+	match := Match{
+		Id:                   matchId,
+		PackId:               in.Pack.Id,
+		ImageNum:             len(in.Pack.Images),
+		OwnerId:              userId,
+		OwnerName:            in.BlogName,
+		SliderNum:            in.SliderNum,
+		Thumb:                in.Pack.Thumb,
+		Title:                in.Title,
+		Prize:                in.GoldCoinForPrize * PRIZE_NUM_PER_COIN,
+		BeginTime:            beginTimeUnix,
+		BeginTimeStr:         beginTimeStr,
+		EndTime:              endTimeUnix,
+		HasResult:            false,
+		RankPrizeProportions: MATCH_RANK_PRIZE_PROPORTIONS,
+		LuckyPrizeProportion: MATCH_LUCKY_PRIZE_PROPORTION,
+		MinPrizeProportion:   MATCH_MIN_PRIZE_PROPORTION,
+		OwnerPrizeProportion: MATCH_OWNER_PRIZE_PROPORTION,
+		PromoUrl:             "",
+		PromoImage:           "",
+		Private:              in.Private,
+	}
+
+	js, err := json.Marshal(match)
+	lwutil.CheckError(err, "")
+
+	//add to hash
+	resp, err = ssdbc.Do("hset", H_MATCH, matchId, js)
+	lwutil.CheckSsdbError(resp, err)
+
+	if !in.Private {
+		//add to Z_MATCH
+		resp, err = ssdbc.Do("zset", Z_MATCH, matchId, beginTimeUnix)
+		lwutil.CheckSsdbError(resp, err)
+
+		//Z_HOT_MATCH
+		resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.GoldCoinForPrize*PRIZE_NUM_PER_COIN)
+		lwutil.CheckSsdbError(resp, err)
+	}
+
+	//Z_LIKE_MATCH
+	key := makeZLikeMatchKey(userId)
+	resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Z_OPEN_MATCH
+	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//add to Z_PLAYER_MATCH
+	zPlayerMatchKey := makeZPlayerMatchKey(userId)
+	resp, err = ssdbc.Do("zset", zPlayerMatchKey, matchId, beginTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//decrease gold coin
+	if in.GoldCoinForPrize != 0 {
+		addPlayerGoldCoin(ssdbc, playerKey, -in.GoldCoinForPrize)
+	}
+
+	//delete from list
+	zkey := makeZTumblrBlogImageKey(in.BlogName, true)
+	cmds := make([]interface{}, 2, len(in.ImageKeys)+2)
+	cmds[0] = "multi_zdel"
+	cmds[1] = zkey
+	for _, v := range in.ImageKeys {
+		cmds = append(cmds, v)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+
+	zkey = makeZTumblrBlogImageKey(in.BlogName, false)
+	cmds = make([]interface{}, 2, len(in.ImageKeys)+2)
+	cmds[0] = "multi_zdel"
+	cmds[1] = zkey
+	for _, v := range in.ImageKeys {
+		cmds = append(cmds, v)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, match)
+}
+
+func apiTumblrGetUptoken(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//in
+	var in struct {
+		Secret string
+	}
+	err := lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if !checkTumblrSecret(in.Secret) {
+		lwutil.SendError("err_secret", "")
+	}
+
+	//
+	scope := fmt.Sprintf("%s", USER_UPLOAD_BUCKET)
+	putPolicy := qiniurs.PutPolicy{
+		Scope: scope,
+	}
+	token := putPolicy.Token(nil)
+
+	scope = fmt.Sprintf("%s", USER_PRIVATE_UPLOAD_BUCKET)
+	putPolicy = qiniurs.PutPolicy{
+		Scope: scope,
+	}
+	privateToken := putPolicy.Token(nil)
+
+	//out
+	out := struct {
+		Token        string
+		PrivateToken string
+	}{
+		token,
+		privateToken,
+	}
+
+	lwutil.WriteResponse(w, &out)
+}
+
 func regTumblr() {
 	http.Handle("/tumblr/addBlog", lwutil.ReqHandler(apiTumblrAddBlog))
 	http.Handle("/tumblr/delBlog", lwutil.ReqHandler(apiTumblrDelBlog))
 	http.Handle("/tumblr/listBlog", lwutil.ReqHandler(apiTumblrListBlog))
 	http.Handle("/tumblr/addImages", lwutil.ReqHandler(apiTumblrAddImages))
+	http.Handle("/tumblr/delImage", lwutil.ReqHandler(apiTumblrDelImage))
 	http.Handle("/tumblr/listImage", lwutil.ReqHandler(apiTumblrListImage))
+	http.Handle("/tumblr/publish", lwutil.ReqHandler(apiTumblrPublish))
 	http.Handle("/tumblr/setFetchFinish", lwutil.ReqHandler(apiTumblrSetFetchFinish))
+	http.Handle("/tumblr/getUptoken", lwutil.ReqHandler(apiTumblrGetUptoken))
 
 	// //ssdb
 	// ssdbc, err := ssdbPool.Get()

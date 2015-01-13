@@ -279,7 +279,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stringLimit(&in.Title, 100)
-	stringLimit(&in.Text, 2000)
+	stringLimit(&in.Text, 1000)
 
 	//check gold coin
 	playerKey := makePlayerInfoKey(session.Userid)
@@ -379,7 +379,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//decrease gold coin
-	addPlayerGoldCoin(ssdbc, playerKey, -in.GoldCoinForPrize)
+	if in.GoldCoinForPrize != 0 {
+		addPlayerGoldCoin(ssdbc, playerKey, -in.GoldCoinForPrize)
+	}
 
 	//out
 	lwutil.WriteResponse(w, match)
