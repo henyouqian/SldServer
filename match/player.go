@@ -1178,6 +1178,36 @@ func checkPlayerExist(ssdbc *ssdb.Client, userId int64) bool {
 	return true
 }
 
+func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+
+	//get info
+	playerInfo, err := getPlayerInfo(ssdb, in.UserId)
+	if err != nil {
+		lwutil.SendError("err_get_player_info", "")
+	}
+
+	//out
+	out := struct {
+		*PlayerInfo
+	}{
+		playerInfo,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
 func regPlayer() {
 	http.Handle("/player/getInfo", lwutil.ReqHandler(apiGetPlayerInfo))
 	http.Handle("/player/setInfo", lwutil.ReqHandler(apiSetPlayerInfo))
@@ -1192,4 +1222,6 @@ func regPlayer() {
 	http.Handle("/player/followList", lwutil.ReqHandler(apiPlayerFollowList))
 	http.Handle("/player/follow", lwutil.ReqHandler(apiPlayerFollow))
 	http.Handle("/player/unfollow", lwutil.ReqHandler(apiPlayerUnfollow))
+
+	http.Handle("/player/getInfoWeb", lwutil.ReqHandler(apiPlayerGetPlayerInfoWeb))
 }
