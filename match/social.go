@@ -307,8 +307,39 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, socialPack)
 }
 
+func apiSocialGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdb.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+
+	//get info
+	playerInfo, err := getPlayerInfo(ssdb, in.UserId)
+	if err != nil {
+		lwutil.SendError("err_get_player_info", "")
+	}
+
+	//out
+	out := struct {
+		*PlayerInfo
+	}{
+		playerInfo,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
 func regSocial() {
 	http.Handle("/social/newPack", lwutil.ReqHandler(apiSocialNewPack))
 	http.Handle("/social/getPack", lwutil.ReqHandler(apiSocialGetPack))
 	http.Handle("/social/play", lwutil.ReqHandler(apiSocialPlay))
+	http.Handle("/social/getPlayerInfo", lwutil.ReqHandler(apiSocialGetPlayerInfo))
 }
