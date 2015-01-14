@@ -445,6 +445,36 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiGetPlayerInfoLite(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+
+	//get infolite
+	infoLite, err := getPlayerInfoLite(ssdbc, in.UserId, nil)
+	if err != nil {
+		lwutil.SendError("err_get_info_lite", "")
+	}
+
+	//out
+	out := struct {
+		*PlayerInfoLite
+	}{
+		infoLite,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
 func getBattleHeartNum(playerInfo *PlayerInfo) int {
 	dt := lwutil.GetRedisTimeUnix() - playerInfo.BattleHeartZeroTime
 	heartNum := int(dt) / BATTLE_HEART_ADD_SEC
@@ -1181,6 +1211,8 @@ func checkPlayerExist(ssdbc *ssdb.Client, userId int64) bool {
 func regPlayer() {
 	http.Handle("/player/getInfo", lwutil.ReqHandler(apiGetPlayerInfo))
 	http.Handle("/player/setInfo", lwutil.ReqHandler(apiSetPlayerInfo))
+	http.Handle("/player/getInfoLite", lwutil.ReqHandler(apiGetPlayerInfoLite))
+
 	http.Handle("/player/addPrizeFromCache", lwutil.ReqHandler(apiAddPrizeFromCache))
 	http.Handle("/player/getUptokens", lwutil.ReqHandler(apiGetUptokens))
 	http.Handle("/player/getUptoken", lwutil.ReqHandler(apiGetUptoken))
