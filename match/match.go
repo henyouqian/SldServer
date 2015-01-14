@@ -2563,6 +2563,45 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+	pack, _ := getPack(ssdbc, match.PackId)
+
+	//get playerInfo
+	player, err := getPlayerInfo(ssdbc, match.OwnerId)
+	lwutil.CheckError(err, "err_player_info")
+
+	//out
+	out := struct {
+		Match  *Match
+		Pack   *Pack
+		Player *PlayerInfo
+	}{
+		match,
+		pack,
+		player,
+	}
+
+	//out
+	lwutil.WriteResponse(w, out)
+}
+
 func regMatch() {
 	http.Handle("/match/new", lwutil.ReqHandler(apiMatchNew))
 	http.Handle("/match/del", lwutil.ReqHandler(apiMatchDel))
@@ -2591,4 +2630,6 @@ func regMatch() {
 
 	http.Handle("/match/like", lwutil.ReqHandler(apiMatchLike))
 	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))
+
+	http.Handle("/match/web/get", lwutil.ReqHandler(apiMatchWebGet))
 }
