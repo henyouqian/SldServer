@@ -29,6 +29,8 @@ func makeZCommentName(packId int64) (name string) {
 type Image struct {
 	Key string
 	Url string
+	W   int
+	H   int
 }
 
 type Pack struct {

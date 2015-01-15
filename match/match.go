@@ -14,6 +14,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
+	"github.com/rubenfonseca/fastimage"
 )
 
 const (
@@ -2586,6 +2587,25 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	//get playerInfo
 	player, err := getPlayerInfo(ssdbc, match.OwnerId)
 	lwutil.CheckError(err, "err_player_info")
+
+	//
+	if pack.Images[0].W == 0 {
+		for i := range pack.Images {
+			image := pack.Images[i]
+			if image.W != 0 {
+				break
+			}
+			url := image.Url
+			if len(url) == 0 {
+				url = fmt.Sprintf("%s/%s", QINIU_USERUPLOAD_URL, image.Key)
+			}
+			_, size, err := fastimage.DetectImageType(url)
+			lwutil.CheckError(err, "err_fastimage")
+			pack.Images[i].W = int(size.Width)
+			pack.Images[i].H = int(size.Height)
+		}
+		savePack(ssdbc, pack)
+	}
 
 	//out
 	out := struct {

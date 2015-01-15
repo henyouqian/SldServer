@@ -18,6 +18,7 @@ const (
 	USER_UPLOAD_BUCKET         = "pintuuserupload"
 	USER_PRIVATE_UPLOAD_BUCKET = "pintuprivate"
 	QINIU_TMP_BUCKET           = "lwswap"
+	QINIU_USERUPLOAD_URL       = "http://pintuuserupload.qiniudn.com"
 )
 
 type Conf struct {

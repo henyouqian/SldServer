@@ -51,6 +51,7 @@ go get github.com/garyburd/redigo/redis
 go get github.com/robfig/cron
 go get github.com/qiniu/api/rs
 go get github.com/gorilla/websocket
+go get github.com/rubenfonseca/fastimage
 
 - 安装nginx
 sudo apt-get install nginx
