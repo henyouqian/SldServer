@@ -187,7 +187,7 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	_, err := findSession(w, r, nil)
+	_, err = findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
 
 	//in
