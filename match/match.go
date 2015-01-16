@@ -2588,7 +2588,7 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	player, err := getPlayerInfo(ssdbc, match.OwnerId)
 	lwutil.CheckError(err, "err_player_info")
 
-	//
+	//gen image size
 	if pack.Images[0].W == 0 {
 		for i := range pack.Images {
 			image := pack.Images[i]

@@ -52,6 +52,131 @@ func makeZSocialPackKey(userId int64) string {
 	return key
 }
 
+// func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
+// 	lwutil.CheckMathod(r, "POST")
+// 	var err error
+
+// 	//ssdb
+// 	ssdbc, err := ssdbPool.Get()
+// 	lwutil.CheckError(err, "")
+// 	defer ssdbc.Close()
+
+// 	//session
+// 	session, err := findSession(w, r, nil)
+// 	lwutil.CheckError(err, "err_auth")
+
+// 	//in
+// 	var in struct {
+// 		PackId    int64
+// 		SliderNum int
+// 		Msec      int
+// 	}
+// 	err = lwutil.DecodeRequestBody(r, &in)
+// 	lwutil.CheckError(err, "err_decode_body")
+
+// 	if in.SliderNum < 3 || in.SliderNum > 8 {
+// 		lwutil.SendError("err_slider_num", "in.SliderNum < 3 || SliderNum > 8")
+// 	}
+
+// 	//get player
+// 	player, err := getPlayerInfo(ssdbc, session.Userid)
+// 	lwutil.CheckError(err, "")
+
+// 	//out
+// 	out := struct {
+// 		Key string
+// 	}{}
+
+// 	//
+// 	subkey := makeHSocialPackSubKey(session.Userid, in.PackId, in.SliderNum)
+
+// 	//check exist
+// 	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, subkey)
+// 	lwutil.CheckError(err, "")
+// 	if resp[0] == ssdb.OK {
+// 		var socialPack SocialPack
+// 		err = json.Unmarshal([]byte(resp[1]), &socialPack)
+// 		lwutil.CheckError(err, "")
+
+// 		if in.Msec > 0 {
+// 			if socialPack.Ranks == nil {
+// 				socialPack.Ranks = []SocialRank{
+// 					{Name: player.NickName, Msec: in.Msec},
+// 				}
+// 			} else {
+// 				found := false
+// 				for i, v := range socialPack.Ranks {
+// 					if v.Name == player.NickName {
+// 						found = true
+// 						if in.Msec < v.Msec {
+// 							socialPack.Ranks[i].Msec = in.Msec
+// 						}
+// 						break
+// 					}
+// 				}
+// 				if !found {
+// 					socialPack.Ranks = append(socialPack.Ranks, SocialRank{player.NickName, in.Msec})
+// 				}
+
+// 				//sort
+// 				sort.Sort(ByRank(socialPack.Ranks))
+
+// 				//
+// 				if len(socialPack.Ranks) > 10 {
+// 					socialPack.Ranks = socialPack.Ranks[:10]
+// 				}
+// 			}
+// 		}
+
+// 		out.Key = subkey
+// 		lwutil.WriteResponse(w, out)
+// 		return
+// 	}
+
+// 	//get pack
+// 	pack, err := getPack(ssdbc, in.PackId)
+// 	lwutil.CheckError(err, "")
+
+// 	isOwner := pack.AuthorId == session.Userid
+// 	if isAdmin(session.Username) && pack.AuthorId == 0 {
+// 		isOwner = true
+// 	}
+
+// 	ranks := []SocialRank{
+// 		{Name: player.NickName, Msec: in.Msec},
+// 	}
+// 	if in.Msec <= 0 {
+// 		ranks = []SocialRank{}
+// 	}
+
+// 	socialPack := SocialPack{
+// 		UserId:    session.Userid,
+// 		PackId:    in.PackId,
+// 		SliderNum: in.SliderNum,
+// 		PlayTimes: 0,
+// 		IsOwner:   isOwner,
+// 		Ranks:     ranks,
+// 	}
+
+// 	//json
+// 	js, err := json.Marshal(socialPack)
+// 	lwutil.CheckError(err, "")
+
+// 	//add to hash
+// 	resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, subkey, js)
+// 	lwutil.CheckSsdbError(resp, err)
+
+// 	// //add to zset
+// 	// zkey := makeZSocialPackKey(session.Userid)
+// 	// score := GenSerial(ssdbc, SERIAL_SOCIAL_PACK)
+// 	// resp, err = ssdbc.Do("zset", zkey, subkey, score)
+// 	// lwutil.CheckSsdbError(resp, err)
+
+// 	//out
+// 	out.Key = subkey
+// 	lwutil.WriteResponse(w, out)
+// }
+
 func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -62,118 +187,23 @@ func apiSocialNewPack(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	session, err := findSession(w, r, nil)
+	_, err := findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
 
 	//in
 	var in struct {
-		PackId    int64
-		SliderNum int
-		Msec      int
+		PackId int64
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	if in.SliderNum < 3 || in.SliderNum > 8 {
-		lwutil.SendError("err_slider_num", "in.SliderNum < 3 || SliderNum > 8")
-	}
-
-	//get player
-	player, err := getPlayerInfo(ssdbc, session.Userid)
-	lwutil.CheckError(err, "")
-
 	//out
 	out := struct {
 		Key string
-	}{}
-
-	//
-	subkey := makeHSocialPackSubKey(session.Userid, in.PackId, in.SliderNum)
-
-	//check exist
-	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, subkey)
-	lwutil.CheckError(err, "")
-	if resp[0] == ssdb.OK {
-		var socialPack SocialPack
-		err = json.Unmarshal([]byte(resp[1]), &socialPack)
-		lwutil.CheckError(err, "")
-
-		if in.Msec > 0 {
-			if socialPack.Ranks == nil {
-				socialPack.Ranks = []SocialRank{
-					{Name: player.NickName, Msec: in.Msec},
-				}
-			} else {
-				found := false
-				for i, v := range socialPack.Ranks {
-					if v.Name == player.NickName {
-						found = true
-						if in.Msec < v.Msec {
-							socialPack.Ranks[i].Msec = in.Msec
-						}
-						break
-					}
-				}
-				if !found {
-					socialPack.Ranks = append(socialPack.Ranks, SocialRank{player.NickName, in.Msec})
-				}
-
-				//sort
-				sort.Sort(ByRank(socialPack.Ranks))
-
-				//
-				if len(socialPack.Ranks) > 10 {
-					socialPack.Ranks = socialPack.Ranks[:10]
-				}
-			}
-		}
-
-		out.Key = subkey
-		lwutil.WriteResponse(w, out)
-		return
+	}{
+		fmt.Sprintf("%d", in.PackId),
 	}
 
-	//get pack
-	pack, err := getPack(ssdbc, in.PackId)
-	lwutil.CheckError(err, "")
-
-	isOwner := pack.AuthorId == session.Userid
-	if isAdmin(session.Username) && pack.AuthorId == 0 {
-		isOwner = true
-	}
-
-	ranks := []SocialRank{
-		{Name: player.NickName, Msec: in.Msec},
-	}
-	if in.Msec <= 0 {
-		ranks = []SocialRank{}
-	}
-
-	socialPack := SocialPack{
-		UserId:    session.Userid,
-		PackId:    in.PackId,
-		SliderNum: in.SliderNum,
-		PlayTimes: 0,
-		IsOwner:   isOwner,
-		Ranks:     ranks,
-	}
-
-	//json
-	js, err := json.Marshal(socialPack)
-	lwutil.CheckError(err, "")
-
-	//add to hash
-	resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, subkey, js)
-	lwutil.CheckSsdbError(resp, err)
-
-	// //add to zset
-	// zkey := makeZSocialPackKey(session.Userid)
-	// score := GenSerial(ssdbc, SERIAL_SOCIAL_PACK)
-	// resp, err = ssdbc.Do("zset", zkey, subkey, score)
-	// lwutil.CheckSsdbError(resp, err)
-
-	//out
-	out.Key = subkey
 	lwutil.WriteResponse(w, out)
 }
 
