@@ -1021,7 +1021,100 @@ func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
 		out.PlayerInfoLites = append(out.PlayerInfoLites, &infoLite)
 	}
 	lwutil.WriteResponse(w, out)
+}
 
+func apiPlayerFollowListWeb(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		Type      int
+		UserId    int64
+		LastKey   int64
+		LastScore int64
+		Limit     int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	if in.LastKey == 0 {
+		in.LastKey = math.MaxInt64
+	}
+	if in.LastScore == 0 {
+		in.LastScore = math.MaxInt64
+	}
+
+	//out
+	out := struct {
+		PlayerInfoLites []*PlayerInfoLite
+		LastKey         int64
+		LastScore       int64
+	}{
+		make([]*PlayerInfoLite, 0, 20),
+		0,
+		0,
+	}
+
+	//get userId list
+	var key string
+	if in.Type == 0 {
+		key = makeZPlayerFollowKey(in.UserId)
+	} else {
+		key = makeZPlayerFanKey(in.UserId)
+	}
+
+	resp, err := ssdbc.Do("zrscan", key, in.LastKey, in.LastScore, "", in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	//get infos
+	num := len(resp) / 2
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_PLAYER_INFO_LITE
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i*2])
+		if i == num-1 {
+			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
+			lwutil.CheckError(err, "")
+			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
+			lwutil.CheckError(err, "")
+		}
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	if len(resp) == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		js := resp[i*2+1]
+		var infoLite PlayerInfoLite
+		err = json.Unmarshal([]byte(js), &infoLite)
+		lwutil.CheckError(err, "err_js")
+		out.PlayerInfoLites = append(out.PlayerInfoLites, &infoLite)
+	}
+	lwutil.WriteResponse(w, out)
 }
 
 func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
@@ -1223,5 +1316,6 @@ func regPlayer() {
 	http.Handle("/player/follow", lwutil.ReqHandler(apiPlayerFollow))
 	http.Handle("/player/unfollow", lwutil.ReqHandler(apiPlayerUnfollow))
 
-	http.Handle("/player/getInfoWeb", lwutil.ReqHandler(apiPlayerGetPlayerInfoWeb))
+	http.Handle("/player/web/getInfo", lwutil.ReqHandler(apiPlayerGetPlayerInfoWeb))
+	http.Handle("/player/web/followList", lwutil.ReqHandler(apiPlayerFollowListWeb))
 }
