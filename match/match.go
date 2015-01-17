@@ -53,7 +53,7 @@ type Match struct {
 	OwnerName            string
 	SliderNum            int
 	Thumb                string
-	Icon                 string
+	Thumbs               []string
 	Title                string
 	Prize                int
 	BeginTime            int64
@@ -325,6 +325,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		OwnerName:            player.NickName,
 		SliderNum:            in.SliderNum,
 		Thumb:                in.Pack.Thumb,
+		Thumbs:               in.Pack.Thumbs,
 		Title:                in.Title,
 		Prize:                in.GoldCoinForPrize * PRIZE_NUM_PER_COIN,
 		BeginTime:            beginTimeUnix,
@@ -478,7 +479,6 @@ func apiMatchMod(w http.ResponseWriter, r *http.Request) {
 	if match.Private != in.Private {
 		match.Private = in.Private
 		if match.Private {
-			glog.Info("xxxxxx")
 			resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
 			lwutil.CheckSsdbError(resp, err)
 
@@ -621,8 +621,8 @@ func apiMatchList(w http.ResponseWriter, r *http.Request) {
 	matches := make([]OutMatch, len(resp)/2)
 	m := make(map[int64]int) //key:matchId, value:index
 	for i, _ := range matches {
-		packjs := resp[i*2+1]
-		err = json.Unmarshal([]byte(packjs), &matches[i])
+		js := resp[i*2+1]
+		err = json.Unmarshal([]byte(js), &matches[i])
 		lwutil.CheckError(err, "")
 		m[matches[i].Id] = i
 	}
