@@ -2636,7 +2636,6 @@ func regMatch() {
 	http.Handle("/match/listOriginal", lwutil.ReqHandler(apiMatchListOriginal))
 	http.Handle("/match/listPlayedMatch", lwutil.ReqHandler(apiMatchListPlayedMatch))
 	http.Handle("/match/listPlayedAll", lwutil.ReqHandler(apiMatchListPlayedAll))
-	http.Handle("/match/listUserWeb", lwutil.ReqHandler(apiMatchListUserWeb))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))
@@ -2651,5 +2650,6 @@ func regMatch() {
 	http.Handle("/match/like", lwutil.ReqHandler(apiMatchLike))
 	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))
 
+	http.Handle("/match/web/listUser", lwutil.ReqHandler(apiMatchListUserWeb))
 	http.Handle("/match/web/get", lwutil.ReqHandler(apiMatchWebGet))
 }
