@@ -41,7 +41,7 @@ var (
 		"PrivateUploadHost": "http://7tebsf.com1.z0.glb.clouddn.com",
 		"StoreId":           "923531990",
 		// "Html5Url":          "http://pintuhtml5.qiniudn.com/index.html",
-		"Html5Url":       "http://7u2jqf.com1.z0.glb.clouddn.com/match.html",
+		"Html5Url":       "http://g.pintugame.com/match.html",
 		"FlurryKey":      "2P9DTVNTFZS8YBZ36QBZ",
 		"MogoKey":        "8c0728f759464dcda07c81afb00d3bf5",
 		"UmengSocialKey": "53aeb00356240bdcb8050c26",
