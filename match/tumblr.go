@@ -184,19 +184,19 @@ func apiTumblrDelBlog(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("zdel", Z_TUMBLR_BLOG, in.BlogName)
 	lwutil.CheckSsdbError(resp, err)
 
-	//hdel
-	var blog TumblrBlog
-	err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
-	lwutil.CheckError(err, "err_table_del_row")
+	// //hdel
+	// var blog TumblrBlog
+	// err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
+	// lwutil.CheckError(err, "err_table_del_row")
 
-	//zclear
-	key := makeZTumblrBlogImageKey(in.BlogName, true)
-	resp, err = ssdbc.Do("zclear", key)
-	lwutil.CheckSsdbError(resp, err)
+	// //zclear
+	// key := makeZTumblrBlogImageKey(in.BlogName, true)
+	// resp, err = ssdbc.Do("zclear", key)
+	// lwutil.CheckSsdbError(resp, err)
 
-	key = makeZTumblrBlogImageKey(in.BlogName, false)
-	resp, err = ssdbc.Do("zclear", key)
-	lwutil.CheckSsdbError(resp, err)
+	// key = makeZTumblrBlogImageKey(in.BlogName, false)
+	// resp, err = ssdbc.Do("zclear", key)
+	// lwutil.CheckSsdbError(resp, err)
 }
 
 // func apiTumblrListBlog(w http.ResponseWriter, r *http.Request) {
