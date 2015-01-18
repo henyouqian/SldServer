@@ -14,6 +14,18 @@ sudo ufw allow 80
 sudo ufw allow 443
 sudo ufw allow 9977
 
+- 修改最大文件打开数
+用 root 权限修改 /etc/sysctl.conf 文件:
+fs.file-max = 1020000
+net.ipv4.ip_conntrack_max = 1020000
+net.ipv4.netfilter.ip_conntrack_max = 1020000
+
+编辑 /etc/security/limits.conf 文件, 加入如下行:
+# /etc/security/limits.conf
+work         hard    nofile      1020000
+work         soft    nofile      1020000
+第一列的 work 表示 work 用户, 你可以填 *, 或者 root. 然后保存退出, 重新登录服务器.
+
 - 安装redis
 * sudo apt-get install redis-server
 

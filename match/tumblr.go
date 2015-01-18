@@ -29,6 +29,7 @@ const (
 )
 
 type TumblrBlog struct {
+	UserId           int64
 	Name             string
 	Url              string
 	Description      string
@@ -96,21 +97,8 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_secret", "")
 	}
 
-	//checkExist
-	resp, err := ssdbc.Do("hexists", H_TUMBLR_BLOG, in.Name)
-	lwutil.CheckSsdbError(resp, err)
-	if resp[1] != "1" {
-		//hset
-		err = ssdbc.TableSetRow(H_TUMBLR_BLOG, in.Name, in.TumblrBlog)
-		lwutil.CheckError(err, "err_table_set_row")
-	}
-
-	//zset
-	resp, err = ssdbc.Do("zset", Z_TUMBLR_BLOG, in.Name, lwutil.GetRedisTimeUnix())
-	lwutil.CheckSsdbError(resp, err)
-
 	//add user
-	resp, err = ssdbc.Do("hget", H_TUMBLR_ACCONT, in.Name)
+	resp, err := ssdbc.Do("hget", H_TUMBLR_ACCONT, in.Name)
 	var userId int64
 	if resp[0] == ssdb.NOT_FOUND {
 		userId = GenSerial(ssdbAuth, ACCOUNT_SERIAL)
@@ -133,7 +121,6 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 	//set player
 	playerKey := makePlayerInfoKey(userId)
 
-	//
 	var player PlayerInfo
 	player.UserId = userId
 	player.NickName = in.Name
@@ -147,6 +134,22 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_json")
 	resp, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
 	lwutil.CheckError(err, "")
+
+	//
+	in.TumblrBlog.UserId = userId
+
+	//checkExist
+	resp, err = ssdbc.Do("hexists", H_TUMBLR_BLOG, in.Name)
+	lwutil.CheckSsdbError(resp, err)
+	if resp[1] != "1" {
+		//hset
+		err = ssdbc.TableSetRow(H_TUMBLR_BLOG, in.Name, in.TumblrBlog)
+		lwutil.CheckError(err, "err_table_set_row")
+	}
+
+	//zset
+	resp, err = ssdbc.Do("zset", Z_TUMBLR_BLOG, in.Name, lwutil.GetRedisTimeUnix())
+	lwutil.CheckSsdbError(resp, err)
 
 	//out
 	out := struct {
