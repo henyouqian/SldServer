@@ -24,6 +24,7 @@ const (
 	BATTLE_HEART_ADD_SEC       = 60 * 5
 	Z_PLAYER_FAN               = "Z_PLAYER_FAN"    //key:Z_PLAYER_FAN/userId subkey:fanUserId score:time
 	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW" //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
+	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH" //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
 )
 
 type PlayerInfoLite struct {
@@ -489,28 +490,33 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//ssdb
-	ssdb, err := ssdbPool.Get()
+	ssdbc, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
-	defer ssdb.Close()
+	defer ssdbc.Close()
 
 	//
 	playerKey := makePlayerInfoKey(session.Userid)
 
 	//check playerInfo exist
-	resp, err := ssdb.Do("hexists", playerKey, PLAYER_GOLD_COIN)
+	resp, err := ssdbc.Do("hexists", playerKey, PLAYER_GOLD_COIN)
 	lwutil.CheckError(err, "")
+	oldNickName := ""
 	if resp[1] != "1" {
 		var player PlayerInfo
-		err = ssdb.HSetStruct(playerKey, player)
+		err = ssdbc.HSetStruct(playerKey, player)
 		lwutil.CheckError(err, "")
+	} else {
+		resp, err := ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
+		lwutil.CheckSsdbError(resp, err)
+		oldNickName = resp[1]
 	}
 
 	//save
-	err = ssdb.HSetStruct(playerKey, in)
+	err = ssdbc.HSetStruct(playerKey, in)
 	lwutil.CheckError(err, "")
 
 	//get player info
-	playerInfo, err := getPlayerInfo(ssdb, session.Userid)
+	playerInfo, err := getPlayerInfo(ssdbc, session.Userid)
 	lwutil.CheckError(err, "")
 
 	//set playerInfoLite
@@ -518,8 +524,11 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(infoLite)
 	lwutil.CheckError(err, "err_js")
-	resp, err = ssdb.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
+	resp, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
 	lwutil.CheckError(err, "")
+
+	//updatePlayerSearchInfo
+	updatePlayerSearchInfo(ssdbc, oldNickName, in.NickName, session.Userid)
 
 	//out
 	out := struct {
@@ -528,6 +537,19 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 		*playerInfo,
 	}
 	lwutil.WriteResponse(w, out)
+}
+
+func updatePlayerSearchInfo(ssdbc *ssdb.Client, oldName, newName string, userId int64) {
+	if oldName == newName {
+		return
+	}
+	key := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, oldName)
+	resp, err := ssdbc.Do("zdel", key, userId)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, newName)
+	resp, err = ssdbc.Do("zset", key, userId, lwutil.GetRedisTimeUnix())
+	lwutil.CheckSsdbError(resp, err)
 }
 
 func makePlayerInfoLite(playerInfo *PlayerInfo) *PlayerInfoLite {
@@ -1276,9 +1298,9 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	//ssdb
-	ssdb, err := ssdbPool.Get()
+	ssdbc, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
-	defer ssdb.Close()
+	defer ssdbc.Close()
 
 	//in
 	var in struct {
@@ -1287,7 +1309,7 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 
 	//get info
-	playerInfo, err := getPlayerInfo(ssdb, in.UserId)
+	playerInfo, err := getPlayerInfo(ssdbc, in.UserId)
 	if err != nil {
 		lwutil.SendError("err_get_player_info", "")
 	}
@@ -1297,6 +1319,46 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 		*PlayerInfo
 	}{
 		playerInfo,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserName  string
+		LastKey   string
+		LastScore int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+
+	//
+	limit := 20
+	zkey := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, in.UserName)
+	hkey := H_PLAYER_INFO_LITE
+	resp, err := ssdbc.ZScan(zkey, hkey, in.LastKey, in.LastScore, limit, false)
+	lwutil.CheckError(err, "err_zmultiget")
+
+	//out
+	num := len(resp) / 2
+	out := struct {
+		Players []PlayerInfoLite
+		Limit   int
+	}{
+		make([]PlayerInfoLite, num),
+		limit,
+	}
+	for i := 0; i < num; num++ {
+		err = json.Unmarshal([]byte(resp[i*2+1]), &out.Players[i])
+		lwutil.CheckError(err, "")
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -1315,6 +1377,7 @@ func regPlayer() {
 	http.Handle("/player/followList", lwutil.ReqHandler(apiPlayerFollowList))
 	http.Handle("/player/follow", lwutil.ReqHandler(apiPlayerFollow))
 	http.Handle("/player/unfollow", lwutil.ReqHandler(apiPlayerUnfollow))
+	http.Handle("/player/searchUser", lwutil.ReqHandler(apiPlayerSearchUser))
 
 	http.Handle("/player/web/getInfo", lwutil.ReqHandler(apiPlayerGetPlayerInfoWeb))
 	http.Handle("/player/web/followList", lwutil.ReqHandler(apiPlayerFollowListWeb))

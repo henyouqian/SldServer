@@ -138,6 +138,9 @@ func apiTumblrAddBlog(w http.ResponseWriter, r *http.Request) {
 	//
 	in.TumblrBlog.UserId = userId
 
+	//
+	updatePlayerSearchInfo(ssdbc, "", in.Name, userId)
+
 	//checkExist
 	resp, err = ssdbc.Do("hexists", H_TUMBLR_BLOG, in.Name)
 	lwutil.CheckSsdbError(resp, err)

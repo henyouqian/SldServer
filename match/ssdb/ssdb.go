@@ -922,3 +922,34 @@ func (c *Client) TableGetRows(tableName string, keys []string, objs interface{})
 
 	return nil
 }
+
+func (c *Client) ZScan(zkey, hkey string, keyStart interface{}, scoreStart int64, limit int, reverse bool) ([]string, error) {
+	api := "zscan"
+	if reverse {
+		api = "zrscan"
+	}
+	resp, err := c.Do(api, zkey, keyStart, scoreStart, "", limit)
+	if err != nil {
+		return nil, err
+	}
+	resp = resp[1:]
+	if len(resp) == 0 {
+		return nil, nil
+	}
+
+	num := len(resp) / 2
+	cmds := make([]interface{}, num+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = hkey
+	for i := 0; i < num; i++ {
+		cmds[i+2] = resp[i*2]
+	}
+
+	//
+	resp, err = c.Do(cmds...)
+	if err != nil {
+		return nil, err
+	}
+	resp = resp[1:]
+	return resp, nil
+}
