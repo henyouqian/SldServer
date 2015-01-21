@@ -1356,7 +1356,7 @@ func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
 		make([]PlayerInfoLite, num),
 		limit,
 	}
-	for i := 0; i < num; num++ {
+	for i := 0; i < num; i++ {
 		err = json.Unmarshal([]byte(resp[i*2+1]), &out.Players[i])
 		lwutil.CheckError(err, "")
 	}

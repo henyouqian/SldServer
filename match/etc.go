@@ -269,9 +269,8 @@ func apiDownloadFilesToQiniu(w http.ResponseWriter, r *http.Request) {
 			//checkexists
 			rsCli := qiniurs.New(nil)
 
-			ret, err := rsCli.Stat(nil, QINIU_TMP_BUCKET, imgkey)
+			_, err = rsCli.Stat(nil, QINIU_TMP_BUCKET, imgkey)
 			if err == nil {
-				glog.Infof("%+v", ret)
 				fileMap[url] = imgkey
 				return
 			}
