@@ -498,16 +498,11 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	playerKey := makePlayerInfoKey(session.Userid)
 
 	//check playerInfo exist
-	resp, err := ssdbc.Do("hexists", playerKey, PLAYER_GOLD_COIN)
-	lwutil.CheckError(err, "")
 	oldNickName := ""
-	if resp[1] != "1" {
-		var player PlayerInfo
-		err = ssdbc.HSetStruct(playerKey, player)
-		lwutil.CheckError(err, "")
-	} else {
-		resp, err := ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
-		lwutil.CheckSsdbError(resp, err)
+
+	resp, err := ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
+	lwutil.CheckError(err, "err_hget")
+	if resp[0] != SSDB_NOT_FOUND {
 		oldNickName = resp[1]
 	}
 

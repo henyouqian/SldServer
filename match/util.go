@@ -14,6 +14,11 @@ import (
 	"github.com/henyouqian/lwutil"
 )
 
+const (
+	SSDB_OK        = "ok"
+	SSDB_NOT_FOUND = "not_found"
+)
+
 func stringLimit(str *string, limit uint) {
 	if uint(len(*str)) > limit {
 		*str = (*str)[:limit]
