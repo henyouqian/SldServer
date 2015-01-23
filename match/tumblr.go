@@ -397,9 +397,15 @@ func apiTumblrAddImages(w http.ResponseWriter, r *http.Request) {
 		imageKey := makeTumblrImageKey(image.PostId, image.IndexInPost)
 		image.Key = imageKey
 
+		resp, err := ssdbc.Do("hexists", H_TUMBLR_IMAGE, imageKey)
+		lwutil.CheckSsdbError(resp, err)
+		if resp[0] == "1" {
+			continue
+		}
+
 		jsb, err := json.Marshal(image)
 		lwutil.CheckError(err, "err_json")
-		resp, err := ssdbc.Do("hset", H_TUMBLR_IMAGE, imageKey, jsb)
+		resp, err = ssdbc.Do("hset", H_TUMBLR_IMAGE, imageKey, jsb)
 		lwutil.CheckSsdbError(resp, err)
 
 		if image.Sizes[0].Width <= image.Sizes[0].Height {
