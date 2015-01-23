@@ -175,6 +175,7 @@ func apiTumblrDelBlog(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		BlogName string
 		Secret   string
+		Clear    bool
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -187,19 +188,22 @@ func apiTumblrDelBlog(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("zdel", Z_TUMBLR_BLOG, in.BlogName)
 	lwutil.CheckSsdbError(resp, err)
 
-	// //hdel
-	// var blog TumblrBlog
-	// err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
-	// lwutil.CheckError(err, "err_table_del_row")
+	//clear
+	if in.Clear {
+		//hdel
+		var blog TumblrBlog
+		err = ssdbc.TableDelRow(H_TUMBLR_BLOG, in.BlogName, blog)
+		lwutil.CheckError(err, "err_table_del_row")
 
-	// //zclear
-	// key := makeZTumblrBlogImageKey(in.BlogName, true)
-	// resp, err = ssdbc.Do("zclear", key)
-	// lwutil.CheckSsdbError(resp, err)
+		//zclear
+		key := makeZTumblrBlogImageKey(in.BlogName, true)
+		resp, err = ssdbc.Do("zclear", key)
+		lwutil.CheckSsdbError(resp, err)
 
-	// key = makeZTumblrBlogImageKey(in.BlogName, false)
-	// resp, err = ssdbc.Do("zclear", key)
-	// lwutil.CheckSsdbError(resp, err)
+		key = makeZTumblrBlogImageKey(in.BlogName, false)
+		resp, err = ssdbc.Do("zclear", key)
+		lwutil.CheckSsdbError(resp, err)
+	}
 }
 
 // func apiTumblrListBlog(w http.ResponseWriter, r *http.Request) {
@@ -681,18 +685,28 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckSsdbError(resp, err)
 	}
 
+	//Z_OPEN_MATCH
+	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
 	//Z_LIKE_MATCH
 	key := makeZLikeMatchKey(userId)
 	resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
 	lwutil.CheckSsdbError(resp, err)
 
-	//Z_OPEN_MATCH
-	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	//Q_LIKE_MATCH
+	key = makeQLikeMatchKey(userId)
+	resp, err = ssdbc.Do("qpush_back", key, matchId)
 	lwutil.CheckSsdbError(resp, err)
 
-	//add to Z_PLAYER_MATCH
+	//Z_PLAYER_MATCH
 	zPlayerMatchKey := makeZPlayerMatchKey(userId)
 	resp, err = ssdbc.Do("zset", zPlayerMatchKey, matchId, beginTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Q_PLAYER_MATCH
+	qPlayerMatchKey := makeQPlayerMatchKey(userId)
+	resp, err = ssdbc.Do("qpush_back", qPlayerMatchKey, matchId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//decrease gold coin

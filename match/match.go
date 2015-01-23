@@ -27,6 +27,8 @@ const (
 	Z_PENDING_MATCH         = "Z_PENDING_MATCH"         //subkey:matchId score:beginTime
 	Z_PLAYER_MATCH          = "Z_PLAYER_MATCH"          //original key:Z_PLAYER_MATCH/userId subkey:matchId score:beginTime
 	Z_LIKE_MATCH            = "Z_LIKE_MATCH"            //key:Z_LIKE_MATCH/userId subkey:matchId score:likeTime
+	Q_PLAYER_MATCH          = "Q_PLAYER_MATCH"          //original key:Q_PLAYER_MATCH/userId value:matchId
+	Q_LIKE_MATCH            = "Q_LIKE_MATCH"            //key:Q_LIKE_MATCH/userId value:matchId
 	Z_PLAYED_MATCH          = "Z_PLAYED_MATCH"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
 	Z_PLAYED_ALL            = "Z_PLAYED_ALL"            //key:Z_PLAYED_ALL/userId subkey:matchId score:lastPlayTime
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
@@ -127,16 +129,20 @@ func makeHMatchExtraSubkey(matchId int64, fieldKey string) string {
 	return fmt.Sprintf("%d/%s", matchId, fieldKey)
 }
 
-func makeZPlayerAllMatchKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_PLAYER_MATCH, userId)
-}
-
 func makeZPlayerMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_PLAYER_MATCH, userId)
 }
 
+func makeQPlayerMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Q_PLAYER_MATCH, userId)
+}
+
 func makeZLikeMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_LIKE_MATCH, userId)
+}
+
+func makeQLikeMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Q_LIKE_MATCH, userId)
 }
 
 func makeZPlayedMatchKey(userId int64) string {
@@ -361,9 +367,23 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Z_LIKE_MATCH
-		score := beginTimeUnix
 		key := makeZLikeMatchKey(session.Userid)
-		resp, err = ssdbc.Do("zset", key, matchId, score)
+		resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+		lwutil.CheckSsdbError(resp, err)
+
+		//Z_PLAYER_MATCH
+		key = makeZPlayerMatchKey(session.Userid)
+		resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+		lwutil.CheckSsdbError(resp, err)
+
+		//Q_LIKE_MATCH
+		key = makeQLikeMatchKey(session.Userid)
+		resp, err = ssdbc.Do("qpush_back", key, matchId)
+		lwutil.CheckSsdbError(resp, err)
+
+		//Q_PLAYER_MATCH
+		key = makeQPlayerMatchKey(session.Userid)
+		resp, err = ssdbc.Do("qpush_back", key, matchId)
 		lwutil.CheckSsdbError(resp, err)
 
 		//Z_OPEN_MATCH
@@ -374,11 +394,6 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		resp, err = ssdbc.Do("zset", Z_PENDING_MATCH, matchId, beginTimeUnix)
 		lwutil.CheckSsdbError(resp, err)
 	}
-
-	//add to Z_PLAYER_MATCH
-	zPlayerMatchKey := makeZPlayerMatchKey(session.Userid)
-	resp, err = ssdbc.Do("zset", zPlayerMatchKey, matchId, beginTimeUnix)
-	lwutil.CheckSsdbError(resp, err)
 
 	//decrease gold coin
 	if in.GoldCoinForPrize != 0 {
@@ -421,14 +436,14 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
-	zPlayerMatchKey := makeZPlayerMatchKey(session.Userid)
-	resp, err = ssdbc.Do("zdel", zPlayerMatchKey, in.MatchId)
-	lwutil.CheckSsdbError(resp, err)
-
 	resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
-	key := makeZLikeMatchKey(session.Userid)
+	key := makeZPlayerMatchKey(session.Userid)
+	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeZLikeMatchKey(session.Userid)
 	resp, err = ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
