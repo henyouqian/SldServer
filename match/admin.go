@@ -258,19 +258,19 @@ func apiAdminClearPlayer(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//
-	key := makeZPlayerMatchKey(session.Userid)
+	key := makeZPlayerMatchKey(in.UserId)
 	resp, err := ssdbc.Do("zclear", key)
 	lwutil.CheckSsdbError(resp, err)
 
-	key = makeZLikeMatchKey(session.Userid)
+	key = makeZLikeMatchKey(in.UserId)
 	resp, err = ssdbc.Do("zclear", key)
 	lwutil.CheckSsdbError(resp, err)
 
-	key = makeQPlayerMatchKey(session.Userid)
+	key = makeQPlayerMatchKey(in.UserId)
 	resp, err = ssdbc.Do("qclear", key)
 	lwutil.CheckSsdbError(resp, err)
 
-	key = makeQLikeMatchKey(session.Userid)
+	key = makeQLikeMatchKey(in.UserId)
 	resp, err = ssdbc.Do("qclear", key)
 	lwutil.CheckSsdbError(resp, err)
 
