@@ -1741,6 +1741,81 @@ func apiMatchListUserWeb(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		UserId int64
+		Offset int
+		Limit  int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 {
+		in.Limit = 20
+	} else if in.Limit > 50 {
+		in.Limit = 50
+	}
+
+	type Out struct {
+		Matches  []*Match
+		MatchNum int
+	}
+	out := Out{
+		[]*Match{},
+		0,
+	}
+
+	//get keys
+	key := makeQLikeMatchKey(in.UserId)
+	resp, err := ssdbc.Do("qrange", key, in.Offset, in.Limit)
+	lwutil.CheckSsdbError(resp, err)
+
+	if len(resp) == 1 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+	resp = resp[1:]
+
+	//get matches
+	num := len(resp)
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH
+	for i := 0; i < num; i++ {
+		args = append(args, resp[i])
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	matches := make([]*Match, len(resp)/2)
+	for i, _ := range matches {
+		packjs := resp[i*2+1]
+		err = json.Unmarshal([]byte(packjs), &matches[i])
+		lwutil.CheckError(err, "")
+	}
+
+	//matchNum
+	resp, err = ssdbc.Do("qsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	out.MatchNum, err = strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	//out
+	out.Matches = matches
+
+	lwutil.WriteResponse(w, out)
+}
+
 func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -2694,6 +2769,8 @@ func regMatch() {
 	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))
 
 	http.Handle("/match/web/listUser", lwutil.ReqHandler(apiMatchListUserWeb))
+	http.Handle("/match/web/listUserQ", lwutil.ReqHandler(apiMatchListUserWebQ))
+
 	http.Handle("/match/web/get", lwutil.ReqHandler(apiMatchWebGet))
 
 	http.Handle("/test/size", lwutil.ReqHandler(apiMatchTestSize))
