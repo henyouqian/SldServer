@@ -2592,9 +2592,9 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	needSave := false
 	for i := range pack.Images {
 		image := pack.Images[i]
-		// if image.W != 0 {
-		// 	break
-		// }
+		if image.W != 0 {
+			continue
+		}
 		url := image.Url
 		if len(url) == 0 {
 			url = fmt.Sprintf("%s/%s", QINIU_USERUPLOAD_URL, image.Key)
