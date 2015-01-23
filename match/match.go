@@ -2589,21 +2589,23 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_player_info")
 
 	//gen image size
-	if pack.Images[0].W == 0 {
-		for i := range pack.Images {
-			image := pack.Images[i]
-			// if image.W != 0 {
-			// 	break
-			// }
-			url := image.Url
-			if len(url) == 0 {
-				url = fmt.Sprintf("%s/%s", QINIU_USERUPLOAD_URL, image.Key)
-			}
-			_, size, err := fastimage.DetectImageType(url)
-			lwutil.CheckError(err, "err_fastimage")
-			pack.Images[i].W = int(size.Width)
-			pack.Images[i].H = int(size.Height)
+	needSave := false
+	for i := range pack.Images {
+		image := pack.Images[i]
+		// if image.W != 0 {
+		// 	break
+		// }
+		url := image.Url
+		if len(url) == 0 {
+			url = fmt.Sprintf("%s/%s", QINIU_USERUPLOAD_URL, image.Key)
 		}
+		_, size, err := fastimage.DetectImageType(url)
+		lwutil.CheckError(err, "err_fastimage")
+		pack.Images[i].W = int(size.Width)
+		pack.Images[i].H = int(size.Height)
+		needSave = true
+	}
+	if needSave {
 		savePack(ssdbc, pack)
 	}
 
