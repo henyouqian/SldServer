@@ -13,8 +13,8 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
+	"github.com/henyouqian/fastimage"
 	"github.com/henyouqian/lwutil"
-	"github.com/rubenfonseca/fastimage"
 )
 
 const (
@@ -2592,9 +2592,9 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	if pack.Images[0].W == 0 {
 		for i := range pack.Images {
 			image := pack.Images[i]
-			if image.W != 0 {
-				break
-			}
+			// if image.W != 0 {
+			// 	break
+			// }
 			url := image.Url
 			if len(url) == 0 {
 				url = fmt.Sprintf("%s/%s", QINIU_USERUPLOAD_URL, image.Key)
@@ -2619,6 +2619,32 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//out
+	lwutil.WriteResponse(w, out)
+}
+
+func apiMatchTestSize(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//in
+	var in struct {
+		Url string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	_, size, err := fastimage.DetectImageType(in.Url)
+	lwutil.CheckError(err, "err_fastimage")
+
+	//
+	out := struct {
+		W int
+		H int
+	}{
+		int(size.Width),
+		int(size.Height),
+	}
+
 	lwutil.WriteResponse(w, out)
 }
 
@@ -2652,4 +2678,6 @@ func regMatch() {
 
 	http.Handle("/match/web/listUser", lwutil.ReqHandler(apiMatchListUserWeb))
 	http.Handle("/match/web/get", lwutil.ReqHandler(apiMatchWebGet))
+
+	http.Handle("/test/size", lwutil.ReqHandler(apiMatchTestSize))
 }

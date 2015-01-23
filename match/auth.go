@@ -692,6 +692,15 @@ func apiSsdbTest(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, res)
 }
 
+func apiWeiboOauth(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	authDb, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer authDb.Close()
+
+}
+
 func regAuth() {
 	http.Handle("/auth/login", lwutil.ReqHandler(apiAuthLogin))
 	http.Handle("/auth/getSnsSecret", lwutil.ReqHandler(apiAuthGetSnsSecret))
@@ -703,4 +712,5 @@ func regAuth() {
 	http.Handle("/auth/resetPassword", lwutil.ReqHandler(apiResetPassword))
 	http.Handle("/auth/checkVersion", lwutil.ReqHandler(apiCheckVersion))
 	http.Handle("/auth/ssdbTest", lwutil.ReqHandler(apiSsdbTest))
+	http.Handle("/auth/weiboOauth", lwutil.ReqHandler(apiWeiboOauth))
 }

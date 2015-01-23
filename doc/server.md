@@ -58,12 +58,12 @@ mkdir $HOME/go
 - 安装go packege
 go get github.com/henyouqian/lwutil
 go get github.com/henyouqian/ssdbgo
+go get github.com/henyouqian/fastimage
 go get github.com/golang/glog
 go get github.com/garyburd/redigo/redis
 go get github.com/robfig/cron
 go get github.com/qiniu/api/rs
 go get github.com/gorilla/websocket
-go get github.com/rubenfonseca/fastimage
 
 - 安装nginx
 sudo apt-get install nginx
