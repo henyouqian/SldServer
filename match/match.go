@@ -1774,9 +1774,16 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		0,
 	}
 
-	//get keys
+	//matchNum
 	key := makeQLikeMatchKey(in.UserId)
-	resp, err := ssdbc.Do("qrange", key, in.Offset, in.Limit)
+
+	resp, err := ssdbc.Do("qsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	out.MatchNum, err = strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	//qrange
+	resp, err = ssdbc.Do("qrange", key, in.Offset, in.Limit)
 	lwutil.CheckSsdbError(resp, err)
 
 	if len(resp) == 1 {
@@ -1803,12 +1810,6 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		err = json.Unmarshal([]byte(packjs), &matches[i])
 		lwutil.CheckError(err, "")
 	}
-
-	//matchNum
-	resp, err = ssdbc.Do("qsize", key)
-	lwutil.CheckSsdbError(resp, err)
-	out.MatchNum, err = strconv.Atoi(resp[1])
-	lwutil.CheckError(err, "err_strconv")
 
 	//out
 	out.Matches = matches
