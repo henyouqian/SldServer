@@ -235,9 +235,52 @@ func apiSetAdsConf(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
+func apiAdminClearPlayer(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	key := makeZPlayerMatchKey(session.Userid)
+	resp, err := ssdbc.Do("zclear", key)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeZLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("zclear", key)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeQPlayerMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qclear", key)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeQLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qclear", key)
+	lwutil.CheckSsdbError(resp, err)
+
+	lwutil.WriteResponse(w, in)
+}
+
 func regAdmin() {
 	http.Handle("/admin/getUserInfo", lwutil.ReqHandler(apiGetUserInfo))
 	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
 	http.Handle("/admin/addPrize", lwutil.ReqHandler(apiAddPrize))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
+	http.Handle("/admin/clearPlayer", lwutil.ReqHandler(apiAdminClearPlayer))
 }

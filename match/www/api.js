@@ -321,6 +321,10 @@ function Controller($scope, $http) {
 					"name": "setAdsConf",
 					"method": "POST",
 					"data": {"ShowPercent": 0.5, "DelayPercent": 0.5, "DelaySec": 1.0}
+				},{
+					"name": "clearPlayer",
+					"method": "POST",
+					"data": {"UserId": 0}
 				}
 			]
 		},{
