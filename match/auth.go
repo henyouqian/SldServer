@@ -377,6 +377,70 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiAuthRegisterTmp(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//out
+	out := struct {
+		Addr string
+	}{
+		r.RemoteAddr,
+	}
+	lwutil.WriteResponse(w, out)
+
+	// //get userId
+	// key := fmt.Sprintf("%s/%s", in.Type, in.SnsKey)
+	// resp, err = ssdbc.Do("hget", H_SNS_ACCONT, key)
+	// var userId int64
+	// if resp[0] == ssdb.NOT_FOUND {
+	// 	userId = GenSerial(ssdbc, ACCOUNT_SERIAL)
+
+	// 	resp, err = ssdbc.Do("hset", H_SNS_ACCONT, key, userId)
+	// 	lwutil.CheckSsdbError(resp, err)
+
+	// 	//set account
+	// 	var account Account
+	// 	account.RegisterTime = time.Now().Format(time.RFC3339)
+	// 	js, err := json.Marshal(account)
+	// 	lwutil.CheckError(err, "")
+	// 	_, err = ssdbc.Do("hset", H_ACCOUNT, userId, js)
+	// 	lwutil.CheckError(err, "")
+
+	// 	//set player
+	// 	playerKey := makePlayerInfoKey(userId)
+
+	// 	matchDb, err := ssdbPool.Get()
+	// 	lwutil.CheckError(err, "")
+	// 	defer matchDb.Close()
+
+	// 	addPlayerGoldCoin(matchDb, playerKey, 20)
+	// } else {
+	// 	lwutil.CheckSsdbError(resp, err)
+	// 	userId, err = strconv.ParseInt(resp[1], 10, 64)
+	// }
+
+	// userToken := newSession(w, userId, key, 0, ssdbc)
+
+	// // out
+	// out := struct {
+	// 	Token    string
+	// 	Now      int64
+	// 	UserId   int64
+	// 	UserName string
+	// }{
+	// 	userToken,
+	// 	lwutil.GetRedisTimeUnix(),
+	// 	userId,
+	// 	key,
+	// }
+	// lwutil.WriteResponse(w, out)
+}
+
 func apiAuthLogout(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
@@ -705,6 +769,7 @@ func regAuth() {
 	http.Handle("/auth/login", lwutil.ReqHandler(apiAuthLogin))
 	http.Handle("/auth/getSnsSecret", lwutil.ReqHandler(apiAuthGetSnsSecret))
 	http.Handle("/auth/loginSns", lwutil.ReqHandler(apiAuthLoginSns))
+	http.Handle("/auth/registerTmp", lwutil.ReqHandler(apiAuthRegisterTmp))
 	http.Handle("/auth/logout", lwutil.ReqHandler(apiAuthLogout))
 	http.Handle("/auth/register", lwutil.ReqHandler(apiAuthRegister))
 	http.Handle("/auth/info", lwutil.ReqHandler(apiAuthLoginInfo))
