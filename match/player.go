@@ -1309,11 +1309,20 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_get_player_info", "")
 	}
 
+	//get packNum
+	key := makeQLikeMatchKey(in.UserId)
+	resp, err := ssdbc.Do("qsize", key)
+	lwutil.CheckSsdbError(resp, err)
+	matchNum, err := strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
 	//out
 	out := struct {
 		*PlayerInfo
+		MatchNum int
 	}{
 		playerInfo,
+		matchNum,
 	}
 	lwutil.WriteResponse(w, out)
 }
