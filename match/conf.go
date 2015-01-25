@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/henyouqian/lwutil"
 )
 
 const (
@@ -67,5 +69,10 @@ func initConf(confFile string) {
 
 	if !isReleaseServer() {
 		delete(_clientConf, "WebSocketUrl")
+	}
+
+	lwutil.AccessControlAllowOrigins = map[string]bool{
+		"http://g.pintugame.com": true,
+		"http://localhost:7777":  true,
 	}
 }

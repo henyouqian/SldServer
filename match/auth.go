@@ -10,6 +10,8 @@ import (
 	"encoding/hex"
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
+	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/mail"
 	"net/smtp"
@@ -25,6 +27,8 @@ const (
 	H_ACCOUNT          = "H_ACCOUNT"        //key:userId, value:accountJson
 	H_NAME_ACCONT      = "H_NAME_ACCONT"    //key:userName, value:userId
 	H_SNS_ACCONT       = "H_SNS_ACCONT"     //key:snsKey, value:userId
+	H_TMP_ACCOUNT      = "H_TMP_ACCOUNT"    //key:uuid, value:userId
+	H_WEIBO_ACCOUNT    = "H_WEIBO_ACCOUNT"  //key:uid, value:userId
 	H_SESSION          = "H_SESSION"        //key:token, value:session
 	H_USER_TOKEN       = "H_USER_TOKEN"     //key:appid/userid, value:token
 	K_RESET_PASSWORD   = "K_RESET_PASSWORD" //key:K_RESET_PASSWORD/<resetKey> value:accountEmail
@@ -34,7 +38,8 @@ const (
 )
 
 var (
-	ADMIN_SET = map[string]bool{"henyouqian@gmail.com": true}
+	ADMIN_SET  = map[string]bool{"henyouqian@gmail.com": true}
+	TEAM_NAMES = []string{"安徽", "澳门", "北京", "重庆", "福建", "甘肃", "广东", "广西", "贵州", "海南", "河北", "黑龙江", "河南", "湖北", "湖南", "江苏", "江西", "吉林", "辽宁", "内蒙古", "宁夏", "青海", "陕西", "山东", "上海", "山西", "四川", "台湾", "天津", "香港", "新疆", "西藏", "云南", "浙江"}
 )
 
 type Session struct {
@@ -108,11 +113,16 @@ func findSession(w http.ResponseWriter, r *http.Request, ssdb *ssdb.Client) (*Se
 		defer ssdb.Close()
 	}
 
+	usertoken := ""
 	usertokenCookie, err := r.Cookie("usertoken")
 	if err != nil {
-		return nil, lwutil.NewErr(err)
+		usertoken = r.URL.Query().Get("usertoken")
+	} else {
+		usertoken = usertokenCookie.Value
 	}
-	usertoken := usertokenCookie.Value
+	if usertoken == "" {
+		return nil, fmt.Errorf("no usertoken")
+	}
 
 	sessionKey := fmt.Sprintf("%s/%s", H_SESSION, usertoken)
 	resp, err := ssdb.Do("get", sessionKey)
@@ -375,70 +385,6 @@ func apiAuthLoginSns(w http.ResponseWriter, r *http.Request) {
 		key,
 	}
 	lwutil.WriteResponse(w, out)
-}
-
-func apiAuthRegisterTmp(w http.ResponseWriter, r *http.Request) {
-	lwutil.CheckMathod(r, "POST")
-
-	//ssdb
-	ssdbc, err := ssdbAuthPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbc.Close()
-
-	//out
-	out := struct {
-		Addr string
-	}{
-		r.RemoteAddr,
-	}
-	lwutil.WriteResponse(w, out)
-
-	// //get userId
-	// key := fmt.Sprintf("%s/%s", in.Type, in.SnsKey)
-	// resp, err = ssdbc.Do("hget", H_SNS_ACCONT, key)
-	// var userId int64
-	// if resp[0] == ssdb.NOT_FOUND {
-	// 	userId = GenSerial(ssdbc, ACCOUNT_SERIAL)
-
-	// 	resp, err = ssdbc.Do("hset", H_SNS_ACCONT, key, userId)
-	// 	lwutil.CheckSsdbError(resp, err)
-
-	// 	//set account
-	// 	var account Account
-	// 	account.RegisterTime = time.Now().Format(time.RFC3339)
-	// 	js, err := json.Marshal(account)
-	// 	lwutil.CheckError(err, "")
-	// 	_, err = ssdbc.Do("hset", H_ACCOUNT, userId, js)
-	// 	lwutil.CheckError(err, "")
-
-	// 	//set player
-	// 	playerKey := makePlayerInfoKey(userId)
-
-	// 	matchDb, err := ssdbPool.Get()
-	// 	lwutil.CheckError(err, "")
-	// 	defer matchDb.Close()
-
-	// 	addPlayerGoldCoin(matchDb, playerKey, 20)
-	// } else {
-	// 	lwutil.CheckSsdbError(resp, err)
-	// 	userId, err = strconv.ParseInt(resp[1], 10, 64)
-	// }
-
-	// userToken := newSession(w, userId, key, 0, ssdbc)
-
-	// // out
-	// out := struct {
-	// 	Token    string
-	// 	Now      int64
-	// 	UserId   int64
-	// 	UserName string
-	// }{
-	// 	userToken,
-	// 	lwutil.GetRedisTimeUnix(),
-	// 	userId,
-	// 	key,
-	// }
-	// lwutil.WriteResponse(w, out)
 }
 
 func apiAuthLogout(w http.ResponseWriter, r *http.Request) {
@@ -756,20 +702,239 @@ func apiSsdbTest(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, res)
 }
 
-func apiWeiboOauth(w http.ResponseWriter, r *http.Request) {
+func apiAuthRegisterTmp(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	authDb, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer authDb.Close()
+
+	matchDb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer matchDb.Close()
+
+	//set tmp account
+	uuid := lwutil.GenUUID()
+	userId := GenSerial(authDb, ACCOUNT_SERIAL)
+
+	resp, err := authDb.Do("hset", H_TMP_ACCOUNT, uuid, userId)
+	lwutil.CheckSsdbError(resp, err)
+
+	playerIn := struct {
+		NickName        string
+		GravatarKey     string
+		CustomAvatarKey string
+		TeamName        string
+		Email           string
+		Gender          int
+	}{
+		fmt.Sprintf("u%d", userId),
+		fmt.Sprintf("%d", rand.Intn(99999)),
+		"",
+		TEAM_NAMES[rand.Intn(len(TEAM_NAMES))],
+		"",
+		rand.Intn(1),
+	}
+	playerOut := savePlayerInfo(matchDb, userId, playerIn)
+
+	userToken := newSession(w, userId, "", 0, authDb)
+
+	// out
+	out := struct {
+		Token  string
+		Now    int64
+		UserId int64
+		UUID   string
+		Player *PlayerInfo
+	}{
+		userToken,
+		lwutil.GetRedisTimeUnix(),
+		userId,
+		uuid,
+		playerOut,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiAuthLoginTmp(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	authDb, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer authDb.Close()
+
+	matchDb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer matchDb.Close()
+
+	//in
+	var in struct {
+		UUID string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	resp, err := authDb.Do("hget", H_TMP_ACCOUNT, in.UUID)
+	lwutil.CheckSsdbError(resp, err)
+
+	userId, err := strconv.ParseInt(resp[1], 10, 64)
+	lwutil.CheckError(err, "err_strconv")
+
+	userToken := newSession(w, userId, "", 0, authDb)
+
+	playerInfo, err := getPlayerInfo(matchDb, userId)
+	lwutil.CheckError(err, "err_getplayerinfo")
+
+	// out
+	out := struct {
+		Token  string
+		Now    int64
+		UserId int64
+		Player *PlayerInfo
+	}{
+		userToken,
+		lwutil.GetRedisTimeUnix(),
+		userId,
+		playerInfo,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+const (
+	WEIBO_APP_ID       = 2485478034
+	WEIBO_APP_SECRET   = "d52bd51bd1b43d6562a5fb19e94883ff"
+	WEIBO_REDIRECT_URI = "http://localhost:7777/oauth.html"
+)
+
+func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 
 	authDb, err := ssdbAuthPool.Get()
 	lwutil.CheckError(err, "")
 	defer authDb.Close()
 
+	//session
+	session, err := findSession(w, r, authDb)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		Code string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	url := fmt.Sprintf("https://api.weibo.com/oauth2/access_token?client_id=%d&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s", WEIBO_APP_ID, WEIBO_APP_SECRET, in.Code, WEIBO_REDIRECT_URI)
+	res, err := http.PostForm(url, nil)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	//
+	authData := struct {
+		AccessToken string `json:"access_token"`
+		ExpiresIn   int64  `json:"expires_in"`
+		Uid         string `json:"uid"`
+	}{}
+	err = json.Unmarshal(data, &authData)
+
+	//check binded already
+	resp, err := authDb.Do("hget", H_WEIBO_ACCOUNT, authData.Uid)
+	lwutil.CheckError(err, "err_ssdb")
+	if resp[0] == SSDB_OK {
+		lwutil.SendError("err_weibo_account_using", "")
+	}
+
+	//bind
+	resp, err = authDb.Do("hset", H_WEIBO_ACCOUNT, authData.Uid, session.Userid)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, authData)
+}
+
+func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+
+	authDb, err := ssdbAuthPool.Get()
+	lwutil.CheckError(err, "")
+	defer authDb.Close()
+	matchDb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer matchDb.Close()
+
+	//in
+	var in struct {
+		Code string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	url := fmt.Sprintf("https://api.weibo.com/oauth2/access_token?client_id=%d&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s", WEIBO_APP_ID, WEIBO_APP_SECRET, in.Code, WEIBO_REDIRECT_URI)
+	res, err := http.PostForm(url, nil)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	//
+	authData := struct {
+		AccessToken string `json:"access_token"`
+		ExpiresIn   int64  `json:"expires_in"`
+		Uid         string `json:"uid"`
+	}{}
+	err = json.Unmarshal(data, &authData)
+
+	if authData.Uid == "" {
+		lwutil.SendError("err_code", "code expired?")
+	}
+
+	//check binded
+	resp, err := authDb.Do("hget", H_WEIBO_ACCOUNT, authData.Uid)
+	lwutil.CheckError(err, "err_ssdb")
+	if resp[0] == SSDB_NOT_FOUND {
+		lwutil.SendError("err_weibo_no_account", fmt.Sprintf("uid:%s", authData.Uid))
+	}
+	userId, err := strconv.ParseInt(resp[1], 10, 64)
+
+	//session
+	userToken := newSession(w, userId, "", 0, authDb)
+
+	playerInfo, err := getPlayerInfo(matchDb, userId)
+	lwutil.CheckError(err, "err_getplayerinfo")
+
+	// out
+	out := struct {
+		Token  string
+		Now    int64
+		UserId int64
+		Player *PlayerInfo
+	}{
+		userToken,
+		lwutil.GetRedisTimeUnix(),
+		userId,
+		playerInfo,
+	}
+	lwutil.WriteResponse(w, out)
 }
 
 func regAuth() {
 	http.Handle("/auth/login", lwutil.ReqHandler(apiAuthLogin))
 	http.Handle("/auth/getSnsSecret", lwutil.ReqHandler(apiAuthGetSnsSecret))
 	http.Handle("/auth/loginSns", lwutil.ReqHandler(apiAuthLoginSns))
-	http.Handle("/auth/registerTmp", lwutil.ReqHandler(apiAuthRegisterTmp))
 	http.Handle("/auth/logout", lwutil.ReqHandler(apiAuthLogout))
 	http.Handle("/auth/register", lwutil.ReqHandler(apiAuthRegister))
 	http.Handle("/auth/info", lwutil.ReqHandler(apiAuthLoginInfo))
@@ -777,5 +942,9 @@ func regAuth() {
 	http.Handle("/auth/resetPassword", lwutil.ReqHandler(apiResetPassword))
 	http.Handle("/auth/checkVersion", lwutil.ReqHandler(apiCheckVersion))
 	http.Handle("/auth/ssdbTest", lwutil.ReqHandler(apiSsdbTest))
-	http.Handle("/auth/weiboOauth", lwutil.ReqHandler(apiWeiboOauth))
+
+	http.Handle("/auth/registerTmp", lwutil.ReqHandler(apiAuthRegisterTmp))
+	http.Handle("/auth/loginTmp", lwutil.ReqHandler(apiAuthLoginTmp))
+	http.Handle("/auth/weiboBind", lwutil.ReqHandler(apiWeiboBind))
+	http.Handle("/auth/weiboLogin", lwutil.ReqHandler(apiWeiboLogin))
 }

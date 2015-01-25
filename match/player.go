@@ -534,6 +534,39 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func savePlayerInfo(ssdbc *ssdb.Client, userId int64, player interface{}) *PlayerInfo {
+	playerKey := makePlayerInfoKey(userId)
+
+	//check playerInfo exist
+	oldNickName := ""
+
+	resp, err := ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
+	lwutil.CheckError(err, "err_hget")
+	if resp[0] != SSDB_NOT_FOUND {
+		oldNickName = resp[1]
+	}
+
+	err = ssdbc.HSetStruct(playerKey, player)
+	lwutil.CheckError(err, "")
+
+	//get player info
+	playerInfo, err := getPlayerInfo(ssdbc, userId)
+	lwutil.CheckError(err, "")
+
+	//set playerInfoLite
+	infoLite := makePlayerInfoLite(playerInfo)
+
+	js, err := json.Marshal(infoLite)
+	lwutil.CheckError(err, "err_js")
+	resp, err = ssdbc.Do("hset", H_PLAYER_INFO_LITE, infoLite.UserId, js)
+	lwutil.CheckError(err, "")
+
+	//updatePlayerSearchInfo
+	updatePlayerSearchInfo(ssdbc, oldNickName, infoLite.NickName, userId)
+
+	return playerInfo
+}
+
 func updatePlayerSearchInfo(ssdbc *ssdb.Client, oldName, newName string, userId int64) {
 	if oldName == newName {
 		return
