@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -1750,6 +1751,10 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
 	//in
 	var in struct {
 		UserId int64
@@ -1766,12 +1771,14 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Out struct {
-		Matches  []*Match
-		MatchNum int
+		Matches        []*Match
+		MatchNum       int
+		PlayedMatchIds []int64
 	}
 	out := Out{
 		[]*Match{},
 		0,
+		make([]int64, 0, 16),
 	}
 
 	//matchNum
@@ -1810,10 +1817,31 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		err = json.Unmarshal([]byte(packjs), &matches[i])
 		lwutil.CheckError(err, "")
 	}
-
-	//out
 	out.Matches = matches
 
+	//playedMap
+	num = len(matches)
+	cmds := make([]interface{}, 2, num+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_MATCH_PLAY
+	for _, match := range matches {
+		subkey := makeMatchPlaySubkey(match.Id, session.Userid)
+		cmds = append(cmds, subkey)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		key := resp[i*2]
+		matchIdStr := strings.Split(key, "/")[0]
+		matchId, err := strconv.ParseInt(matchIdStr, 10, 60)
+		lwutil.CheckError(err, "strconv")
+		out.PlayedMatchIds = append(out.PlayedMatchIds, matchId)
+	}
+
+	//out
 	lwutil.WriteResponse(w, out)
 }
 
@@ -2664,6 +2692,10 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
 	//in
 	var in struct {
 		MatchId int64
@@ -2700,15 +2732,26 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 		savePack(ssdbc, pack)
 	}
 
+	//played
+	subkey := makeMatchPlaySubkey(in.MatchId, session.Userid)
+	resp, err := ssdbc.Do("hexists", H_MATCH_PLAY, subkey)
+	lwutil.CheckError(err, "")
+	played := false
+	if resp[1] == "1" {
+		played = true
+	}
+
 	//out
 	out := struct {
 		Match  *Match
 		Pack   *Pack
 		Player *PlayerInfo
+		Played bool
 	}{
 		match,
 		pack,
 		player,
+		played,
 	}
 
 	//out

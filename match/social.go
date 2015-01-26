@@ -284,6 +284,10 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
 	//in
 	var in struct {
 		Key      string
@@ -293,6 +297,8 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
+
+	matchId, _ := strconv.ParseInt(in.Key, 10, 64)
 
 	//
 	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
@@ -323,6 +329,13 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	//
 	if len(socialPack.Ranks) > 10 {
 		socialPack.Ranks = socialPack.Ranks[:10]
+	}
+
+	//played
+	if matchId != 0 {
+		play := getMatchPlay(ssdbc, matchId, session.Userid)
+		play.Played = true
+		saveMatchPlay(ssdbc, matchId, session.Userid, play)
 	}
 
 	//json

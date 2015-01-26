@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/henyouqian/lwutil"
 )
@@ -52,6 +54,8 @@ var (
 )
 
 func initConf(confFile string) {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	var f *os.File
 	var err error
 
