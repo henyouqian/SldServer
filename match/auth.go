@@ -903,18 +903,44 @@ func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check binded
+	userId := int64(0)
+	var playerInfo *PlayerInfo
+
 	resp, err := authDb.Do("hget", H_WEIBO_ACCOUNT, authData.Uid)
 	lwutil.CheckError(err, "err_ssdb")
 	if resp[0] == SSDB_NOT_FOUND {
-		lwutil.SendError("err_weibo_no_account", fmt.Sprintf("uid:%s", authData.Uid))
+		//set tmp account
+		userId = GenSerial(authDb, ACCOUNT_SERIAL)
+
+		resp, err := authDb.Do("hset", H_WEIBO_ACCOUNT, authData.Uid, userId)
+		lwutil.CheckSsdbError(resp, err)
+
+		playerIn := struct {
+			NickName        string
+			GravatarKey     string
+			CustomAvatarKey string
+			TeamName        string
+			Email           string
+			Gender          int
+		}{
+			fmt.Sprintf("u%d", userId),
+			fmt.Sprintf("%d", rand.Intn(99999)),
+			"",
+			TEAM_NAMES[rand.Intn(len(TEAM_NAMES))],
+			"",
+			rand.Intn(1),
+		}
+		playerInfo = savePlayerInfo(matchDb, userId, playerIn)
+	} else {
+		userId, err = strconv.ParseInt(resp[1], 10, 64)
+		lwutil.CheckError(err, "err_strconv")
+
+		playerInfo, err = getPlayerInfo(matchDb, userId)
+		lwutil.CheckError(err, "err_getplayerinfo")
 	}
-	userId, err := strconv.ParseInt(resp[1], 10, 64)
 
 	//session
 	userToken := newSession(w, userId, "", 0, authDb)
-
-	playerInfo, err := getPlayerInfo(matchDb, userId)
-	lwutil.CheckError(err, "err_getplayerinfo")
 
 	// out
 	out := struct {
