@@ -805,7 +805,7 @@ func apiAuthLoginTmp(w http.ResponseWriter, r *http.Request) {
 const (
 	WEIBO_APP_ID       = 2485478034
 	WEIBO_APP_SECRET   = "d52bd51bd1b43d6562a5fb19e94883ff"
-	WEIBO_REDIRECT_URI = "http://localhost:7777/oauth.html"
+	WEIBO_REDIRECT_URI = "http://g.pintugame.com/oauth.html"
 )
 
 func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
