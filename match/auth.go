@@ -899,7 +899,7 @@ func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(data, &authData)
 
 	if authData.Uid == "" {
-		lwutil.SendError("err_code", "code expired?")
+		lwutil.SendError("err_code", string(data))
 	}
 
 	//check binded
