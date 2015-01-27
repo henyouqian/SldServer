@@ -419,7 +419,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	//followed?
 	followed := false
 	if session != nil && session.Userid != in.UserId {
-		followed, err = isFollowed(ssdb, in.UserId, playerInfo.UserId)
+		followed, err = isFollowed(ssdb, session.Userid, playerInfo.UserId)
 		lwutil.CheckError(err, "err_follow")
 	}
 
@@ -1239,7 +1239,7 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		Follow         bool
-		FollowNum      int
+		FollowNum      int //myfollowNum
 		FanNum         int
 		PlayerInfoLite *PlayerInfoLite
 	}{
@@ -1300,7 +1300,7 @@ func apiPlayerUnfollow(w http.ResponseWriter, r *http.Request) {
 	//out
 	out := struct {
 		Follow    bool
-		FollowNum int
+		FollowNum int //myFollowNum
 		FanNum    int
 	}{
 		false,
@@ -1330,6 +1330,10 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
 	//in
 	var in struct {
 		UserId int64
@@ -1349,13 +1353,22 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 	matchNum, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "err_strconv")
 
+	//followed?
+	followed := false
+	if session != nil && session.Userid != in.UserId {
+		followed, err = isFollowed(ssdbc, session.Userid, playerInfo.UserId)
+		lwutil.CheckError(err, "err_follow")
+	}
+
 	//out
 	out := struct {
 		*PlayerInfo
 		MatchNum int
+		Followed bool
 	}{
 		playerInfo,
 		matchNum,
+		followed,
 	}
 	lwutil.WriteResponse(w, out)
 }
