@@ -1841,8 +1841,6 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		out.PlayedMatchIds = append(out.PlayedMatchIds, matchId)
 	}
 
-	glog.Info(out.PlayedMatchIds)
-
 	//out
 	lwutil.WriteResponse(w, out)
 }
