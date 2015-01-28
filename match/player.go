@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -568,6 +569,9 @@ func savePlayerInfo(ssdbc *ssdb.Client, userId int64, player interface{}) *Playe
 }
 
 func updatePlayerSearchInfo(ssdbc *ssdb.Client, oldName, newName string, userId int64) {
+	oldName = strings.ToLower(oldName)
+	newName = strings.ToLower(newName)
+
 	if oldName == newName {
 		return
 	}
@@ -1392,7 +1396,8 @@ func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
 
 	//
 	limit := 20
-	zkey := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, in.UserName)
+	userName := strings.ToLower(in.UserName)
+	zkey := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, userName)
 	hkey := H_PLAYER_INFO_LITE
 	resp, err := ssdbc.ZScan(zkey, hkey, in.LastKey, in.LastScore, limit, false)
 	lwutil.CheckError(err, "err_zmultiget")

@@ -967,7 +967,7 @@ func regAuth() {
 	http.Handle("/auth/forgotPassword", lwutil.ReqHandler(apiForgotPassword))
 	http.Handle("/auth/resetPassword", lwutil.ReqHandler(apiResetPassword))
 	http.Handle("/auth/checkVersion", lwutil.ReqHandler(apiCheckVersion))
-	http.Handle("/auth/ssdbTest", lwutil.ReqHandler(apiSsdbTest))
+	// http.Handle("/auth/ssdbTest", lwutil.ReqHandler(apiSsdbTest))
 
 	http.Handle("/auth/registerTmp", lwutil.ReqHandler(apiAuthRegisterTmp))
 	http.Handle("/auth/loginTmp", lwutil.ReqHandler(apiAuthLoginTmp))

@@ -76,7 +76,8 @@ func initConf(confFile string) {
 	}
 
 	lwutil.AccessControlAllowOrigins = map[string]bool{
-		"http://g.pintugame.com": true,
-		"http://localhost:7777":  true,
+		"http://g.pintugame.com":   true,
+		"http://localhost:7777":    true,
+		"http://192.168.2.55:7777": true,
 	}
 }
