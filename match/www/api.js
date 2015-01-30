@@ -325,6 +325,10 @@ function Controller($scope, $http) {
 					"name": "clearPlayer",
 					"method": "POST",
 					"data": {"UserId": 0}
+				},{
+					"name": "delMatch",
+					"method": "POST",
+					"data": {"MatchId": 0}
 				}
 			]
 		},{

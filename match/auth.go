@@ -38,7 +38,10 @@ const (
 )
 
 var (
-	ADMIN_SET  = map[string]bool{"henyouqian@gmail.com": true}
+	ADMIN_SET = map[string]bool{
+		"henyouqian@gmail.com":                 true,
+		"B421E075-A1D3-BED7-3D55-CD0613E14915": true,
+	}
 	TEAM_NAMES = []string{"安徽", "澳门", "北京", "重庆", "福建", "甘肃", "广东", "广西", "贵州", "海南", "河北", "黑龙江", "河南", "湖北", "湖南", "江苏", "江西", "吉林", "辽宁", "内蒙古", "宁夏", "青海", "陕西", "山东", "上海", "山西", "四川", "台湾", "天津", "香港", "新疆", "西藏", "云南", "浙江"}
 )
 
@@ -857,8 +860,23 @@ func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
 	resp, err = authDb.Do("hset", H_WEIBO_ACCOUNT, authData.Uid, session.Userid)
 	lwutil.CheckSsdbError(resp, err)
 
+	//playerInfo
+	matchDb, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer matchDb.Close()
+
+	playerInfo, err := getPlayerInfo(matchDb, session.Userid)
+	lwutil.CheckError(err, "err_getplayerinfo")
+
 	//out
-	lwutil.WriteResponse(w, authData)
+	out := struct {
+		Player *PlayerInfo
+	}{
+		playerInfo,
+	}
+
+	//out
+	lwutil.WriteResponse(w, out)
 }
 
 func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {

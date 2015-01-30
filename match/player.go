@@ -1097,6 +1097,14 @@ func apiPlayerFollowListWeb(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
+	if in.UserId == 0 {
+		//session
+		session, err := findSession(w, r, nil)
+		lwutil.CheckError(err, "err_auth")
+
+		in.UserId = session.Userid
+	}
+
 	if in.Limit <= 0 {
 		in.Limit = 20
 	} else if in.Limit > 50 {
@@ -1343,6 +1351,10 @@ func apiPlayerGetPlayerInfoWeb(w http.ResponseWriter, r *http.Request) {
 		UserId int64
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
+
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
 
 	//get info
 	playerInfo, err := getPlayerInfo(ssdbc, in.UserId)

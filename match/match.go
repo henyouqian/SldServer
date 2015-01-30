@@ -1764,6 +1764,10 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
+	if in.UserId == 0 {
+		in.UserId = session.Userid
+	}
+
 	if in.Limit <= 0 {
 		in.Limit = 20
 	} else if in.Limit > 50 {

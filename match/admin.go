@@ -277,10 +277,74 @@ func apiAdminClearPlayer(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, in)
 }
 
+func apiAdminDelMatch(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//
+	match := getMatch(ssdbc, in.MatchId)
+	match.Deleted = true
+	saveMatch(ssdbc, match)
+
+	//del
+	resp, err := ssdbc.Do("zdel", Z_MATCH, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	resp, err = ssdbc.Do("zdel", Z_HOT_MATCH, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	key := makeZPlayerMatchKey(match.OwnerId)
+	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeZLikeMatchKey(match.OwnerId)
+	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	key = makeQPlayerMatchKey(match.OwnerId)
+	resp, err = ssdbc.Do("qback", key)
+	lwutil.CheckSsdbError(resp, err)
+	matchId, err := strconv.ParseInt(resp[1], 10, 64)
+	lwutil.CheckError(err, "err_strconv")
+	if matchId == in.MatchId {
+		ssdbc.Do("qpop_back", key)
+	}
+
+	key = makeQLikeMatchKey(match.OwnerId)
+	resp, err = ssdbc.Do("qback", key)
+	lwutil.CheckSsdbError(resp, err)
+	matchId, err = strconv.ParseInt(resp[1], 10, 64)
+	lwutil.CheckError(err, "err_strconv")
+	if matchId == in.MatchId {
+		ssdbc.Do("qpop_back", key)
+	}
+
+	lwutil.WriteResponse(w, in)
+}
+
 func regAdmin() {
 	http.Handle("/admin/getUserInfo", lwutil.ReqHandler(apiGetUserInfo))
 	http.Handle("/admin/addGoldCoin", lwutil.ReqHandler(apiAddGoldCoin))
 	http.Handle("/admin/addPrize", lwutil.ReqHandler(apiAddPrize))
 	http.Handle("/admin/setAdsConf", lwutil.ReqHandler(apiSetAdsConf))
 	http.Handle("/admin/clearPlayer", lwutil.ReqHandler(apiAdminClearPlayer))
+	http.Handle("/admin/delMatch", lwutil.ReqHandler(apiAdminDelMatch))
 }
