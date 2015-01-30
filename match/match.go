@@ -299,6 +299,18 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	player, err := getPlayerInfo(ssdbc, session.Userid)
 	lwutil.CheckError(err, "")
 
+	//check repeat
+	key := makeQPlayerMatchKey(session.Userid)
+	resp, err := ssdbc.Do("qback", key)
+	if err == nil && len(resp) == 2 && resp[0] == "ok" {
+		lastMatchId, err := strconv.ParseInt(resp[1], 10, 64)
+		lwutil.CheckError(err, "err_strconv")
+		match := getMatch(ssdbc, lastMatchId)
+		if match.Thumb == in.Pack.Thumb {
+			lwutil.SendError("err_match_repeat", "是否重复发送？")
+		}
+	}
+
 	//new pack
 	newPack(ssdbc, &in.Pack, session.Userid)
 
@@ -353,7 +365,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 
 	//add to hash
-	resp, err := ssdbc.Do("hset", H_MATCH, matchId, js)
+	resp, err = ssdbc.Do("hset", H_MATCH, matchId, js)
 	lwutil.CheckSsdbError(resp, err)
 
 	if isPublishNow {
@@ -368,7 +380,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Z_LIKE_MATCH
-		key := makeZLikeMatchKey(session.Userid)
+		key = makeZLikeMatchKey(session.Userid)
 		resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
 		lwutil.CheckSsdbError(resp, err)
 
