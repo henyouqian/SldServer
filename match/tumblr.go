@@ -653,6 +653,7 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 		OwnerName:            in.BlogName,
 		SliderNum:            in.SliderNum,
 		Thumb:                in.Pack.Thumb,
+		Thumbs:               in.Pack.Thumbs,
 		Title:                in.Title,
 		Prize:                in.GoldCoinForPrize * PRIZE_NUM_PER_COIN,
 		BeginTime:            beginTimeUnix,
@@ -708,6 +709,22 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 	qPlayerMatchKey := makeQPlayerMatchKey(userId)
 	resp, err = ssdbc.Do("qpush_back", qPlayerMatchKey, matchId)
 	lwutil.CheckSsdbError(resp, err)
+
+	//channel
+	key = makeHUserChannelKey(userId)
+	resp, err = ssdbc.Do("hgetall", key)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	for _, channelName := range resp {
+		key := makeZChannelMatchKey(channelName)
+		resp, err := ssdbc.Do("zset", key, matchId, beginTimeUnix)
+		lwutil.CheckSsdbError(resp, err)
+
+		//set channel thumb
+		resp, err = ssdbc.Do("hset", H_CHANNEL_THUMB, channelName, match.Thumb)
+		lwutil.CheckSsdbError(resp, err)
+	}
 
 	//decrease gold coin
 	if in.GoldCoinForPrize != 0 {

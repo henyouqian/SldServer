@@ -511,6 +511,32 @@ function Controller($scope, $http) {
 					"data": {"BlogName":"", "LastKey":"", "LastScore":0, "Limit":20}
 				}
 			]
+		},{
+			"tab":"channel",
+			"path":"channel",
+			"apis":[
+				{
+					"name": "set",
+					"method": "POST",
+					"data": {"Channels":[]}
+				},{
+					"name": "list",
+					"method": "POST",
+					"data": ""
+				},{
+					"name": "addUser",
+					"method": "POST",
+					"data": {"ChannelName":"", "UserId":-2222}
+				},{
+					"name": "delUser",
+					"method": "POST",
+					"data": {"ChannelName":"", "UserId":-2222}
+				},{
+					"name": "listUser",
+					"method": "POST",
+					"data": {"ChannelName":""}
+				}
+			]
 		}
 	]
 

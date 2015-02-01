@@ -923,18 +923,18 @@ func (c *Client) TableGetRows(tableName string, keys []string, objs interface{})
 	return nil
 }
 
-func (c *Client) ZScan(zkey, hkey string, keyStart interface{}, scoreStart int64, limit int, reverse bool) ([]string, error) {
+func (c *Client) ZScan(zkey, hkey string, keyStart interface{}, scoreStart interface{}, limit int, reverse bool) (result []string, lastKey string, lastScore string, err error) {
 	api := "zscan"
 	if reverse {
 		api = "zrscan"
 	}
 	resp, err := c.Do(api, zkey, keyStart, scoreStart, "", limit)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	resp = resp[1:]
 	if len(resp) == 0 {
-		return nil, nil
+		return nil, "", "", nil
 	}
 
 	num := len(resp) / 2
@@ -945,11 +945,14 @@ func (c *Client) ZScan(zkey, hkey string, keyStart interface{}, scoreStart int64
 		cmds[i+2] = resp[i*2]
 	}
 
+	lastKey = resp[(num-1)*2]
+	lastScore = resp[(num-1)*2+1]
+
 	//
 	resp, err = c.Do(cmds...)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	resp = resp[1:]
-	return resp, nil
+	return resp, lastKey, lastScore, nil
 }

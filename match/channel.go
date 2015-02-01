@@ -1,0 +1,360 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/golang/glog"
+	"github.com/henyouqian/lwutil"
+	"net/http"
+	"strconv"
+	"strings"
+)
+
+const (
+	K_CHANNEL_LIST  = "K_CHANNEL_LIST"  //value:channel name array(json)
+	Z_CHANNEL_USER  = "Z_CHANNEL_USER"  //key:Z_CHANNEL_USER/channelName subkey:userId score:time
+	H_USER_CHANNEL  = "H_USER_CHANNEL"  //key:H_USER_CHANNEL/userId subkey:channelName value:1
+	Z_CHANNEL_MATCH = "Z_CHANNEL_MATCH" //key:Z_CHANNEL_MATCH/channelName subkey:matchId score:time
+	H_CHANNEL_THUMB = "H_CHANNEL_THUMB" //subkey:channelName value:thumb
+)
+
+func glogChannel() {
+	glog.Info("")
+}
+
+func makeZChannelUserKey(channelName string) string {
+	return fmt.Sprintf("%s/%s", Z_CHANNEL_USER, channelName)
+}
+
+func makeHUserChannelKey(userId int64) string {
+	return fmt.Sprintf("%s/%s", H_USER_CHANNEL, userId)
+}
+
+func makeZChannelMatchKey(channelName string) string {
+	return fmt.Sprintf("%s/%s", Z_CHANNEL_MATCH, channelName)
+}
+
+type Channel [2]string //[name, thumb]
+
+func apiChannelSet(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		Channels []Channel
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//json
+	bt, err := json.Marshal(in.Channels)
+	lwutil.CheckError(err, "err_json")
+
+	//set
+	resp, err := ssdbc.Do("set", K_CHANNEL_LIST, bt)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiChannelList(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	_, err = findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//get
+	resp, err := ssdbc.Do("get", K_CHANNEL_LIST)
+	lwutil.CheckSsdbError(resp, err)
+
+	var channels []Channel
+	err = json.Unmarshal([]byte(resp[1]), &channels)
+
+	//out
+	out := struct {
+		Channels []Channel
+		ThumbMap map[string]string //[channelName]thumb
+	}{
+		channels,
+		make(map[string]string),
+	}
+
+	//get thumbs
+	num := len(out.Channels)
+	if num > 0 {
+		cmds := make([]interface{}, 2, num+2)
+		cmds[0] = "multi_hget"
+		cmds[1] = H_CHANNEL_THUMB
+		for _, channel := range out.Channels {
+			channelName := channel[0]
+			cmds = append(cmds, channelName)
+		}
+		resp, err = ssdbc.Do(cmds...)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			out.ThumbMap[resp[i*2]] = resp[i*2+1]
+		}
+	}
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiChannelAddUser(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		ChannelName string
+		UserId      int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check channel name
+	if len(in.ChannelName) == 0 {
+		lwutil.SendError("err_channel_name", "")
+	}
+
+	//check user
+	if !checkPlayerExist(ssdbc, in.UserId) {
+		lwutil.SendError("err_user_id", "")
+	}
+
+	//zset
+	t := lwutil.GetRedisTimeUnix()
+	key := makeZChannelUserKey(in.ChannelName)
+	resp, err := ssdbc.Do("zset", key, in.UserId, t)
+	lwutil.CheckSsdbError(resp, err)
+
+	//hset
+	key = makeHUserChannelKey(in.UserId)
+	resp, err = ssdbc.Do("hset", key, in.ChannelName, 1)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiChannelDelUser(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		ChannelName string
+		UserId      int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//del channel user
+	key := makeZChannelUserKey(in.ChannelName)
+	resp, err := ssdbc.Do("zdel", key, in.UserId)
+	lwutil.CheckSsdbError(resp, err)
+
+	//del user channel
+	key = makeHUserChannelKey(in.UserId)
+	resp, err = ssdbc.Do("hdel", key, in.ChannelName)
+	lwutil.CheckSsdbError(resp, err)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiChannelListUser(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	checkAdmin(session)
+
+	//in
+	var in struct {
+		ChannelName string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	key := makeZChannelUserKey(in.ChannelName)
+	resp, err := ssdbc.Do("zkeys", key, "", "", "", 100)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	userIds := make([]int64, 0, 10)
+	for _, v := range resp {
+		userId, err := strconv.ParseInt(v, 10, 64)
+		lwutil.CheckError(err, "err_strconv")
+		userIds = append(userIds, userId)
+	}
+
+	//out
+	out := struct {
+		UserIds []int64
+	}{
+		userIds,
+	}
+	lwutil.WriteResponse(w, out)
+}
+
+func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		ChannelName string
+		Key         string
+		Score       string
+		Limit       int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 || in.Limit > 30 {
+		in.Limit = 30
+	}
+
+	key := makeZChannelMatchKey(in.ChannelName)
+	resp, lastKey, lastScore, err := ssdbc.ZScan(key, H_MATCH, in.Key, in.Score, in.Limit, true)
+	lwutil.CheckError(err, "err_zscan")
+
+	//out
+	out := struct {
+		Matches        []*Match
+		LastKey        string
+		LastScore      string
+		PlayedMatchIds []int64
+		OwnerMap       map[string]*PlayerInfoLite
+	}{
+		make([]*Match, 0, 30),
+		lastKey,
+		lastScore,
+		make([]int64, 0, 30),
+		make(map[string]*PlayerInfoLite),
+	}
+
+	num := len(resp) / 2
+	for i := 0; i < num; i++ {
+		matchJs := resp[i*2+1]
+		var match Match
+		err := json.Unmarshal([]byte(matchJs), &match)
+		lwutil.CheckError(err, "err_json")
+		out.Matches = append(out.Matches, &match)
+	}
+
+	//playedMap
+	num = len(out.Matches)
+	cmds := make([]interface{}, 2, num+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_MATCH_PLAY
+	ownerIds := make([]int64, 0, num)
+	for _, match := range out.Matches {
+		subkey := makeMatchPlaySubkey(match.Id, session.Userid)
+		cmds = append(cmds, subkey)
+		ownerIds = append(ownerIds, match.OwnerId)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		key := resp[i*2]
+		matchIdStr := strings.Split(key, "/")[0]
+		matchId, err := strconv.ParseInt(matchIdStr, 10, 60)
+		lwutil.CheckError(err, "strconv")
+		out.PlayedMatchIds = append(out.PlayedMatchIds, matchId)
+	}
+
+	//ownerMap
+	cmds = make([]interface{}, 2, len(ownerIds)+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_PLAYER_INFO_LITE
+	for _, ownerId := range ownerIds {
+		cmds = append(cmds, ownerId)
+	}
+
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		var owner PlayerInfoLite
+		err = json.Unmarshal([]byte(resp[i*2+1]), &owner)
+		lwutil.CheckError(err, "err_json")
+		out.OwnerMap[resp[i*2]] = &owner
+	}
+
+	lwutil.WriteResponse(w, out)
+}
+
+func regChannel() {
+	http.Handle("/channel/set", lwutil.ReqHandler(apiChannelSet))
+	http.Handle("/channel/list", lwutil.ReqHandler(apiChannelList))
+	http.Handle("/channel/addUser", lwutil.ReqHandler(apiChannelAddUser))
+	http.Handle("/channel/delUser", lwutil.ReqHandler(apiChannelDelUser))
+	http.Handle("/channel/listUser", lwutil.ReqHandler(apiChannelListUser))
+	http.Handle("/channel/listMatch", lwutil.ReqHandler(apiChannelListMatch))
+}

@@ -319,22 +319,10 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	beginTimeUnix := int64(0)
 	beginTimeStr := in.BeginTimeStr
 	endTimeUnix := int64(0)
-	isPublishNow := false
-	if in.BeginTimeStr == "" {
-		beginTime := lwutil.GetRedisTime()
-		beginTimeUnix = beginTime.Unix()
-		beginTimeStr = beginTime.Format("2006-01-02T15:04:05")
-		endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
-		isPublishNow = true
-	} else {
-		beginTime, err := time.ParseInLocation("2006-01-02T15:04:05", in.BeginTimeStr, time.Local)
-		lwutil.CheckError(err, "")
-		if beginTime.Before(lwutil.GetRedisTime()) {
-			lwutil.SendError("err_time", "begin time must later than now")
-		}
-		beginTimeUnix = beginTime.Unix()
-		endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
-	}
+	beginTime := lwutil.GetRedisTime()
+	beginTimeUnix = beginTime.Unix()
+	beginTimeStr = beginTime.Format("2006-01-02T15:04:05")
+	endTimeUnix = beginTime.Add(MATCH_TIME_SEC * time.Second).Unix()
 
 	match := Match{
 		Id:                   matchId,
@@ -368,45 +356,51 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", H_MATCH, matchId, js)
 	lwutil.CheckSsdbError(resp, err)
 
-	if isPublishNow {
-		if !in.Private {
-			//add to Z_MATCH
-			resp, err = ssdbc.Do("zset", Z_MATCH, matchId, beginTimeUnix)
-			lwutil.CheckSsdbError(resp, err)
-
-			//Z_HOT_MATCH
-			resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.GoldCoinForPrize*PRIZE_NUM_PER_COIN)
-			lwutil.CheckSsdbError(resp, err)
-		}
-
-		//Z_LIKE_MATCH
-		key = makeZLikeMatchKey(session.Userid)
-		resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	if !in.Private {
+		//add to Z_MATCH
+		resp, err = ssdbc.Do("zset", Z_MATCH, matchId, beginTimeUnix)
 		lwutil.CheckSsdbError(resp, err)
 
-		//Z_PLAYER_MATCH
-		key = makeZPlayerMatchKey(session.Userid)
-		resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
-		lwutil.CheckSsdbError(resp, err)
-
-		//Q_LIKE_MATCH
-		key = makeQLikeMatchKey(session.Userid)
-		resp, err = ssdbc.Do("qpush_back", key, matchId)
-		lwutil.CheckSsdbError(resp, err)
-
-		//Q_PLAYER_MATCH
-		key = makeQPlayerMatchKey(session.Userid)
-		resp, err = ssdbc.Do("qpush_back", key, matchId)
-		lwutil.CheckSsdbError(resp, err)
-
-		//Z_OPEN_MATCH
-		resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
-		lwutil.CheckSsdbError(resp, err)
-	} else {
-		//add to Z_PENDING_MATCH
-		resp, err = ssdbc.Do("zset", Z_PENDING_MATCH, matchId, beginTimeUnix)
+		//Z_HOT_MATCH
+		resp, err = ssdbc.Do("zset", Z_HOT_MATCH, matchId, in.GoldCoinForPrize*PRIZE_NUM_PER_COIN)
 		lwutil.CheckSsdbError(resp, err)
 	}
+
+	//Z_LIKE_MATCH
+	key = makeZLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Z_PLAYER_MATCH
+	key = makeZPlayerMatchKey(session.Userid)
+	resp, err = ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Q_LIKE_MATCH
+	key = makeQLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qpush_back", key, matchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Q_PLAYER_MATCH
+	key = makeQPlayerMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qpush_back", key, matchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	//Z_OPEN_MATCH
+	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	lwutil.CheckSsdbError(resp, err)
+
+	// //channel
+	// key = makeHUserChannelKey(session.Userid)
+	// resp, err = ssdbc.Do("hgetall", key)
+	// lwutil.CheckSsdbError(resp, err)
+	// resp = resp[1:]
+
+	// for _, channelName := range resp {
+	// 	key := makeZChannelMatchKey(channelName)
+	// 	resp, err := ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	// 	lwutil.CheckSsdbError(resp, err)
+	// }
 
 	//decrease gold coin
 	if in.GoldCoinForPrize != 0 {

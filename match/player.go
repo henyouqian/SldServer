@@ -26,6 +26,7 @@ const (
 	Z_PLAYER_FAN               = "Z_PLAYER_FAN"    //key:Z_PLAYER_FAN/userId subkey:fanUserId score:time
 	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW" //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
 	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH" //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
+	H_PLAYER_NAME              = "H_PLAYER_NAME"   //key:H_PLAYER_NAME subkey:playerName value:userId
 )
 
 type PlayerInfoLite struct {
@@ -414,6 +415,7 @@ func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	playerInfo, err := getPlayerInfo(ssdb, in.UserId)
 	if err != nil {
 		w.WriteHeader(500)
+		lwutil.SendError("err_user_id", fmt.Sprintf("userId:%d", in.UserId))
 		return
 	}
 
@@ -495,13 +497,24 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdbc.Close()
 
+	//check name
+	resp, err := ssdbc.Do("hget", H_PLAYER_NAME, in.NickName)
+	lwutil.CheckError(err, "err_ssdb")
+	if resp[0] == SSDB_OK {
+		uid, err := strconv.ParseInt(resp[1], 10, 64)
+		lwutil.CheckError(err, "err_strconv")
+		if uid != session.Userid {
+			lwutil.SendError("err_name_taken", "")
+		}
+	}
+
 	//
 	playerKey := makePlayerInfoKey(session.Userid)
 
 	//check playerInfo exist
 	oldNickName := ""
 
-	resp, err := ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
+	resp, err = ssdbc.Do("hget", playerKey, PLAYER_NICK_NAME)
 	lwutil.CheckError(err, "err_hget")
 	if resp[0] != SSDB_NOT_FOUND {
 		oldNickName = resp[1]
@@ -1411,17 +1424,21 @@ func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
 	userName := strings.ToLower(in.UserName)
 	zkey := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, userName)
 	hkey := H_PLAYER_INFO_LITE
-	resp, err := ssdbc.ZScan(zkey, hkey, in.LastKey, in.LastScore, limit, false)
+	resp, lastKey, lastScore, err := ssdbc.ZScan(zkey, hkey, in.LastKey, in.LastScore, limit, false)
 	lwutil.CheckError(err, "err_zmultiget")
 
 	//out
 	num := len(resp) / 2
 	out := struct {
-		Players []PlayerInfoLite
-		Limit   int
+		Players   []PlayerInfoLite
+		Limit     int
+		LastKey   string
+		LastScore string
 	}{
 		make([]PlayerInfoLite, num),
 		limit,
+		lastKey,
+		lastScore,
 	}
 	for i := 0; i < num; i++ {
 		err = json.Unmarshal([]byte(resp[i*2+1]), &out.Players[i])
