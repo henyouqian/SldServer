@@ -500,7 +500,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 	//check name
 	resp, err := ssdbc.Do("hget", H_PLAYER_NAME, in.NickName)
 	lwutil.CheckError(err, "err_ssdb")
-	if resp[0] == SSDB_OK {
+	if resp[0] == SSDB_OK && len(resp) == 2 {
 		uid, err := strconv.ParseInt(resp[1], 10, 64)
 		lwutil.CheckError(err, "err_strconv")
 		if uid != session.Userid {
@@ -582,17 +582,30 @@ func savePlayerInfo(ssdbc *ssdb.Client, userId int64, player interface{}) *Playe
 }
 
 func updatePlayerSearchInfo(ssdbc *ssdb.Client, oldName, newName string, userId int64) {
+	if oldName == newName {
+		return
+	}
+
+	resp, err := ssdbc.Do("hset", H_PLAYER_NAME, newName, userId)
+	lwutil.CheckSsdbError(resp, err)
+	if oldName != "" {
+		resp, err := ssdbc.Do("hdel", H_PLAYER_NAME, oldName, userId)
+		lwutil.CheckSsdbError(resp, err)
+	}
+
 	oldName = strings.ToLower(oldName)
 	newName = strings.ToLower(newName)
 
 	if oldName == newName {
 		return
 	}
-	key := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, oldName)
-	resp, err := ssdbc.Do("zdel", key, userId)
-	lwutil.CheckSsdbError(resp, err)
+	if oldName != "" {
+		key := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, oldName)
+		resp, err := ssdbc.Do("zdel", key, userId)
+		lwutil.CheckSsdbError(resp, err)
+	}
 
-	key = fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, newName)
+	key := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, newName)
 	resp, err = ssdbc.Do("zset", key, userId, lwutil.GetRedisTimeUnix())
 	lwutil.CheckSsdbError(resp, err)
 }

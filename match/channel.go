@@ -285,13 +285,13 @@ func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
 		Matches        []*Match
 		LastKey        string
 		LastScore      string
-		PlayedMatchIds []int64
+		PlayedMatchMap map[string]*PlayerMatchInfo
 		OwnerMap       map[string]*PlayerInfoLite
 	}{
 		make([]*Match, 0, 30),
 		lastKey,
 		lastScore,
-		make([]int64, 0, 30),
+		make(map[string]*PlayerMatchInfo),
 		make(map[string]*PlayerInfoLite),
 	}
 
@@ -321,11 +321,12 @@ func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
 
 	num = len(resp) / 2
 	for i := 0; i < num; i++ {
-		key := resp[i*2]
-		matchIdStr := strings.Split(key, "/")[0]
-		matchId, err := strconv.ParseInt(matchIdStr, 10, 60)
-		lwutil.CheckError(err, "strconv")
-		out.PlayedMatchIds = append(out.PlayedMatchIds, matchId)
+		matchIdStr := strings.Split(resp[i*2], "/")[0]
+		var matchPlay MatchPlay
+		err := json.Unmarshal([]byte(resp[i*2+1]), &matchPlay)
+		lwutil.CheckError(err, "err_json")
+		playerMatchInfo := makePlayerMatchInfo(&matchPlay)
+		out.PlayedMatchMap[matchIdStr] = playerMatchInfo
 	}
 
 	//ownerMap

@@ -35,6 +35,7 @@ type Image struct {
 
 type Pack struct {
 	Id        int64
+	MatchId   int64
 	AuthorId  int64
 	Time      string
 	TimeUnix  int64
@@ -108,11 +109,12 @@ func init() {
 	glog.Info("init")
 }
 
-func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
+func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64, matchId int64) {
 	if len(pack.Images) < 4 {
 		lwutil.SendError("err_images", "len(pack.Images) < 4")
 	}
 
+	pack.MatchId = matchId
 	pack.AuthorId = authorId
 
 	now := time.Now()
@@ -131,35 +133,35 @@ func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64) {
 	lwutil.CheckSsdbError(resp, err)
 }
 
-func apiNewPack(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
+// func apiNewPack(w http.ResponseWriter, r *http.Request) {
+// 	var err error
+// 	lwutil.CheckMathod(r, "POST")
 
-	//ssdb
-	ssdb, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdb.Close()
+// 	//ssdb
+// 	ssdb, err := ssdbPool.Get()
+// 	lwutil.CheckError(err, "")
+// 	defer ssdb.Close()
 
-	//session
-	session, err := findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
+// 	//session
+// 	session, err := findSession(w, r, nil)
+// 	lwutil.CheckError(err, "err_auth")
 
-	//in
-	var pack Pack
-	err = lwutil.DecodeRequestBody(r, &pack)
-	lwutil.CheckError(err, "err_decode_body")
-	authorId := int64(0)
-	if isAdmin(session.Username) {
-		authorId = 0
-	} else {
-		authorId = session.Userid
-	}
+// 	//in
+// 	var pack Pack
+// 	err = lwutil.DecodeRequestBody(r, &pack)
+// 	lwutil.CheckError(err, "err_decode_body")
+// 	authorId := int64(0)
+// 	if isAdmin(session.Username) {
+// 		authorId = 0
+// 	} else {
+// 		authorId = session.Userid
+// 	}
 
-	newPack(ssdb, &pack, authorId)
+// 	newPack(ssdb, &pack, authorId)
 
-	//out
-	lwutil.WriteResponse(w, pack)
-}
+// 	//out
+// 	lwutil.WriteResponse(w, pack)
+// }
 
 func apiListPack(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -480,7 +482,7 @@ func apiGetComments(w http.ResponseWriter, r *http.Request) {
 }
 
 func regPack() {
-	http.Handle("/pack/new", lwutil.ReqHandler(apiNewPack))
+	// http.Handle("/pack/new", lwutil.ReqHandler(apiNewPack))
 	http.Handle("/pack/list", lwutil.ReqHandler(apiListPack))
 	http.Handle("/pack/listMatch", lwutil.ReqHandler(apiListMatchPack))
 	http.Handle("/pack/get", lwutil.ReqHandler(apiGetPack))

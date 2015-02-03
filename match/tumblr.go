@@ -634,11 +634,10 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 	//
 	playerKey := makePlayerInfoKey(userId)
 
-	//new pack
-	newPack(ssdbc, &in.Pack, userId)
-
 	//new match
 	matchId := GenSerial(ssdbc, MATCH_SERIAL)
+
+	newPack(ssdbc, &in.Pack, userId, matchId)
 
 	beginTime := lwutil.GetRedisTime()
 	beginTimeUnix := beginTime.Unix()

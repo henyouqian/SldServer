@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	H_SOCIAL_PACK      = "H_SOCIAL_PACK" //subkey:userId/packId/sliderNum value:socialPack
-	Z_SOCIAL_PACK      = "Z_SOCIAL_PACK" //key: Z_SOCIAL_PACK/userId subkey: socialPackKey score:serial
+	H_SOCIAL_PACK      = "H_SOCIAL_PACK"  //subkey:userId/packId/sliderNum value:socialPack
+	Z_SOCIAL_PACK      = "Z_SOCIAL_PACK"  //key: Z_SOCIAL_PACK/userId subkey: socialPackKey score:serial
+	H_SOCIAL_RANKS     = "H_SOCIAL_RANKS" //key:H_SOCIAL_RANK subkey:matchId value:ranks
 	SERIAL_SOCIAL_PACK = "SERIAL_SOCIAL_PACK"
 )
 
@@ -275,6 +276,41 @@ func apiSocialGetPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func apiSocialGetMatch(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+	pack, _ := getPack(ssdbc, match.PackId)
+
+	//out
+	out := struct {
+		Match *Match
+		Pack  *Pack
+		Ranks []SocialRank
+	}{
+		match,
+		pack,
+		[]SocialRank{},
+	}
+
+	//out
+	lwutil.WriteResponse(w, out)
+}
+
 func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -291,6 +327,7 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	//in
 	var in struct {
 		Key      string
+		MatchId  int64
 		Checksum string
 		UserName string
 		Msec     int
@@ -298,60 +335,115 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	matchId, _ := strconv.ParseInt(in.Key, 10, 64)
-
 	//
-	resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
-	lwutil.CheckSsdbError(resp, err)
+	if len(in.Key) > 0 {
+		resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
+		lwutil.CheckSsdbError(resp, err)
 
-	socialPack := SocialPack{}
-	err = json.Unmarshal([]byte(resp[1]), &socialPack)
-	lwutil.CheckError(err, "")
+		socialPack := SocialPack{}
+		err = json.Unmarshal([]byte(resp[1]), &socialPack)
+		lwutil.CheckError(err, "")
 
-	//update score
-	found := false
-	for i, v := range socialPack.Ranks {
-		if v.Name == in.UserName {
-			found = true
-			if in.Msec < v.Msec {
-				socialPack.Ranks[i].Msec = in.Msec
+		//update score
+		found := false
+		for i, v := range socialPack.Ranks {
+			if v.Name == in.UserName {
+				found = true
+				if in.Msec < v.Msec {
+					socialPack.Ranks[i].Msec = in.Msec
+				}
+				break
 			}
-			break
 		}
-	}
-	if !found {
-		socialPack.Ranks = append(socialPack.Ranks, SocialRank{in.UserName, in.Msec})
+		if !found {
+			socialPack.Ranks = append(socialPack.Ranks, SocialRank{in.UserName, in.Msec})
+		}
+
+		//sort
+		sort.Sort(ByRank(socialPack.Ranks))
+
+		//
+		if len(socialPack.Ranks) > 10 {
+			socialPack.Ranks = socialPack.Ranks[:10]
+		}
+
+		//json
+		js, err := json.Marshal(socialPack)
+		lwutil.CheckError(err, "")
+
+		//add to hash
+		resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, in.Key, js)
+		lwutil.CheckSsdbError(resp, err)
+
+		//out
+		lwutil.WriteResponse(w, socialPack)
 	}
 
-	//sort
-	sort.Sort(ByRank(socialPack.Ranks))
-
-	//
-	if len(socialPack.Ranks) > 10 {
-		socialPack.Ranks = socialPack.Ranks[:10]
-	}
-
-	//played
-	if matchId != 0 {
-		play := getMatchPlay(ssdbc, matchId, session.Userid)
+	//match played
+	if in.MatchId != 0 {
+		play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+		lwutil.CheckError(err, "err_get_match_play")
 		play.Played = true
-		saveMatchPlay(ssdbc, matchId, session.Userid, play)
+		saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+		playerMatchInfo := makePlayerMatchInfo(play)
+
+		//ranks
+		ranks := []SocialRank{}
+
+		resp, err := ssdbc.Do("hget", H_SOCIAL_RANKS, in.MatchId)
+		lwutil.CheckError(err, "err_ssdb")
+		if resp[0] == SSDB_OK {
+			err = json.Unmarshal([]byte(resp[1]), &ranks)
+			lwutil.CheckError(err, "")
+		}
+
+		//update score
+		found := false
+		for i, v := range ranks {
+			if v.Name == play.PlayerName {
+				found = true
+				if in.Msec < v.Msec {
+					ranks[i].Msec = in.Msec
+				}
+				break
+			}
+		}
+		if !found {
+			ranks = append(ranks, SocialRank{play.PlayerName, in.Msec})
+		}
+
+		//sort
+		sort.Sort(ByRank(ranks))
+
+		//
+		if len(ranks) > 10 {
+			ranks = ranks[:10]
+		}
+
+		//json
+		js, err := json.Marshal(ranks)
+		lwutil.CheckError(err, "")
+
+		//add to hash
+		resp, err = ssdbc.Do("hset", H_SOCIAL_RANKS, in.MatchId, js)
+		lwutil.CheckSsdbError(resp, err)
+
+		//out
+		out := struct {
+			PlayerMatchInfo *PlayerMatchInfo
+			Ranks           []SocialRank
+		}{
+			playerMatchInfo,
+			ranks,
+		}
+		lwutil.WriteResponse(w, out)
 	}
 
-	//json
-	js, err := json.Marshal(socialPack)
-	lwutil.CheckError(err, "")
-
-	//add to hash
-	resp, err = ssdbc.Do("hset", H_SOCIAL_PACK, in.Key, js)
-	lwutil.CheckSsdbError(resp, err)
-
-	//out
-	lwutil.WriteResponse(w, socialPack)
 }
 
 func regSocial() {
 	http.Handle("/social/newPack", lwutil.ReqHandler(apiSocialNewPack))
-	http.Handle("/social/getPack", lwutil.ReqHandler(apiSocialGetPack))
+	http.Handle("/social/getPack", lwutil.ReqHandler(apiSocialGetPack)) //deprecated
+	http.Handle("/social/getMatch", lwutil.ReqHandler(apiSocialGetMatch))
 	http.Handle("/social/play", lwutil.ReqHandler(apiSocialPlay))
 }

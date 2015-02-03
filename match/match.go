@@ -102,11 +102,18 @@ type MatchPlay struct {
 	Prize            int
 	Like             bool
 	Played           bool
+	PrivateLike      bool
 }
 
 type MatchActivity struct {
 	Player *PlayerInfoLite
 	Text   string
+}
+
+type PlayerMatchInfo struct {
+	Played       bool
+	Liked        bool
+	PrivateLiked bool
 }
 
 const (
@@ -178,6 +185,17 @@ func makeQMatchActivityKey(matchId int64) string {
 	return fmt.Sprintf("%s/%d", Q_MATCH_ACTIVITY, matchId)
 }
 
+func makePlayerMatchInfo(matchPlay *MatchPlay) *PlayerMatchInfo {
+	if matchPlay == nil {
+		return nil
+	}
+	var playerMatchInfo PlayerMatchInfo
+	playerMatchInfo.Played = matchPlay.Played
+	playerMatchInfo.Liked = matchPlay.Like
+	playerMatchInfo.PrivateLiked = matchPlay.PrivateLike
+	return &playerMatchInfo
+}
+
 func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
 	resp, err := ssdbc.Do("hget", H_MATCH, matchId)
 	lwutil.CheckSsdbError(resp, err)
@@ -196,7 +214,7 @@ func saveMatch(ssdbc *ssdb.Client, match *Match) {
 	lwutil.CheckSsdbError(resp, err)
 }
 
-func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
+func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) (*MatchPlay, error) {
 	var play MatchPlay
 	subkey := makeMatchPlaySubkey(matchId, userId)
 
@@ -207,8 +225,7 @@ func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
 
 		playerInfo, err := getPlayerInfo(ssdbc, userId)
 		if err != nil {
-			glog.Errorf("no playerInfo:userId=%d", userId)
-			return nil
+			return nil, fmt.Errorf("no playerInfo:userId=%d", userId)
 		}
 
 		play.Team = playerInfo.TeamName
@@ -225,7 +242,7 @@ func getMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64) *MatchPlay {
 		err := json.Unmarshal([]byte(resp[1]), &play)
 		lwutil.CheckError(err, "")
 	}
-	return &play
+	return &play, nil
 }
 
 func saveMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64, play *MatchPlay) {
@@ -311,11 +328,13 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//
+	matchId := GenSerial(ssdbc, MATCH_SERIAL)
+
 	//new pack
-	newPack(ssdbc, &in.Pack, session.Userid)
+	newPack(ssdbc, &in.Pack, session.Userid, matchId)
 
 	//new match
-	matchId := GenSerial(ssdbc, MATCH_SERIAL)
 	beginTimeUnix := int64(0)
 	beginTimeStr := in.BeginTimeStr
 	endTimeUnix := int64(0)
@@ -1783,12 +1802,12 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	type Out struct {
 		Matches        []*Match
 		MatchNum       int
-		PlayedMatchIds []int64
+		PlayedMatchMap map[string]*PlayerMatchInfo
 	}
 	out := Out{
 		[]*Match{},
 		0,
-		make([]int64, 0, 16),
+		make(map[string]*PlayerMatchInfo),
 	}
 
 	//matchNum
@@ -1844,11 +1863,22 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 
 	num = len(resp) / 2
 	for i := 0; i < num; i++ {
-		key := resp[i*2]
-		matchIdStr := strings.Split(key, "/")[0]
-		matchId, err := strconv.ParseInt(matchIdStr, 10, 60)
-		lwutil.CheckError(err, "strconv")
-		out.PlayedMatchIds = append(out.PlayedMatchIds, matchId)
+		matchIdStr := strings.Split(resp[i*2], "/")[0]
+		var matchPlay MatchPlay
+		err := json.Unmarshal([]byte(resp[i*2+1]), &matchPlay)
+		lwutil.CheckError(err, "err_json")
+		playerMatchInfo := makePlayerMatchInfo(&matchPlay)
+		out.PlayedMatchMap[matchIdStr] = playerMatchInfo
+	}
+
+	//match thumbs fix
+	for _, match := range matches {
+		if match.Thumbs == nil {
+			pack, err := getPack(ssdbc, match.PackId)
+			lwutil.CheckError(err, "err_get_pack")
+			match.Thumbs = pack.Thumbs
+			saveMatch(ssdbc, match)
+		}
 	}
 
 	//out
@@ -1905,7 +1935,8 @@ func apiMatchGetDynamicData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get match play
-	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
 
 	//get match
 	match := getMatch(ssdbc, in.MatchId)
@@ -2006,7 +2037,8 @@ func apiMatchPlayBegin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get matchPlay
-	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
 
 	//free try or use goldCoin
 	genLuckyNum := false
@@ -2272,7 +2304,9 @@ func apiMatchFreePlay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check match play
-	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
+
 	if play.Played == false {
 		play.Played = true
 
@@ -2421,7 +2455,9 @@ func apiMatchGetRanks(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//my rank
-		play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+		play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+		lwutil.CheckError(err, "err_get_match_play")
+
 		myRank = play.FinalRank
 
 		//rankNum
@@ -2606,7 +2642,8 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
 
 	//match play
-	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
 	play.Like = true
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
@@ -2675,7 +2712,8 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
 
 	//match play
-	play := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
 	play.Like = false
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
@@ -2742,26 +2780,22 @@ func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
 		savePack(ssdbc, pack)
 	}
 
-	//played
-	subkey := makeMatchPlaySubkey(in.MatchId, session.Userid)
-	resp, err := ssdbc.Do("hexists", H_MATCH_PLAY, subkey)
-	lwutil.CheckError(err, "")
-	played := false
-	if resp[1] == "1" {
-		played = true
-	}
+	//PlayerMatchInfo
+	matchPlay, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
+	playerMatchInfo := makePlayerMatchInfo(matchPlay)
 
 	//out
 	out := struct {
-		Match  *Match
-		Pack   *Pack
-		Player *PlayerInfo
-		Played bool
+		Match           *Match
+		Pack            *Pack
+		Player          *PlayerInfo
+		PlayerMatchInfo *PlayerMatchInfo
 	}{
 		match,
 		pack,
 		player,
-		played,
+		playerMatchInfo,
 	}
 
 	//out

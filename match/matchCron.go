@@ -128,7 +128,8 @@ func matchCron() {
 						// checkError(err)
 
 						//set to matchPlay
-						play := getMatchPlay(ssdbc, matchId, userId)
+						play, err := getMatchPlay(ssdbc, matchId, userId)
+						lwutil.CheckError(err, "err_get_match_play")
 						if play == nil {
 							glog.Error("no play")
 							continue
