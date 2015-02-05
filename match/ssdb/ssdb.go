@@ -956,3 +956,106 @@ func (c *Client) ZScan(zkey, hkey string, keyStart interface{}, scoreStart inter
 	resp = resp[1:]
 	return resp, lastKey, lastScore, nil
 }
+
+func (c *Client) QDel(qkey string, value string, limit int, fromBack bool) error {
+	if limit < 0 {
+		return fmt.Errorf("err_limit")
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	if fromBack {
+		resp, err := c.Do("qsize", qkey)
+		if err != nil {
+			return err
+		}
+		if resp[0] != OK {
+			return fmt.Errorf("err_ssdb:%s", resp[0])
+		}
+		size, err := strconv.Atoi(resp[1])
+		if err != nil {
+			return err
+		}
+		if limit > size {
+			limit = size
+		}
+	}
+
+	index := 0
+	if fromBack {
+		index = -limit
+	}
+	resp, err := c.Do("qrange", qkey, index, limit)
+	if err != nil {
+		return err
+	}
+	if resp[0] != OK {
+		return fmt.Errorf("err_ssdb:%s", resp[0])
+	}
+
+	resp = resp[1:]
+
+	pushValues := make([]interface{}, 0, len(resp))
+	find := false
+	trimNum := 0
+	if fromBack {
+		for _, v := range resp {
+			if !find {
+				if v == value {
+					find = true
+				}
+			}
+			if find {
+				trimNum++
+				if v != value {
+					pushValues = append(pushValues, v)
+				}
+			}
+		}
+	} else {
+		l := len(resp)
+		for i := range resp {
+			v := resp[l-i-1]
+			if !find {
+				if v == value {
+					find = true
+				}
+			}
+			if find {
+				trimNum++
+				if v != value {
+					pushValues = append(pushValues, v)
+				}
+			}
+		}
+	}
+
+	if find {
+		trimApi := "qtrim_front"
+		pushApi := "qpush_front"
+		if fromBack {
+			trimApi = "qtrim_back"
+			pushApi = "qpush_back"
+		}
+		_, err := c.Do(trimApi, qkey, trimNum)
+		if err != nil {
+			return err
+		}
+
+		if len(pushValues) > 0 {
+			cmds := make([]interface{}, 2, len(pushValues))
+			cmds[0] = pushApi
+			cmds[1] = qkey
+			cmds = append(cmds, pushValues...)
+
+			_, err = c.Do(cmds...)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+
+}

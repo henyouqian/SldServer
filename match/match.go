@@ -37,6 +37,7 @@ const (
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
 	Z_MATCH_LIKER           = "Z_MATCH_LIKER"           //key:Z_MATCH_LIKER/matchId subkey:userId score:time
 	Q_MATCH_ACTIVITY        = "Q_MATCH_ACTIVITY"        //key:Q_MATCH_ACTIVITY/matchId subkey:userId score:time
+	Q_MATCH_DEL_LIMIT       = 50
 
 	PRIZE_NUM_PER_COIN         = 100
 	MIN_PRIZE                  = PRIZE_NUM_PER_COIN
@@ -472,6 +473,15 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	key = makeZLikeMatchKey(session.Userid)
 	resp, err = ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
+
+	key = makeQLikeMatchKey(session.Userid)
+	matchIdStr := fmt.Sprintf("%d", in.MatchId)
+	err = ssdbc.QDel(key, matchIdStr, Q_MATCH_DEL_LIMIT, true)
+	lwutil.CheckError(err, "err_ssdb_qdel")
+
+	key = makeQPlayerMatchKey(session.Userid)
+	err = ssdbc.QDel(key, matchIdStr, Q_MATCH_DEL_LIMIT, true)
+	lwutil.CheckError(err, "err_ssdb_qdel")
 
 	match.Deleted = true
 	saveMatch(ssdbc, match)
@@ -1782,6 +1792,7 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
+		Type   int //0:all(like) 1:original(player) 2:privateLike
 		UserId int64
 		Offset int
 		Limit  int
@@ -1803,20 +1814,37 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		Matches        []*Match
 		MatchNum       int
 		PlayedMatchMap map[string]*PlayerMatchInfo
+		OwnerMap       map[string]*PlayerInfoLite
 	}
 	out := Out{
 		[]*Match{},
 		0,
 		make(map[string]*PlayerMatchInfo),
+		make(map[string]*PlayerInfoLite),
 	}
 
 	//matchNum
-	key := makeQLikeMatchKey(in.UserId)
+	key := ""
+	if in.Type == 0 {
+		key = makeQLikeMatchKey(in.UserId)
+	} else if in.Type == 1 {
+		key = makeQPlayerMatchKey(in.UserId)
+	} else {
+		lwutil.SendError("err_type", "")
+	}
 
 	resp, err := ssdbc.Do("qsize", key)
 	lwutil.CheckSsdbError(resp, err)
 	out.MatchNum, err = strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "err_strconv")
+
+	//adjust offset
+	if in.Offset < 1 {
+		in.Offset = -in.Limit
+		if in.Limit > out.MatchNum {
+			in.Offset = 0
+		}
+	}
 
 	//qrange
 	resp, err = ssdbc.Do("qrange", key, in.Offset, in.Limit)
@@ -1879,6 +1907,25 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 			match.Thumbs = pack.Thumbs
 			saveMatch(ssdbc, match)
 		}
+	}
+
+	//ownerMap
+	cmds = make([]interface{}, 2, len(matches)+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_PLAYER_INFO_LITE
+	for _, match := range matches {
+		cmds = append(cmds, match.OwnerId)
+	}
+
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		var owner PlayerInfoLite
+		err = json.Unmarshal([]byte(resp[i*2+1]), &owner)
+		lwutil.CheckError(err, "err_json")
+		out.OwnerMap[resp[i*2]] = &owner
 	}
 
 	//out
@@ -2615,7 +2662,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_match_id", "Can't find match")
 	}
 
-	//
+	//zset
 	key := makeZLikeMatchKey(session.Userid)
 	resp, err = ssdbc.Do("zexists", key, in.MatchId)
 	lwutil.CheckError(err, "")
@@ -2626,6 +2673,11 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 
 	score := lwutil.GetRedisTimeUnix()
 	resp, err = ssdbc.Do("zset", key, in.MatchId, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	//queue
+	key = makeQLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qpush_back", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//update matchLiker list
@@ -2692,10 +2744,15 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_owner", "")
 	}
 
-	//
+	//zset
 	key := makeZLikeMatchKey(session.Userid)
 	resp, err := ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
+
+	//queue
+	key = makeQLikeMatchKey(session.Userid)
+	err = ssdbc.QDel(key, fmt.Sprintf("%d", in.MatchId), Q_MATCH_DEL_LIMIT, true)
+	lwutil.CheckError(err, "err_ssdb_qdel")
 
 	//update matchLike
 	score := lwutil.GetRedisTimeUnix()

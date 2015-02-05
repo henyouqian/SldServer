@@ -307,6 +307,16 @@ func apiSocialGetMatch(w http.ResponseWriter, r *http.Request) {
 		[]SocialRank{},
 	}
 
+	ranks := []SocialRank{}
+
+	resp, err := ssdbc.Do("hget", H_SOCIAL_RANKS, in.MatchId)
+	lwutil.CheckError(err, "err_ssdb")
+	if resp[0] == SSDB_OK {
+		err = json.Unmarshal([]byte(resp[1]), &ranks)
+		lwutil.CheckError(err, "")
+		out.Ranks = ranks
+	}
+
 	//out
 	lwutil.WriteResponse(w, out)
 }

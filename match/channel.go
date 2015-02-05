@@ -358,4 +358,16 @@ func regChannel() {
 	http.Handle("/channel/delUser", lwutil.ReqHandler(apiChannelDelUser))
 	http.Handle("/channel/listUser", lwutil.ReqHandler(apiChannelListUser))
 	http.Handle("/channel/listMatch", lwutil.ReqHandler(apiChannelListMatch))
+
+	// //test
+	// ssdbc, err := ssdbPool.Get()
+	// lwutil.CheckError(err, "")
+	// defer ssdbc.Close()
+
+	// key := "a"
+	// ssdbc.Do("qclear", key)
+	// ssdbc.Do("qpush", key, 1, 2, 3, 4, 3, 5, 6)
+	// ssdbc.QDel(key, "3", 3, false)
+	// resp, _ := ssdbc.Do("qrange", key, 0, 100)
+	// glog.Info(resp)
 }

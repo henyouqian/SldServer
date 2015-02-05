@@ -870,8 +870,10 @@ func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
 
 	//out
 	out := struct {
+		UserId int64
 		Player *PlayerInfo
 	}{
+		session.Userid,
 		playerInfo,
 	}
 
