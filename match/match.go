@@ -1920,7 +1920,7 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		var matchId string
 		var fieldKey string
 		_, err = fmt.Sscanf(key, "%s/%s", &matchId, &fieldKey)
-		lwutil.CheckError(err, "")
+		// lwutil.CheckError(err, fmt.Sprintf("key:%s", key))
 
 		var matchEx MatchExtra
 		if fieldKey == MATCH_EXTRA_PLAY_TIMES {

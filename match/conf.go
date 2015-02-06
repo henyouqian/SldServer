@@ -79,5 +79,6 @@ func initConf(confFile string) {
 		"http://g.pintugame.com":   true,
 		"http://localhost:7777":    true,
 		"http://192.168.2.55:7777": true,
+		"http://192.168.1.43:7777": true,
 	}
 }
