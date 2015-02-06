@@ -345,7 +345,7 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	//
+	//old
 	if len(in.Key) > 0 {
 		resp, err := ssdbc.Do("hget", H_SOCIAL_PACK, in.Key)
 		lwutil.CheckSsdbError(resp, err)
@@ -390,7 +390,7 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//match played
-	if in.MatchId != 0 {
+	if in.MatchId > 0 {
 		play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
 		lwutil.CheckError(err, "err_get_match_play")
 		play.Played = true
@@ -438,13 +438,21 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 		resp, err = ssdbc.Do("hset", H_SOCIAL_RANKS, in.MatchId, js)
 		lwutil.CheckSsdbError(resp, err)
 
+		//add play times
+		playTimesKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_PLAY_TIMES)
+		resp, err = ssdbc.Do("hincr", H_MATCH_EXTRA, playTimesKey, 1)
+		lwutil.CheckSsdbError(resp, err)
+		playTimes, err := strconv.Atoi(resp[1])
+
 		//out
 		out := struct {
 			PlayerMatchInfo *PlayerMatchInfo
 			Ranks           []SocialRank
+			PlayTimes       int
 		}{
 			playerMatchInfo,
 			ranks,
+			playTimes,
 		}
 		lwutil.WriteResponse(w, out)
 	}

@@ -1815,12 +1815,14 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		MatchNum       int
 		PlayedMatchMap map[string]*PlayerMatchInfo
 		OwnerMap       map[string]*PlayerInfoLite
+		MatchExMap     map[string]*MatchExtra
 	}
 	out := Out{
 		[]*Match{},
 		0,
 		make(map[string]*PlayerMatchInfo),
 		make(map[string]*PlayerInfoLite),
+		make(map[string]*MatchExtra),
 	}
 
 	//matchNum
@@ -1897,6 +1899,38 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		lwutil.CheckError(err, "err_json")
 		playerMatchInfo := makePlayerMatchInfo(&matchPlay)
 		out.PlayedMatchMap[matchIdStr] = playerMatchInfo
+	}
+
+	//match extra
+	args = make([]interface{}, 2, len(matches)*2+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH_EXTRA
+	for _, match := range matches {
+		playTimesKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_PLAY_TIMES)
+		likeNumKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_LIKE_NUM)
+		args = append(args, playTimesKey, likeNumKey)
+	}
+	resp, err = ssdbc.Do(args...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		key := resp[i*2]
+		var matchId string
+		var fieldKey string
+		_, err = fmt.Sscanf(key, "%s/%s", &matchId, &fieldKey)
+		lwutil.CheckError(err, "")
+
+		var matchEx MatchExtra
+		if fieldKey == MATCH_EXTRA_PLAY_TIMES {
+			matchEx.PlayTimes, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+			matchEx.LikeNum, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		}
+		out.MatchExMap[matchId] = &matchEx
 	}
 
 	//match thumbs fix
