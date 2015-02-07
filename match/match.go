@@ -1841,7 +1841,7 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_strconv")
 
 	//adjust offset
-	if in.Offset < 1 {
+	if in.Offset < 0 {
 		in.Offset = -in.Limit
 		if in.Limit > out.MatchNum {
 			in.Offset = 0
