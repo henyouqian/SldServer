@@ -30,6 +30,7 @@ const (
 	Z_LIKE_MATCH            = "Z_LIKE_MATCH"            //key:Z_LIKE_MATCH/userId subkey:matchId score:likeTime
 	Q_PLAYER_MATCH          = "Q_PLAYER_MATCH"          //original key:Q_PLAYER_MATCH/userId value:matchId
 	Q_LIKE_MATCH            = "Q_LIKE_MATCH"            //key:Q_LIKE_MATCH/userId value:matchId
+	Q_PRIVATE_LIKE_MATCH    = "Q_PRIVATE_LIKE_MATCH"    //key:Q_PRIVATE_LIKE_MATCH/userId value:matchId
 	Z_PLAYED_MATCH          = "Z_PLAYED_MATCH"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
 	Z_PLAYED_ALL            = "Z_PLAYED_ALL"            //key:Z_PLAYED_ALL/userId subkey:matchId score:lastPlayTime
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
@@ -152,6 +153,10 @@ func makeZLikeMatchKey(userId int64) string {
 
 func makeQLikeMatchKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Q_LIKE_MATCH, userId)
+}
+
+func makeQPrivateLikeMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Q_PRIVATE_LIKE_MATCH, userId)
 }
 
 func makeZPlayedMatchKey(userId int64) string {
@@ -1831,6 +1836,8 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 		key = makeQLikeMatchKey(in.UserId)
 	} else if in.Type == 1 {
 		key = makeQPlayerMatchKey(in.UserId)
+	} else if in.Type == 2 {
+		key = makeQPrivateLikeMatchKey(in.UserId)
 	} else {
 		lwutil.SendError("err_type", "")
 	}
@@ -1917,12 +1924,17 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	num = len(resp) / 2
 	for i := 0; i < num; i++ {
 		key := resp[i*2]
-		var matchId string
+		var matchId int64
 		var fieldKey string
-		_, err = fmt.Sscanf(key, "%s/%s", &matchId, &fieldKey)
-		// lwutil.CheckError(err, fmt.Sprintf("key:%s", key))
+		_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
+		lwutil.CheckError(err, fmt.Sprintf("key:%s", key))
 
-		var matchEx MatchExtra
+		matchIdStr := fmt.Sprint(matchId)
+		matchEx := out.MatchExMap[matchIdStr]
+		if matchEx == nil {
+			matchEx = new(MatchExtra)
+		}
+
 		if fieldKey == MATCH_EXTRA_PLAY_TIMES {
 			matchEx.PlayTimes, err = strconv.Atoi(resp[i*2+1])
 			lwutil.CheckError(err, "")
@@ -1930,7 +1942,7 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 			matchEx.LikeNum, err = strconv.Atoi(resp[i*2+1])
 			lwutil.CheckError(err, "")
 		}
-		out.MatchExMap[matchId] = &matchEx
+		out.MatchExMap[matchIdStr] = matchEx
 	}
 
 	//match thumbs fix
@@ -2783,15 +2795,8 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 	resp, err := ssdbc.Do("zdel", key, in.MatchId)
 	lwutil.CheckSsdbError(resp, err)
 
-	//queue
-	key = makeQLikeMatchKey(session.Userid)
-	err = ssdbc.QDel(key, fmt.Sprintf("%d", in.MatchId), Q_MATCH_DEL_LIMIT, true)
-	lwutil.CheckError(err, "err_ssdb_qdel")
-
-	//update matchLike
-	score := lwutil.GetRedisTimeUnix()
 	key = makeZMatchLikerKey(in.MatchId)
-	resp, err = ssdbc.Do("zset", key, session.Userid, score)
+	resp, err = ssdbc.Do("zdel", key, session.Userid)
 	lwutil.CheckSsdbError(resp, err)
 
 	resp, err = ssdbc.Do("zsize", key)
@@ -2801,6 +2806,11 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 
 	matchLikeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
 	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
+
+	//queue
+	key = makeQLikeMatchKey(session.Userid)
+	err = ssdbc.QDel(key, fmt.Sprintf("%d", in.MatchId), Q_MATCH_DEL_LIMIT, true)
+	lwutil.CheckError(err, "err_ssdb_qdel")
 
 	//match play
 	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
@@ -2820,6 +2830,99 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 		_, err = rc.Do("SREM", BATTLE_PACKID_SET, match.PackId)
 		lwutil.CheckError(err, "")
 	}
+}
+
+func apiMatchPrivateLike(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check match exist
+	resp, err := ssdbc.Do("hexists", H_MATCH, in.MatchId)
+	lwutil.CheckError(err, "")
+	if !ssdbCheckExists(resp) {
+		lwutil.SendError("err_match_id", "Can't find match")
+	}
+
+	//match play
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
+
+	if play.PrivateLike {
+		lwutil.SendError("err_already_plike", "")
+	}
+
+	//queue
+	key := makeQPrivateLikeMatchKey(session.Userid)
+	resp, err = ssdbc.Do("qpush_back", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
+	//match play
+	play.PrivateLike = true
+	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+
+	//out
+	lwutil.WriteResponse(w, in)
+}
+
+func apiMatchPrivateUnlike(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		MatchId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	//check match exist
+	match := getMatch(ssdbc, in.MatchId)
+	if match.OwnerId == session.Userid {
+		lwutil.SendError("err_owner", "")
+	}
+
+	//match play
+	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
+	lwutil.CheckError(err, "err_get_match_play")
+	if play.PrivateLike == false {
+		lwutil.SendError("err_not_plike", "")
+	}
+
+	//queue
+	key := makeQPrivateLikeMatchKey(session.Userid)
+	err = ssdbc.QDel(key, fmt.Sprintf("%d", in.MatchId), Q_MATCH_DEL_LIMIT, true)
+	lwutil.CheckError(err, "err_ssdb_qdel")
+
+	//match play
+	play.Like = false
+	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+
+	lwutil.WriteResponse(w, in)
 }
 
 func apiMatchWebGet(w http.ResponseWriter, r *http.Request) {
@@ -2946,6 +3049,8 @@ func regMatch() {
 
 	http.Handle("/match/like", lwutil.ReqHandler(apiMatchLike))
 	http.Handle("/match/unlike", lwutil.ReqHandler(apiMatchUnlike))
+	http.Handle("/match/privateLike", lwutil.ReqHandler(apiMatchPrivateLike))
+	http.Handle("/match/privateUnlike", lwutil.ReqHandler(apiMatchPrivateUnlike))
 
 	http.Handle("/match/web/listUser", lwutil.ReqHandler(apiMatchListUserWeb))
 	http.Handle("/match/web/listUserQ", lwutil.ReqHandler(apiMatchListUserWebQ))

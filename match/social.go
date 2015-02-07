@@ -443,6 +443,7 @@ func apiSocialPlay(w http.ResponseWriter, r *http.Request) {
 		resp, err = ssdbc.Do("hincr", H_MATCH_EXTRA, playTimesKey, 1)
 		lwutil.CheckSsdbError(resp, err)
 		playTimes, err := strconv.Atoi(resp[1])
+		glog.Info(playTimesKey, ",", playTimes)
 
 		//out
 		out := struct {
