@@ -483,7 +483,7 @@ func apiSetPlayerInfo(w http.ResponseWriter, r *http.Request) {
 
 	stringLimit(&in.NickName, 40)
 	stringLimit(&in.GravatarKey, 20)
-	stringLimit(&in.CustomAvatarKey, 40)
+	stringLimit(&in.CustomAvatarKey, 80)
 	stringLimit(&in.TeamName, 40)
 	stringLimit(&in.Email, 40)
 

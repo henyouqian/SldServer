@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	// "github.com/garyburd/redigo/redis"
@@ -8,16 +9,21 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/golang/glog"
-	"github.com/henyouqian/lwutil"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/mail"
 	"net/smtp"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	qiniuio "github.com/qiniu/api/io"
+	qiniurs "github.com/qiniu/api/rs"
+
+	"github.com/golang/glog"
+	"github.com/henyouqian/lwutil"
 )
 
 const (
@@ -868,6 +874,75 @@ func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
 	playerInfo, err := getPlayerInfo(matchDb, session.Userid)
 	lwutil.CheckError(err, "err_getplayerinfo")
 
+	////fill weibo user info
+	//check name change
+	nameChanged := false
+	avatarChanged := false
+
+	if playerInfo.NickName != fmt.Sprintf("u%d", session.Userid) {
+		nameChanged = true
+	}
+	if playerInfo.CustomAvatarKey != "" {
+		avatarChanged = true
+	}
+
+	if !nameChanged || !avatarChanged {
+		url = fmt.Sprintf("https://api.weibo.com/2/users/show.json?access_token=%s&uid=%s", authData.AccessToken, authData.Uid)
+		res, err = http.Get(url)
+		if err != nil {
+			return
+		}
+		defer res.Body.Close()
+		data, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+
+		udata := struct {
+			Name   string `json:"name"`
+			Avatar string `json:"avatar_large"`
+			Gender string `json:"gender"`
+		}{}
+		err = json.Unmarshal(data, &udata)
+
+		if !nameChanged {
+			playerInfo.NickName = udata.Name
+		}
+
+		//upload avatar to qiniu
+		if udata.Avatar != "" && !avatarChanged {
+			url = udata.Avatar
+			res, err = http.Get(url)
+			lwutil.CheckError(err, "err_http_get")
+
+			defer res.Body.Close()
+			data, err = ioutil.ReadAll(res.Body)
+			lwutil.CheckError(err, "err_ioutil")
+
+			ext := filepath.Ext(url)
+			imgkey := genImageKey(data, ext)
+
+			//checkexists
+			rsCli := qiniurs.New(nil)
+
+			_, err = rsCli.Stat(nil, USER_UPLOAD_BUCKET, imgkey)
+			if err != nil {
+				//upload
+				putPolicy := qiniurs.PutPolicy{
+					Scope: USER_UPLOAD_BUCKET,
+				}
+				token := putPolicy.Token(nil)
+
+				var putRet qiniuio.PutRet
+				err = qiniuio.Put(nil, &putRet, token, imgkey, bytes.NewReader(data), nil)
+				lwutil.CheckError(err, "err_qiniu_put")
+			}
+
+			playerInfo.CustomAvatarKey = imgkey
+		}
+		savePlayerInfo(matchDb, session.Userid, *playerInfo)
+	}
+
 	//out
 	out := struct {
 		UserId int64
@@ -910,7 +985,6 @@ func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//
 	authData := struct {
 		AccessToken string `json:"access_token"`
 		ExpiresIn   int64  `json:"expires_in"`
@@ -928,6 +1002,8 @@ func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := authDb.Do("hget", H_WEIBO_ACCOUNT, authData.Uid)
 	lwutil.CheckError(err, "err_ssdb")
+
+	//register or login
 	if resp[0] == SSDB_NOT_FOUND {
 		//set tmp account
 		userId = GenSerial(authDb, ACCOUNT_SERIAL)
@@ -951,6 +1027,61 @@ func apiWeiboLogin(w http.ResponseWriter, r *http.Request) {
 			rand.Intn(1),
 		}
 		playerInfo = savePlayerInfo(matchDb, userId, playerIn)
+
+		//fill weibo user info
+		url = fmt.Sprintf("https://api.weibo.com/2/users/show.json?access_token=%s&uid=%s", authData.AccessToken, authData.Uid)
+		res, err = http.Get(url)
+		if err != nil {
+			return
+		}
+		defer res.Body.Close()
+		data, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+
+		udata := struct {
+			Name   string `json:"name"`
+			Avatar string `json:"avatar_large"`
+			Gender string `json:"gender"`
+		}{}
+		err = json.Unmarshal(data, &udata)
+
+		playerInfo.NickName = udata.Name
+
+		//upload avatar to qiniu
+		if udata.Avatar != "" {
+			url = udata.Avatar
+			res, err = http.Get(url)
+			lwutil.CheckError(err, "err_http_get")
+
+			defer res.Body.Close()
+			data, err = ioutil.ReadAll(res.Body)
+			lwutil.CheckError(err, "err_ioutil")
+
+			ext := filepath.Ext(url)
+			imgkey := genImageKey(data, ext)
+
+			//checkexists
+			rsCli := qiniurs.New(nil)
+
+			_, err = rsCli.Stat(nil, USER_UPLOAD_BUCKET, imgkey)
+			if err != nil {
+				//upload
+				putPolicy := qiniurs.PutPolicy{
+					Scope: USER_UPLOAD_BUCKET,
+				}
+				token := putPolicy.Token(nil)
+
+				var putRet qiniuio.PutRet
+				err = qiniuio.Put(nil, &putRet, token, imgkey, bytes.NewReader(data), nil)
+				lwutil.CheckError(err, "err_qiniu_put")
+			}
+
+			playerInfo.CustomAvatarKey = imgkey
+		}
+		savePlayerInfo(matchDb, userId, *playerInfo)
+
 	} else {
 		userId, err = strconv.ParseInt(resp[1], 10, 64)
 		lwutil.CheckError(err, "err_strconv")
