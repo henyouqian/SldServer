@@ -322,8 +322,8 @@ func apiTumblrListBlog(w http.ResponseWriter, r *http.Request) {
 	}
 	if in.Limit <= 0 {
 		in.Limit = 20
-	} else if in.Limit > 50 {
-		in.Limit = 50
+	} else if in.Limit > 100 {
+		in.Limit = 100
 	}
 
 	//zrscan

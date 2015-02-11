@@ -465,6 +465,10 @@ function Controller($scope, $http) {
 					"method": "POST",
 					"data": {"StartId": 0, "BeginTime": 0, "Limit":12}
 				},{
+					"name": "get",
+					"method": "POST",
+					"data": {"MatchId": 0}
+				},{
 					"name": "listMine",
 					"method": "POST",
 					"data": {"StartId": 0, "BeginTime": 0, "Limit":12}

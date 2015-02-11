@@ -86,11 +86,12 @@ func getPack(ssdbc *ssdb.Client, packId int64) (*Pack, error) {
 
 	//pack url
 	for i, image := range pack.Images {
-		if len(image.Url) > 0 {
-			pack.Images[i].Url = makeImagePrivateUrl(image.Key)
-		} else {
-			break
-		}
+		// if len(image.Url) > 0 {
+		// 	pack.Images[i].Url = makeImagePrivateUrl(image.Key)
+		// } else {
+		// 	break
+		// }
+		pack.Images[i].Url = makeImagePrivateUrl(image.Key)
 	}
 
 	return &pack, err
@@ -110,8 +111,8 @@ func init() {
 }
 
 func newPack(ssdbc *ssdb.Client, pack *Pack, authorId int64, matchId int64) {
-	if len(pack.Images) < 4 {
-		lwutil.SendError("err_images", "len(pack.Images) < 4")
+	if len(pack.Images) < 3 {
+		lwutil.SendError("err_images", "len(pack.Images) < 3")
 	}
 
 	pack.MatchId = matchId
@@ -294,7 +295,7 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 
 	//in
 	var in struct {
-		Id uint64
+		Id int64
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
@@ -304,13 +305,8 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "")
 	defer ssdb.Close()
 
-	//get packs
-	resp, err := ssdb.Do("hget", H_PACK, in.Id)
-	lwutil.CheckSsdbErrorDesc(resp, err, fmt.Sprintf("id:%d", in.Id))
-
-	var pack Pack
-	err = json.Unmarshal([]byte(resp[1]), &pack)
-	lwutil.CheckError(err, "")
+	pack, err := getPack(ssdb, in.Id)
+	lwutil.CheckError(err, "err_get_pack")
 
 	//get
 	player, err := getPlayerInfo(ssdb, pack.AuthorId)
@@ -342,7 +338,7 @@ func apiGetPack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := struct {
-		Pack
+		*Pack
 		Author PlayerInfoPlus
 	}{
 		pack,

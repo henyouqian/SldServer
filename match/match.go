@@ -1839,7 +1839,7 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	} else if in.Type == 2 {
 		key = makeQPrivateLikeMatchKey(in.UserId)
 	} else {
-		lwutil.SendError("err_type", "")
+		lwutil.SendError("err_type", fmt.Sprint(in.Type))
 	}
 
 	resp, err := ssdbc.Do("qsize", key)
