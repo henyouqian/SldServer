@@ -1432,7 +1432,7 @@ func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 
-	//
+	//userName
 	limit := 20
 	userName := strings.ToLower(in.UserName)
 	zkey := fmt.Sprintf("%s/%s", Z_PLAYER_SEARCH, userName)
@@ -1440,22 +1440,33 @@ func apiPlayerSearchUser(w http.ResponseWriter, r *http.Request) {
 	resp, lastKey, lastScore, err := ssdbc.ZScan(zkey, hkey, in.LastKey, in.LastScore, limit, false)
 	lwutil.CheckError(err, "err_zmultiget")
 
+	//userId
+	userId, _ := strconv.ParseInt(userName, 10, 64)
+
 	//out
 	num := len(resp) / 2
 	out := struct {
-		Players   []PlayerInfoLite
+		Players   []*PlayerInfoLite
 		Limit     int
 		LastKey   string
 		LastScore string
 	}{
-		make([]PlayerInfoLite, num),
+		make([]*PlayerInfoLite, 0, num+1),
 		limit,
 		lastKey,
 		lastScore,
 	}
+	if userId != 0 {
+		player, err := getPlayerInfoLite(ssdbc, userId, nil)
+		if err == nil {
+			out.Players = append(out.Players, player)
+		}
+	}
 	for i := 0; i < num; i++ {
-		err = json.Unmarshal([]byte(resp[i*2+1]), &out.Players[i])
+		var player PlayerInfoLite
+		err = json.Unmarshal([]byte(resp[i*2+1]), &player)
 		lwutil.CheckError(err, "")
+		out.Players = append(out.Players, &player)
 	}
 	lwutil.WriteResponse(w, out)
 }
