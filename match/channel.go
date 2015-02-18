@@ -6,7 +6,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -80,8 +79,8 @@ func apiChannelList(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	_, err = findSession(w, r, nil)
-	lwutil.CheckError(err, "err_auth")
+	// _, err = findSession(w, r, nil)
+	// lwutil.CheckError(err, "err_auth")
 
 	//get
 	resp, err := ssdbc.Do("get", K_CHANNEL_LIST)
@@ -216,10 +215,10 @@ func apiChannelListUser(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	session, err := findSession(w, r, nil)
+	_, err = findSession(w, r, nil)
 	lwutil.CheckError(err, "err_auth")
 
-	checkAdmin(session)
+	// checkAdmin(session)
 
 	//in
 	var in struct {
@@ -229,24 +228,42 @@ func apiChannelListUser(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	key := makeZChannelUserKey(in.ChannelName)
-	resp, err := ssdbc.Do("zkeys", key, "", "", "", 100)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
+	// resp, err := ssdbc.Do("zkeys", key, "", "", "", 100)
+	// lwutil.CheckSsdbError(resp, err)
+	// resp = resp[1:]
 
-	userIds := make([]int64, 0, 10)
-	for _, v := range resp {
-		userId, err := strconv.ParseInt(v, 10, 64)
-		lwutil.CheckError(err, "err_strconv")
-		userIds = append(userIds, userId)
-	}
+	// userIds := make([]int64, 0, 10)
+	// for _, v := range resp {
+	// 	userId, err := strconv.ParseInt(v, 10, 64)
+	// 	lwutil.CheckError(err, "err_strconv")
+	// 	userIds = append(userIds, userId)
+	// }
+
+	//
+	resp, _, _, err := ssdbc.ZScan(key, H_PLAYER_INFO_LITE, "", "", 100, false)
 
 	//out
+	num := len(resp) / 2
 	out := struct {
-		UserIds []int64
+		Players []*PlayerInfoLite
 	}{
-		userIds,
+		make([]*PlayerInfoLite, 0, num),
+	}
+	for i := 0; i < num; i++ {
+		var player PlayerInfoLite
+		err := json.Unmarshal([]byte(resp[i*2+1]), &player)
+		lwutil.CheckError(err, "err_json")
+		out.Players = append(out.Players, &player)
 	}
 	lwutil.WriteResponse(w, out)
+
+	//out
+	// out := struct {
+	// 	UserIds []int64
+	// }{
+	// 	userIds,
+	// }
+	// lwutil.WriteResponse(w, out)
 }
 
 func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {

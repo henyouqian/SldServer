@@ -905,7 +905,7 @@ func apiWeiboBind(w http.ResponseWriter, r *http.Request) {
 		}{}
 		err = json.Unmarshal(data, &udata)
 
-		if !nameChanged {
+		if !nameChanged && udata.Name != "" {
 			playerInfo.NickName = udata.Name
 		}
 
