@@ -132,6 +132,42 @@ func (c *Client) Do(args ...interface{}) (_ []string, rErr error) {
 	return resp, err
 }
 
+type SsdbResp struct {
+	Resp []string
+	Err  error
+}
+
+func (c *Client) Batch(args [][]interface{}) (_ []SsdbResp, rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	err := c.sendBatch(args)
+	if err != nil {
+		return nil, err
+	}
+	num := len(args)
+	resps := make([]SsdbResp, 0, num)
+	for i := 0; i < num; i++ {
+		resp, err := c.recv()
+		if resp[0] != OK {
+			err = fmt.Errorf("ssdb_not_ok")
+		}
+		ssdbResp := SsdbResp{
+			resp,
+			err,
+		}
+		resps = append(resps, ssdbResp)
+		if err != nil && rErr == nil {
+			rErr = err
+		}
+	}
+
+	return resps, rErr
+}
+
 func (c *Client) Set(key string, val string) (_ interface{}, rErr error) {
 	defer func() {
 		if rErr != nil {
@@ -225,6 +261,51 @@ func (c *Client) send(args []interface{}) (rErr error) {
 		buf.WriteByte('\n')
 	}
 	buf.WriteByte('\n')
+	_, err := c.sock.Write(buf.Bytes())
+	return err
+}
+
+func (c *Client) sendBatch(argss [][]interface{}) (rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	var buf bytes.Buffer
+	for _, args := range argss {
+		for _, arg := range args {
+			var s string
+			switch arg := arg.(type) {
+			case string:
+				s = arg
+			case []byte:
+				s = string(arg)
+			case int, int8, int16, int32, int64:
+				s = fmt.Sprintf("%d", arg)
+			case uint, uint8, uint16, uint32, uint64:
+				s = fmt.Sprintf("%d", arg)
+			case float32, float64:
+				s = fmt.Sprintf("%f", arg)
+			case bool:
+				if arg {
+					s = "1"
+				} else {
+					s = "0"
+				}
+			case nil:
+				s = ""
+			default:
+				return fmt.Errorf("bad arguments")
+			}
+			buf.WriteString(fmt.Sprintf("%d", len(s)))
+			buf.WriteByte('\n')
+			buf.WriteString(s)
+			buf.WriteByte('\n')
+		}
+		buf.WriteByte('\n')
+	}
+
 	_, err := c.sock.Write(buf.Bytes())
 	return err
 }

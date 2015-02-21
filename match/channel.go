@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/henyouqian/lwutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -304,12 +305,14 @@ func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
 		LastScore      string
 		PlayedMatchMap map[string]*PlayerMatchInfo
 		OwnerMap       map[string]*PlayerInfoLite
+		MatchExMap     map[string]*MatchExtra
 	}{
 		make([]*Match, 0, 30),
 		lastKey,
 		lastScore,
 		make(map[string]*PlayerMatchInfo),
 		make(map[string]*PlayerInfoLite),
+		make(map[string]*MatchExtra),
 	}
 
 	num := len(resp) / 2
@@ -365,6 +368,77 @@ func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
 		out.OwnerMap[resp[i*2]] = &owner
 	}
 
+	//match extra
+	cmds = make([]interface{}, 2, len(out.Matches)*2+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_MATCH_EXTRA
+	for _, match := range out.Matches {
+		playTimesKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_PLAY_TIMES)
+		likeNumKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_LIKE_NUM)
+		cmds = append(cmds, playTimesKey, likeNumKey)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		key := resp[i*2]
+		var matchId int64
+		var fieldKey string
+		_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
+		lwutil.CheckError(err, fmt.Sprintf("key:%s", key))
+
+		matchIdStr := fmt.Sprint(matchId)
+		matchEx := out.MatchExMap[matchIdStr]
+		if matchEx == nil {
+			matchEx = new(MatchExtra)
+		}
+
+		if fieldKey == MATCH_EXTRA_PLAY_TIMES {
+			matchEx.PlayTimes, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+			matchEx.LikeNum, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		}
+		out.MatchExMap[matchIdStr] = matchEx
+	}
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiChannelListUserChannel(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	// //session
+	// _, err = findSession(w, r, nil)
+	// lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		UserId int64
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	key := makeHUserChannelKey(in.UserId)
+	resp, err := ssdbc.Do("hgetall", key)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	//out
+	out := struct {
+		Channels []string
+	}{
+		resp,
+	}
 	lwutil.WriteResponse(w, out)
 }
 
@@ -375,11 +449,23 @@ func regChannel() {
 	http.Handle("/channel/delUser", lwutil.ReqHandler(apiChannelDelUser))
 	http.Handle("/channel/listUser", lwutil.ReqHandler(apiChannelListUser))
 	http.Handle("/channel/listMatch", lwutil.ReqHandler(apiChannelListMatch))
+	http.Handle("/channel/listUserChannel", lwutil.ReqHandler(apiChannelListUserChannel))
 
 	// //test
 	// ssdbc, err := ssdbPool.Get()
 	// lwutil.CheckError(err, "")
 	// defer ssdbc.Close()
+
+	// //batch test
+	// cmds := [][]interface{}{
+	// 	[]interface{}{"set", "a", "gg"},
+	// 	[]interface{}{"set", "a", "bbb"},
+	// }
+	// resp, err := ssdbc.Batch(cmds)
+	// glog.Info(resp)
+
+	// resp1, err := ssdbc.Do("get", "a")
+	// glog.Info(resp1)
 
 	// key := "a"
 	// ssdbc.Do("qclear", key)

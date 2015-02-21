@@ -770,6 +770,9 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do(cmds...)
 	lwutil.CheckSsdbError(resp, err)
 
+	//fanout
+	go fanout(ssdbc, &match)
+
 	//out
 	lwutil.WriteResponse(w, match)
 }
@@ -991,6 +994,9 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zdel", queueKey, matchId)
 	lwutil.CheckSsdbError(resp, err)
 
+	//fanout
+	go fanout(ssdbc, match)
+
 	//out
 	lwutil.WriteResponse(w, match)
 }
@@ -1063,7 +1069,7 @@ func apiTumblrListPublishQueue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := makeZTumblrPublishQueueKey(in.UserId)
-	resp, lastKey, lastScore, err := ssdbc.ZScan(key, H_MATCH, in.Key, in.Score, in.Limit, true)
+	resp, lastKey, lastScore, err := ssdbc.ZScan(key, H_MATCH, in.Key, in.Score, in.Limit, false)
 	lwutil.CheckError(err, "err_zscan")
 
 	num := len(resp) / 2

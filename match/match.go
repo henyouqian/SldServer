@@ -33,6 +33,7 @@ const (
 	Q_PRIVATE_LIKE_MATCH    = "Q_PRIVATE_LIKE_MATCH"    //key:Q_PRIVATE_LIKE_MATCH/userId value:matchId
 	Z_PLAYED_MATCH          = "Z_PLAYED_MATCH"          //key:Z_PLAYED_MATCH/userId subkey:matchId score:lastPlayTime
 	Z_PLAYED_ALL            = "Z_PLAYED_ALL"            //key:Z_PLAYED_ALL/userId subkey:matchId score:lastPlayTime
+	Z_MATCH_TIMELINE        = "Z_MATCH_TIMELINE"        //key:Z_MATCH_TIMELINE/userId subkey:matchId score:time
 	Z_OPEN_MATCH            = "Z_OPEN_MATCH"            //subkey:matchId score:endTime
 	Z_HOT_MATCH             = "Z_HOT_MATCH"             //subkey:matchId score:totalPrize
 	RDS_Z_MATCH_LEADERBOARD = "RDS_Z_MATCH_LEADERBOARD" //key:RDS_Z_MATCH_LEADERBOARD/matchId
@@ -191,6 +192,10 @@ func makeQMatchActivityKey(matchId int64) string {
 	return fmt.Sprintf("%s/%d", Q_MATCH_ACTIVITY, matchId)
 }
 
+func makeZTimelineMatchKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_MATCH_TIMELINE, userId)
+}
+
 func makePlayerMatchInfo(matchPlay *MatchPlay) *PlayerMatchInfo {
 	if matchPlay == nil {
 		return nil
@@ -257,6 +262,50 @@ func saveMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64, play *MatchP
 	subkey := makeMatchPlaySubkey(matchId, userId)
 	resp, err := ssdbc.Do("hset", H_MATCH_PLAY, subkey, js)
 	lwutil.CheckSsdbError(resp, err)
+}
+
+func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
+	key := makeZPlayerActiveFanKey(match.OwnerId)
+	limit := 100
+
+	startId := ""
+	startScore := ""
+
+	for true {
+		resp, err := ssdbc.Do("zrscan", key, startId, startScore, "", limit)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		if num == 0 {
+			break
+		}
+
+		cmds := make([][]interface{}, 0, num)
+		for i := 0; i < num; i++ {
+			userId, _ := strconv.ParseInt(resp[i*2], 10, 64)
+			key := makeZTimelineMatchKey(userId)
+			cmds = append(cmds, []interface{}{"zset", key, match.Id, match.BeginTime})
+			if i == num-1 {
+				startId = resp[i*2]
+				startScore = resp[i*2+1]
+			}
+		}
+
+		_, err = ssdbc.Batch(cmds)
+		if err != nil && rErr == nil {
+			rErr = err
+		}
+
+		if num < limit {
+			break
+		}
+	}
+	if rErr != nil {
+		glog.Errorf("fanout error:%v", rErr)
+	}
+
+	return rErr
 }
 
 func init() {
@@ -431,6 +480,9 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	if in.GoldCoinForPrize != 0 {
 		addPlayerGoldCoin(ssdbc, playerKey, -in.GoldCoinForPrize)
 	}
+
+	//fanout
+	go fanout(ssdbc, &match)
 
 	//out
 	lwutil.WriteResponse(w, match)
@@ -1267,6 +1319,152 @@ func apiMatchListPlayedAll(w http.ResponseWriter, r *http.Request) {
 	//out
 	out.Matches = matches
 	out.FanNum, out.FollowNum = getPlayerFanFollowNum(ssdbc, in.UserId)
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiMatchListTimeline(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//in
+	var in struct {
+		Key   string
+		Score string
+		Limit int
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	if in.Limit <= 0 || in.Limit > 30 {
+		in.Limit = 30
+	}
+
+	key := makeZTimelineMatchKey(session.Userid)
+	resp, lastKey, lastScore, err := ssdbc.ZScan(key, H_MATCH, in.Key, in.Score, in.Limit, true)
+	lwutil.CheckError(err, "err_zscan")
+
+	//out
+	out := struct {
+		Matches        []*Match
+		LastKey        string
+		LastScore      string
+		PlayedMatchMap map[string]*PlayerMatchInfo
+		OwnerMap       map[string]*PlayerInfoLite
+		MatchExMap     map[string]*MatchExtra
+	}{
+		make([]*Match, 0, 30),
+		lastKey,
+		lastScore,
+		make(map[string]*PlayerMatchInfo),
+		make(map[string]*PlayerInfoLite),
+		make(map[string]*MatchExtra),
+	}
+
+	num := len(resp) / 2
+	if num == 0 {
+		lwutil.WriteResponse(w, out)
+		return
+	}
+
+	glog.Info(num)
+	for i := 0; i < num; i++ {
+		matchJs := resp[i*2+1]
+		var match Match
+		err := json.Unmarshal([]byte(matchJs), &match)
+		lwutil.CheckError(err, "err_json")
+		out.Matches = append(out.Matches, &match)
+	}
+
+	//playedMap
+	num = len(out.Matches)
+	cmds := make([]interface{}, 2, num+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_MATCH_PLAY
+	ownerIds := make([]int64, 0, num)
+	for _, match := range out.Matches {
+		subkey := makeMatchPlaySubkey(match.Id, session.Userid)
+		cmds = append(cmds, subkey)
+		ownerIds = append(ownerIds, match.OwnerId)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		matchIdStr := strings.Split(resp[i*2], "/")[0]
+		var matchPlay MatchPlay
+		err := json.Unmarshal([]byte(resp[i*2+1]), &matchPlay)
+		lwutil.CheckError(err, "err_json")
+		playerMatchInfo := makePlayerMatchInfo(&matchPlay)
+		out.PlayedMatchMap[matchIdStr] = playerMatchInfo
+	}
+
+	//ownerMap
+	cmds = make([]interface{}, 2, len(ownerIds)+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_PLAYER_INFO_LITE
+	for _, ownerId := range ownerIds {
+		cmds = append(cmds, ownerId)
+	}
+
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		var owner PlayerInfoLite
+		err = json.Unmarshal([]byte(resp[i*2+1]), &owner)
+		lwutil.CheckError(err, "err_json")
+		out.OwnerMap[resp[i*2]] = &owner
+	}
+
+	//match extra
+	cmds = make([]interface{}, 2, len(out.Matches)*2+2)
+	cmds[0] = "multi_hget"
+	cmds[1] = H_MATCH_EXTRA
+	for _, match := range out.Matches {
+		playTimesKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_PLAY_TIMES)
+		likeNumKey := makeHMatchExtraSubkey(match.Id, MATCH_EXTRA_LIKE_NUM)
+		cmds = append(cmds, playTimesKey, likeNumKey)
+	}
+	resp, err = ssdbc.Do(cmds...)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num = len(resp) / 2
+	for i := 0; i < num; i++ {
+		key := resp[i*2]
+		var matchId int64
+		var fieldKey string
+		_, err = fmt.Sscanf(key, "%d/%s", &matchId, &fieldKey)
+		lwutil.CheckError(err, fmt.Sprintf("key:%s", key))
+
+		matchIdStr := fmt.Sprint(matchId)
+		matchEx := out.MatchExMap[matchIdStr]
+		if matchEx == nil {
+			matchEx = new(MatchExtra)
+		}
+
+		if fieldKey == MATCH_EXTRA_PLAY_TIMES {
+			matchEx.PlayTimes, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		} else if fieldKey == MATCH_EXTRA_LIKE_NUM {
+			matchEx.LikeNum, err = strconv.Atoi(resp[i*2+1])
+			lwutil.CheckError(err, "")
+		}
+		out.MatchExMap[matchIdStr] = matchEx
+	}
 
 	lwutil.WriteResponse(w, out)
 }
@@ -3036,6 +3234,7 @@ func regMatch() {
 	http.Handle("/match/listOriginal", lwutil.ReqHandler(apiMatchListOriginal))
 	http.Handle("/match/listPlayedMatch", lwutil.ReqHandler(apiMatchListPlayedMatch))
 	http.Handle("/match/listPlayedAll", lwutil.ReqHandler(apiMatchListPlayedAll))
+	http.Handle("/match/listTimeline", lwutil.ReqHandler(apiMatchListTimeline))
 
 	http.Handle("/match/playBegin", lwutil.ReqHandler(apiMatchPlayBegin))
 	http.Handle("/match/playEnd", lwutil.ReqHandler(apiMatchPlayEnd))

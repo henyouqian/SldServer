@@ -23,10 +23,11 @@ const (
 	SEREAL_PLAYER_PRIZE_RECORD = "SEREAL_PLAYER_PRIZE_RECORD"
 	BATTLE_HEART_TOTAL         = 10
 	BATTLE_HEART_ADD_SEC       = 60 * 5
-	Z_PLAYER_FAN               = "Z_PLAYER_FAN"    //key:Z_PLAYER_FAN/userId subkey:fanUserId score:time
-	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW" //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
-	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH" //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
-	H_PLAYER_NAME              = "H_PLAYER_NAME"   //key:H_PLAYER_NAME subkey:playerName value:userId
+	Z_PLAYER_FAN               = "Z_PLAYER_FAN"        //key:Z_PLAYER_FAN/userId subkey:fanUserId score:time
+	Z_PLAYER_ACTIVE_FAN        = "Z_PLAYER_ACTIVE_FAN" //key:Z_PLAYER_ACTIVE_FAN/userId subkey:fanUserId score:time
+	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW"     //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
+	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH"     //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
+	H_PLAYER_NAME              = "H_PLAYER_NAME"       //key:H_PLAYER_NAME subkey:playerName value:userId
 )
 
 type PlayerInfoLite struct {
@@ -232,6 +233,10 @@ func makeAppPlayerRateSubkey(appName string, userId int64) string {
 
 func makeZPlayerFanKey(userId int64) string {
 	return fmt.Sprintf("%s/%d", Z_PLAYER_FAN, userId)
+}
+
+func makeZPlayerActiveFanKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_PLAYER_ACTIVE_FAN, userId)
 }
 
 func makeZPlayerFollowKey(userId int64) string {
@@ -965,38 +970,17 @@ func apiPlayerFanList(w http.ResponseWriter, r *http.Request) {
 	//get userId list
 	key := makeZPlayerFanKey(in.UserId)
 
-	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
-	lwutil.CheckSsdbError(resp, err)
+	resp, lastKeyStr, lastScoreStr, err := ssdbc.ZScan(key, H_PLAYER_INFO_LITE, in.StartId, in.LastScore, in.Limit, true)
 
-	resp = resp[1:]
+	out.LastKey, _ = strconv.ParseInt(lastKeyStr, 10, 64)
+	out.LastScore, _ = strconv.ParseInt(lastScoreStr, 10, 64)
+
 	if len(resp) == 0 {
 		lwutil.WriteResponse(w, out)
 		return
 	}
 
-	//get infos
 	num := len(resp) / 2
-	args := make([]interface{}, 2, num+2)
-	args[0] = "multi_hget"
-	args[1] = H_PLAYER_INFO_LITE
-	for i := 0; i < num; i++ {
-		args = append(args, resp[i*2])
-		if i == num-1 {
-			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
-			lwutil.CheckError(err, "")
-			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
-			lwutil.CheckError(err, "")
-		}
-	}
-	resp, err = ssdbc.Do(args...)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-	if len(resp) == 0 {
-		lwutil.WriteResponse(w, out)
-		return
-	}
-
-	num = len(resp) / 2
 	for i := 0; i < num; i++ {
 		js := resp[i*2+1]
 		var infoLite PlayerInfoLite
@@ -1061,140 +1045,12 @@ func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
 	//get userId list
 	key := makeZPlayerFollowKey(in.UserId)
 
-	resp, err := ssdbc.Do("zrscan", key, in.StartId, in.LastScore, "", in.Limit)
-	lwutil.CheckSsdbError(resp, err)
+	resp, lastKeyStr, lastScoreStr, err := ssdbc.ZScan(key, H_PLAYER_INFO_LITE, in.StartId, in.LastScore, in.Limit, true)
 
-	resp = resp[1:]
-	if len(resp) == 0 {
-		lwutil.WriteResponse(w, out)
-		return
-	}
+	out.LastKey, _ = strconv.ParseInt(lastKeyStr, 10, 64)
+	out.LastScore, _ = strconv.ParseInt(lastScoreStr, 10, 64)
 
-	//get infos
 	num := len(resp) / 2
-	args := make([]interface{}, 2, num+2)
-	args[0] = "multi_hget"
-	args[1] = H_PLAYER_INFO_LITE
-	for i := 0; i < num; i++ {
-		args = append(args, resp[i*2])
-		if i == num-1 {
-			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
-			lwutil.CheckError(err, "")
-			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
-			lwutil.CheckError(err, "")
-		}
-	}
-	resp, err = ssdbc.Do(args...)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-	if len(resp) == 0 {
-		lwutil.WriteResponse(w, out)
-		return
-	}
-
-	num = len(resp) / 2
-	for i := 0; i < num; i++ {
-		js := resp[i*2+1]
-		var infoLite PlayerInfoLite
-		err = json.Unmarshal([]byte(js), &infoLite)
-		lwutil.CheckError(err, "err_js")
-		out.PlayerInfoLites = append(out.PlayerInfoLites, &infoLite)
-	}
-	lwutil.WriteResponse(w, out)
-}
-
-func apiPlayerFollowListWeb(w http.ResponseWriter, r *http.Request) {
-	var err error
-	lwutil.CheckMathod(r, "POST")
-
-	//ssdb
-	ssdbc, err := ssdbPool.Get()
-	lwutil.CheckError(err, "")
-	defer ssdbc.Close()
-
-	//in
-	var in struct {
-		Type      int
-		UserId    int64
-		LastKey   int64
-		LastScore int64
-		Limit     int
-	}
-	err = lwutil.DecodeRequestBody(r, &in)
-	lwutil.CheckError(err, "err_decode_body")
-
-	if in.UserId == 0 {
-		//session
-		session, err := findSession(w, r, nil)
-		lwutil.CheckError(err, "err_auth")
-
-		in.UserId = session.Userid
-	}
-
-	if in.Limit <= 0 {
-		in.Limit = 20
-	} else if in.Limit > 50 {
-		in.Limit = 50
-	}
-
-	if in.LastKey == 0 {
-		in.LastKey = math.MaxInt64
-	}
-	if in.LastScore == 0 {
-		in.LastScore = math.MaxInt64
-	}
-
-	//out
-	out := struct {
-		PlayerInfoLites []*PlayerInfoLite
-		LastKey         int64
-		LastScore       int64
-	}{
-		make([]*PlayerInfoLite, 0, 20),
-		0,
-		0,
-	}
-
-	//get userId list
-	var key string
-	if in.Type == 0 {
-		key = makeZPlayerFollowKey(in.UserId)
-	} else {
-		key = makeZPlayerFanKey(in.UserId)
-	}
-
-	resp, err := ssdbc.Do("zrscan", key, in.LastKey, in.LastScore, "", in.Limit)
-	lwutil.CheckSsdbError(resp, err)
-
-	resp = resp[1:]
-	if len(resp) == 0 {
-		lwutil.WriteResponse(w, out)
-		return
-	}
-
-	//get infos
-	num := len(resp) / 2
-	args := make([]interface{}, 2, num+2)
-	args[0] = "multi_hget"
-	args[1] = H_PLAYER_INFO_LITE
-	for i := 0; i < num; i++ {
-		args = append(args, resp[i*2])
-		if i == num-1 {
-			out.LastKey, err = strconv.ParseInt(resp[i*2], 10, 64)
-			lwutil.CheckError(err, "")
-			out.LastScore, err = strconv.ParseInt(resp[i*2+1], 10, 64)
-			lwutil.CheckError(err, "")
-		}
-	}
-	resp, err = ssdbc.Do(args...)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-	if len(resp) == 0 {
-		lwutil.WriteResponse(w, out)
-		return
-	}
-
-	num = len(resp) / 2
 	for i := 0; i < num; i++ {
 		js := resp[i*2+1]
 		var infoLite PlayerInfoLite
@@ -1251,6 +1107,10 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 
 	fanKey := makeZPlayerFanKey(in.UserId)
 	resp, err = ssdbc.Do("zset", fanKey, session.Userid, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	activeFanKey := makeZPlayerActiveFanKey(in.UserId)
+	resp, err = ssdbc.Do("zset", activeFanKey, session.Userid, score)
 	lwutil.CheckSsdbError(resp, err)
 
 	//getPlayerInfoLite
@@ -1316,6 +1176,10 @@ func apiPlayerUnfollow(w http.ResponseWriter, r *http.Request) {
 
 	fanKey := makeZPlayerFanKey(in.UserId)
 	resp, err = ssdbc.Do("zdel", fanKey, session.Userid)
+	lwutil.CheckSsdbError(resp, err)
+
+	activeFanKey := makeZPlayerActiveFanKey(in.UserId)
+	resp, err = ssdbc.Do("zdel", activeFanKey, session.Userid)
 	lwutil.CheckSsdbError(resp, err)
 
 	//update nums
@@ -1488,5 +1352,4 @@ func regPlayer() {
 	http.Handle("/player/searchUser", lwutil.ReqHandler(apiPlayerSearchUser))
 
 	http.Handle("/player/web/getInfo", lwutil.ReqHandler(apiPlayerGetPlayerInfoWeb))
-	http.Handle("/player/web/followList", lwutil.ReqHandler(apiPlayerFollowListWeb))
 }
