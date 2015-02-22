@@ -733,8 +733,9 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hgetall", key)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
-
-	for _, channelName := range resp {
+	num := len(resp) / 2
+	for i := 0; i < num; i++ {
+		channelName := resp[i*2]
 		key := makeZChannelMatchKey(channelName)
 		resp, err := ssdbc.Do("zset", key, matchId, beginTimeUnix)
 		lwutil.CheckSsdbError(resp, err)
@@ -979,8 +980,9 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hgetall", key)
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
-
-	for _, channelName := range resp {
+	num := len(resp) / 2
+	for i := 0; i < num; i++ {
+		channelName := resp[i*2]
 		key := makeZChannelMatchKey(channelName)
 		resp, err := ssdbc.Do("zset", key, matchId, beginTimeUnix)
 		lwutil.CheckSsdbError(resp, err)

@@ -465,14 +465,19 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	// //channel
-	// key = makeHUserChannelKey(session.Userid)
+	// key = makeHUserChannelKey(userId)
 	// resp, err = ssdbc.Do("hgetall", key)
 	// lwutil.CheckSsdbError(resp, err)
 	// resp = resp[1:]
-
-	// for _, channelName := range resp {
+	// num := len(resp) / 2
+	// for i := 0; i < num; i++ {
+	// 	channelName := resp[i*2]
 	// 	key := makeZChannelMatchKey(channelName)
 	// 	resp, err := ssdbc.Do("zset", key, matchId, beginTimeUnix)
+	// 	lwutil.CheckSsdbError(resp, err)
+
+	// 	//set channel thumb
+	// 	resp, err = ssdbc.Do("hset", H_CHANNEL_THUMB, channelName, match.Thumb)
 	// 	lwutil.CheckSsdbError(resp, err)
 	// }
 

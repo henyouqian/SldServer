@@ -433,11 +433,16 @@ func apiChannelListUserChannel(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 	resp = resp[1:]
 
+	num := len(resp) / 2
+
 	//out
 	out := struct {
 		Channels []string
 	}{
-		resp,
+		make([]string, 0, num),
+	}
+	for i := 0; i < num; i++ {
+		out.Channels = append(out.Channels, resp[2*i])
 	}
 	lwutil.WriteResponse(w, out)
 }
