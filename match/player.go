@@ -404,7 +404,7 @@ func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
 	//get timeline last score
 	lastTimelineScore := int64(math.MaxInt64)
 	timelineKey := makeZTimelineMatchKey(fanId)
-	resp, err := ssdbc.Do("zrscan", timelineKey, "", "", "", 1)
+	resp, err := ssdbc.Do("zscan", timelineKey, "", "", "", 1)
 	lwutil.CheckSsdbError(resp, err)
 	if len(resp) == 3 {
 		lastTimelineScore, err = parseInt64(resp[2])
@@ -431,7 +431,7 @@ func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
 	cmds = append(cmds, timelineKey)
 
 	for true {
-		resp, err := ssdbc.Do("zscan", playerMatchKey, startId, startScore, "", TIMELINE_BATCH)
+		resp, err := ssdbc.Do("zrscan", playerMatchKey, startId, startScore, "", TIMELINE_BATCH)
 		lwutil.CheckSsdbError(resp, err)
 		resp = resp[1:]
 
