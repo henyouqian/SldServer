@@ -132,40 +132,38 @@ func (c *Client) Do(args ...interface{}) (_ []string, rErr error) {
 	return resp, err
 }
 
-type SsdbResp struct {
-	Resp []string
-	Err  error
-}
-
-func (c *Client) Batch(args [][]interface{}) (_ []SsdbResp, rErr error) {
+func (c *Client) Batch(args [][]interface{}) (_ [][]string, rErr error) {
 	defer func() {
 		if rErr != nil {
 			c.err = rErr
 		}
 	}()
 
-	err := c.sendBatch(args)
+	err := c.batchSend(args)
 	if err != nil {
 		return nil, err
 	}
 	num := len(args)
-	resps := make([]SsdbResp, 0, num)
-	for i := 0; i < num; i++ {
-		resp, err := c.recv()
-		if resp[0] != OK {
-			err = fmt.Errorf("ssdb_not_ok")
-		}
-		ssdbResp := SsdbResp{
-			resp,
-			err,
-		}
-		resps = append(resps, ssdbResp)
-		if err != nil && rErr == nil {
-			rErr = err
-		}
-	}
 
-	return resps, rErr
+	resps, err := c.batchRecv(num)
+	return resps, err
+
+	// for i := 0; i < num; i++ {
+	// 	resp, err := c.recv()
+	// 	if err == nil && resp[0] != OK {
+	// 		err = fmt.Errorf("ssdb_not_ok")
+	// 	}
+	// 	ssdbResp := SsdbResp{
+	// 		resp,
+	// 		err,
+	// 	}
+	// 	resps = append(resps, ssdbResp)
+	// 	if err != nil && rErr == nil {
+	// 		rErr = err
+	// 	}
+	// }
+
+	// return resps, rErr
 }
 
 func (c *Client) Set(key string, val string) (_ interface{}, rErr error) {
@@ -265,7 +263,7 @@ func (c *Client) send(args []interface{}) (rErr error) {
 	return err
 }
 
-func (c *Client) sendBatch(argss [][]interface{}) (rErr error) {
+func (c *Client) batchSend(argss [][]interface{}) (rErr error) {
 	defer func() {
 		if rErr != nil {
 			c.err = rErr
@@ -369,6 +367,38 @@ func (c *Client) parse() []string {
 	}
 
 	return []string{}
+}
+
+func (c *Client) batchRecv(num int) (_ [][]string, rErr error) {
+	defer func() {
+		if rErr != nil {
+			c.err = rErr
+		}
+	}()
+
+	resps := make([][]string, 0, num)
+
+	var tmp [8192]byte
+	for {
+		n, rErr := c.sock.Read(tmp[0:])
+		if rErr != nil {
+			break
+		}
+		c.recv_buf.Write(tmp[0:n])
+		for true {
+			resp := c.parse()
+			if resp == nil || len(resp) > 0 {
+				resps = append(resps, resp)
+			} else {
+				break
+			}
+		}
+
+		if len(resps) == num {
+			break
+		}
+	}
+	return resps, rErr
 }
 
 func (c *Client) HSet(key string, subKey string, obj interface{}) (rErr error) {

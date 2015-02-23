@@ -1381,7 +1381,6 @@ func apiMatchListTimeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Info(num)
 	for i := 0; i < num; i++ {
 		matchJs := resp[i*2+1]
 		var match Match

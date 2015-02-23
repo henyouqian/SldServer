@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/user"
 	"runtime"
+	"strconv"
 	"unicode/utf8"
 
 	"github.com/golang/glog"
@@ -126,4 +127,8 @@ func formateMsec(msec int) string {
 	s := sec % 60
 	ms := msec % 1000
 	return fmt.Sprintf("%d:%02d.%03d", m, s, ms)
+}
+
+func parseInt64(str string) (int64, error) {
+	return strconv.ParseInt(str, 10, 64)
 }

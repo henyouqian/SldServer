@@ -28,6 +28,8 @@ const (
 	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW"     //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
 	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH"     //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
 	H_PLAYER_NAME              = "H_PLAYER_NAME"       //key:H_PLAYER_NAME subkey:playerName value:userId
+	TIMELINE_LIMIT             = 200
+	TIMELINE_BATCH             = 100
 )
 
 type PlayerInfoLite struct {
@@ -392,6 +394,152 @@ func isFollowed(ssdbc *ssdb.Client, fanId int64, followId int64) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
+	playerMatchKey := makeZPlayerMatchKey(followId)
+	startId := ""
+	startScore := ""
+
+	//get timeline last score
+	lastTimelineScore := int64(math.MaxInt64)
+	timelineKey := makeZTimelineMatchKey(fanId)
+	resp, err := ssdbc.Do("zrscan", timelineKey, "", "", "", 1)
+	lwutil.CheckSsdbError(resp, err)
+	if len(resp) == 3 {
+		lastTimelineScore, err = parseInt64(resp[2])
+		if err != nil {
+			glog.Error(err)
+			return
+		}
+	}
+
+	resp, err = ssdbc.Do("zsize", timelineKey)
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+	timelineMatchNum, err := parseInt64(resp[1])
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+
+	// cmds := make([][]interface{}, 0, TIMELINE_BATCH)
+	cmds := make([]interface{}, 0, TIMELINE_BATCH+2)
+	cmds = append(cmds, "multi_zset")
+	cmds = append(cmds, timelineKey)
+
+	for true {
+		resp, err := ssdbc.Do("zscan", playerMatchKey, startId, startScore, "", TIMELINE_BATCH)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+
+		needBreak := false
+		for i := 0; i < num; i++ {
+			startId = resp[i*2]
+			startScore = resp[i*2+1]
+			timelineMatchNum += 1
+			score, err := parseInt64(startScore)
+			if err != nil {
+				glog.Error(err)
+				return
+			}
+
+			if timelineMatchNum > TIMELINE_LIMIT && score <= lastTimelineScore {
+				needBreak = true
+				break
+			}
+
+			// cmd := []interface{}{
+			// 	"zset", timelineKey, startId, startScore,
+			// }
+			// cmds = append(cmds, cmd)
+			cmds = append(cmds, startId)
+			cmds = append(cmds, startScore)
+		}
+
+		if num < TIMELINE_BATCH || needBreak {
+			break
+		}
+	}
+
+	if len(cmds) > 0 {
+		_, err := ssdbc.Do(cmds...)
+		// _, err := ssdbc.Batch(cmds)
+		if err != nil {
+			glog.Error(err)
+			return
+		}
+	}
+}
+
+func unfollowDelTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
+	playerMatchKey := makeZPlayerMatchKey(followId)
+	startId := ""
+	startScore := ""
+
+	//get timeline last score
+	lastTimelineScore := int64(math.MaxInt64)
+	timelineKey := makeZTimelineMatchKey(fanId)
+	resp, err := ssdbc.Do("zscan", timelineKey, "", "", "", 1)
+	lwutil.CheckSsdbError(resp, err)
+	if len(resp) == 3 {
+		lastTimelineScore, err = parseInt64(resp[2])
+		if err != nil {
+			glog.Error(err)
+			return
+		}
+	}
+
+	// cmds := make([][]interface{}, 0, TIMELINE_BATCH)
+	cmds := make([]interface{}, 0, TIMELINE_BATCH+2)
+	cmds = append(cmds, "multi_zdel")
+	cmds = append(cmds, timelineKey)
+
+	for true {
+		resp, err := ssdbc.Do("zrscan", playerMatchKey, startId, startScore, "", TIMELINE_BATCH)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+		needBreak := false
+		for i := 0; i < num; i++ {
+			startId = resp[i*2]
+			startScore = resp[i*2+1]
+			score, err := parseInt64(startScore)
+			if err != nil {
+				glog.Error(err)
+				return
+			}
+
+			if score < lastTimelineScore {
+				needBreak = true
+				break
+			}
+
+			// cmd := []interface{}{
+			// 	"zdel", timelineKey, startId,
+			// }
+			// cmds = append(cmds, cmd)
+			cmds = append(cmds, startId)
+		}
+
+		if num < TIMELINE_BATCH || needBreak {
+			break
+		}
+	}
+
+	if len(cmds) > 0 {
+		_, err := ssdbc.Do(cmds...)
+		// _, err := ssdbc.Batch(cmds)
+		if err != nil {
+			glog.Error(err)
+			return
+		}
+	}
 }
 
 func apiGetPlayerInfo(w http.ResponseWriter, r *http.Request) {
@@ -1134,6 +1282,9 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 	key = makePlayerInfoKey(in.UserId)
 	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
 
+	//timeline
+	go followAddTimeLine(ssdbc, session.Userid, in.UserId)
+
 	//out
 	out := struct {
 		Follow         bool
@@ -1198,6 +1349,9 @@ func apiPlayerUnfollow(w http.ResponseWriter, r *http.Request) {
 	ssdbc.HSet(key, PLAYER_FOLLOW_NUM, followNum)
 	key = makePlayerInfoKey(in.UserId)
 	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
+
+	//
+	go unfollowDelTimeLine(ssdbc, session.Userid, in.UserId)
 
 	//out
 	out := struct {
