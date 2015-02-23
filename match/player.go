@@ -28,8 +28,10 @@ const (
 	Z_PLAYER_FOLLOW            = "Z_PLAYER_FOLLOW"     //key:Z_PLAYER_FOLLOW/userId subkey:userId score:time
 	Z_PLAYER_SEARCH            = "Z_PLAYER_SEARCH"     //key:Z_PLAYER_SEARCH/nickName subkey:userId score:time
 	H_PLAYER_NAME              = "H_PLAYER_NAME"       //key:H_PLAYER_NAME subkey:playerName value:userId
-	TIMELINE_LIMIT             = 200
+	TIMELINE_LIMIT             = 300
 	TIMELINE_BATCH             = 100
+	// TIMELINE_LIMIT = 6
+	// TIMELINE_BATCH = 5
 )
 
 type PlayerInfoLite struct {
@@ -449,6 +451,7 @@ func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
 			}
 
 			if timelineMatchNum > TIMELINE_LIMIT && score <= lastTimelineScore {
+				timelineMatchNum -= 1
 				needBreak = true
 				break
 			}
@@ -473,6 +476,23 @@ func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
 			glog.Error(err)
 			return
 		}
+	}
+
+	//trim
+	if timelineMatchNum > TIMELINE_LIMIT {
+		resp, err := ssdbc.Do("zrscan", timelineKey, "", "", "", timelineMatchNum-TIMELINE_LIMIT)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+		num := len(resp) / 2
+		cmds := make([]interface{}, 0, num+2)
+		cmds = append(cmds, "multi_zdel")
+		cmds = append(cmds, timelineKey)
+		for i := 0; i < num; i++ {
+			cmds = append(cmds, resp[i*2])
+		}
+		glog.Info(cmds)
+		resp, err = ssdbc.Do(cmds...)
+		lwutil.CheckSsdbError(resp, err)
 	}
 }
 
