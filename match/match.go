@@ -303,7 +303,12 @@ func saveMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64, play *MatchP
 }
 
 func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
-	key := makeZPlayerActiveFanKey(match.OwnerId)
+	myUserId := match.OwnerId
+	if match.RepostUserId > 0 {
+		myUserId = match.RepostUserId
+	}
+
+	key := makeZPlayerActiveFanKey(myUserId)
 	limit := 100
 
 	startId := ""
@@ -321,10 +326,6 @@ func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
 		cmds := make([][]interface{}, 0, limit+1)
 		if addMe {
 			addMe = false
-			myUserId := match.OwnerId
-			if match.RepostUserId > 0 {
-				myUserId = match.RepostUserId
-			}
 			key := makeZTimelineMatchKey(myUserId)
 			cmds = append(cmds, []interface{}{"zset", key, matchId, nowUnix})
 		}
