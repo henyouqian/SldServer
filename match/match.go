@@ -74,7 +74,6 @@ type Match struct {
 	PromoImage           string
 	Private              bool
 	Deleted              bool
-	Source               string
 }
 
 type MatchExtra struct {
@@ -214,6 +213,38 @@ func getMatch(ssdbc *ssdb.Client, matchId int64) *Match {
 	err = json.Unmarshal([]byte(resp[1]), &match)
 	lwutil.CheckError(err, "")
 	return &match
+}
+
+func getMatches(ssdbc *ssdb.Client, matchIds []string) (_ []*Match, _ error) {
+	num := len(matchIds)
+	empty := []*Match{}
+	if num == 0 {
+		return empty, nil
+	}
+	args := make([]interface{}, 2, num+2)
+	args[0] = "multi_hget"
+	args[1] = H_MATCH
+	for i := 0; i < num; i++ {
+		args = append(args, matchIds[i])
+	}
+	resp, err := ssdbc.Do(args...)
+	if err != nil {
+		return empty, err
+	}
+	if len(resp) == 1 {
+		return empty, fmt.Errorf("err_no_match")
+	}
+
+	resp = resp[1:]
+	matches := make([]*Match, len(resp)/2)
+	for i, _ := range matches {
+		packjs := resp[i*2+1]
+		err = json.Unmarshal([]byte(packjs), &matches[i])
+		if err != nil {
+			return empty, err
+		}
+	}
+	return matches, nil
 }
 
 func saveMatch(ssdbc *ssdb.Client, match *Match) {
@@ -2954,16 +2985,16 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	//out
 	lwutil.WriteResponse(w, in)
 
-	//battle
-	if session.Username == BATTLE_PACK_USER {
-		match := getMatch(ssdbc, in.MatchId)
+	// //battle
+	// if session.Username == BATTLE_PACK_USER {
+	// 	match := getMatch(ssdbc, in.MatchId)
 
-		rc := redisPool.Get()
-		defer rc.Close()
+	// 	rc := redisPool.Get()
+	// 	defer rc.Close()
 
-		_, err = rc.Do("SADD", BATTLE_PACKID_SET, match.PackId)
-		lwutil.CheckError(err, "")
-	}
+	// 	_, err = rc.Do("SADD", BATTLE_PACKID_SET, match.PackId)
+	// 	lwutil.CheckError(err, "")
+	// }
 }
 
 func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
@@ -3022,16 +3053,16 @@ func apiMatchUnlike(w http.ResponseWriter, r *http.Request) {
 
 	lwutil.WriteResponse(w, in)
 
-	//battle
-	if session.Username == BATTLE_PACK_USER {
-		match := getMatch(ssdbc, in.MatchId)
+	// //battle
+	// if session.Username == BATTLE_PACK_USER {
+	// 	match := getMatch(ssdbc, in.MatchId)
 
-		rc := redisPool.Get()
-		defer rc.Close()
+	// 	rc := redisPool.Get()
+	// 	defer rc.Close()
 
-		_, err = rc.Do("SREM", BATTLE_PACKID_SET, match.PackId)
-		lwutil.CheckError(err, "")
-	}
+	// 	_, err = rc.Do("SREM", BATTLE_PACKID_SET, match.PackId)
+	// 	lwutil.CheckError(err, "")
+	// }
 }
 
 func apiMatchPrivateLike(w http.ResponseWriter, r *http.Request) {
