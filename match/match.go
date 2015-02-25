@@ -74,6 +74,9 @@ type Match struct {
 	PromoImage           string
 	Private              bool
 	Deleted              bool
+	RepostId             int64
+	RepostTime           int64
+	RepostUserId         int64
 }
 
 type MatchExtra struct {
@@ -252,7 +255,11 @@ func saveMatch(ssdbc *ssdb.Client, match *Match) {
 	lwutil.CheckError(err, "")
 
 	//add to hash
-	resp, err := ssdbc.Do("hset", H_MATCH, match.Id, js)
+	subkey := match.Id
+	if match.RepostId > 0 {
+		subkey = match.RepostId
+	}
+	resp, err := ssdbc.Do("hset", H_MATCH, subkey, js)
 	lwutil.CheckSsdbError(resp, err)
 }
 
@@ -302,25 +309,44 @@ func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
 	startId := ""
 	startScore := ""
 
+	nowUnix := lwutil.GetRedisTimeUnix()
+	addMe := true
+
+	matchId := match.Id
+	if match.RepostId > 0 {
+		matchId = match.RepostId
+	}
+
 	for true {
+		cmds := make([][]interface{}, 0, limit+1)
+		if addMe {
+			addMe = false
+			myUserId := match.OwnerId
+			if match.RepostUserId > 0 {
+				myUserId = match.RepostUserId
+			}
+			glog.Info(myUserId, ",", matchId)
+			key := makeZTimelineMatchKey(myUserId)
+			cmds = append(cmds, []interface{}{"zset", key, matchId, nowUnix})
+		}
+
 		resp, err := ssdbc.Do("zrscan", key, startId, startScore, "", limit)
 		lwutil.CheckSsdbError(resp, err)
 		resp = resp[1:]
 
 		num := len(resp) / 2
-		if num == 0 {
-			break
-		}
 
-		cmds := make([][]interface{}, 0, num)
 		for i := 0; i < num; i++ {
 			userId, _ := strconv.ParseInt(resp[i*2], 10, 64)
 			key := makeZTimelineMatchKey(userId)
-			cmds = append(cmds, []interface{}{"zset", key, match.Id, match.BeginTime})
+			cmds = append(cmds, []interface{}{"zset", key, matchId, nowUnix})
 			if i == num-1 {
 				startId = resp[i*2]
 				startScore = resp[i*2+1]
 			}
+		}
+		if len(cmds) == 0 {
+			break
 		}
 
 		_, err = ssdbc.Batch(cmds)
@@ -548,7 +574,17 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	match := getMatch(ssdbc, in.MatchId)
 
 	//check owner
-	if match.OwnerId != session.Userid {
+	canDel := false
+	if match.RepostUserId > 0 {
+		if match.RepostUserId == session.Userid {
+			canDel = true
+		}
+	} else {
+		if match.OwnerId == session.Userid {
+			canDel = true
+		}
+	}
+	if !canDel {
 		lwutil.SendError("err_owner", "not the pack's owner")
 	}
 
@@ -576,8 +612,20 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	err = ssdbc.QDel(key, matchIdStr, Q_MATCH_DEL_LIMIT, true)
 	lwutil.CheckError(err, "err_ssdb_qdel")
 
+	//timeline
+	userId := match.OwnerId
+	if match.RepostUserId > 0 {
+		userId = match.RepostUserId
+	}
+	key = makeZTimelineMatchKey(userId)
+	resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	lwutil.CheckSsdbError(resp, err)
+
 	match.Deleted = true
 	saveMatch(ssdbc, match)
+
+	//out
+	lwutil.WriteResponse(w, in)
 }
 
 func apiMatchMod(w http.ResponseWriter, r *http.Request) {
@@ -1425,11 +1473,9 @@ func apiMatchListTimeline(w http.ResponseWriter, r *http.Request) {
 	cmds := make([]interface{}, 2, num+2)
 	cmds[0] = "multi_hget"
 	cmds[1] = H_MATCH_PLAY
-	ownerIds := make([]int64, 0, num)
 	for _, match := range out.Matches {
 		subkey := makeMatchPlaySubkey(match.Id, session.Userid)
 		cmds = append(cmds, subkey)
-		ownerIds = append(ownerIds, match.OwnerId)
 	}
 	resp, err = ssdbc.Do(cmds...)
 	lwutil.CheckSsdbError(resp, err)
@@ -1446,11 +1492,20 @@ func apiMatchListTimeline(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//ownerMap
-	cmds = make([]interface{}, 2, len(ownerIds)+2)
+	ownerIdMap := make(map[int64]bool)
+	cmds = make([]interface{}, 2, len(out.Matches)+2)
 	cmds[0] = "multi_hget"
 	cmds[1] = H_PLAYER_INFO_LITE
-	for _, ownerId := range ownerIds {
-		cmds = append(cmds, ownerId)
+
+	for _, match := range out.Matches {
+		ownerIdMap[match.OwnerId] = true
+		if match.RepostUserId > 0 {
+			ownerIdMap[match.RepostUserId] = true
+		}
+	}
+
+	for userId, _ := range ownerIdMap {
+		cmds = append(cmds, userId)
 	}
 
 	resp, err = ssdbc.Do(cmds...)
@@ -2189,11 +2244,19 @@ func apiMatchListUserWebQ(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//ownerMap
+	ownerIdMap := make(map[int64]bool)
 	cmds = make([]interface{}, 2, len(matches)+2)
 	cmds[0] = "multi_hget"
 	cmds[1] = H_PLAYER_INFO_LITE
 	for _, match := range matches {
-		cmds = append(cmds, match.OwnerId)
+		ownerIdMap[match.OwnerId] = true
+		if match.RepostUserId > 0 {
+			ownerIdMap[match.RepostUserId] = true
+		}
+	}
+
+	for userId, _ := range ownerIdMap {
+		cmds = append(cmds, userId)
 	}
 
 	resp, err = ssdbc.Do(cmds...)
@@ -2941,27 +3004,39 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 		lwutil.SendError("err_match_id", "Can't find match")
 	}
 
+	//get match
+	match := getMatch(ssdbc, in.MatchId)
+
+	//get play
+	// play, err := getMatchPlay(ssdbc, match.Id, session.Userid)
+	// lwutil.CheckError(err, "err_get_match_play")
+	// if play.Like {
+	// 	lwutil.SendError("err_liked", "")
+	// }
+
+	//make new match
+	now := lwutil.GetRedisTime()
+	nowUnix := now.Unix()
+
+	newMatch := match
+	newMatch.RepostId = GenSerial(ssdbc, MATCH_SERIAL)
+	newMatch.RepostTime = nowUnix
+	newMatch.RepostUserId = session.Userid
+	saveMatch(ssdbc, newMatch)
+
 	//zset
 	key := makeZLikeMatchKey(session.Userid)
-	resp, err = ssdbc.Do("zexists", key, in.MatchId)
-	lwutil.CheckError(err, "")
-	if ssdbCheckExists(resp) {
-		lwutil.WriteResponse(w, in)
-		return
-	}
-
-	score := lwutil.GetRedisTimeUnix()
-	resp, err = ssdbc.Do("zset", key, in.MatchId, score)
+	resp, err = ssdbc.Do("zset", key, newMatch.RepostId, nowUnix)
 	lwutil.CheckSsdbError(resp, err)
 
 	//queue
 	key = makeQLikeMatchKey(session.Userid)
-	resp, err = ssdbc.Do("qpush_back", key, in.MatchId)
+	resp, err = ssdbc.Do("qpush_back", key, newMatch.RepostId)
 	lwutil.CheckSsdbError(resp, err)
 
 	//update matchLiker list
-	key = makeZMatchLikerKey(in.MatchId)
-	resp, err = ssdbc.Do("zset", key, session.Userid, score)
+	key = makeZMatchLikerKey(newMatch.Id)
+	resp, err = ssdbc.Do("zset", key, session.Userid, nowUnix)
 	lwutil.CheckSsdbError(resp, err)
 
 	resp, err = ssdbc.Do("zsize", key)
@@ -2969,18 +3044,19 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	likeNum, err := strconv.Atoi(resp[1])
 	lwutil.CheckError(err, "err_strconv")
 
-	matchLikeKey := makeHMatchExtraSubkey(in.MatchId, MATCH_EXTRA_LIKE_NUM)
+	matchLikeKey := makeHMatchExtraSubkey(newMatch.Id, MATCH_EXTRA_LIKE_NUM)
 	resp, err = ssdbc.Do("hset", H_MATCH_EXTRA, matchLikeKey, likeNum)
 
-	//match play
-	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
-	lwutil.CheckError(err, "err_get_match_play")
-	play.Like = true
-	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
+	// //match play
+	// play.Like = true
+	// saveMatchPlay(ssdbc, newMatch.Id, session.Userid, play)
 
 	//activity
-	text := "❤️喜欢了这组拼图"
-	addMatchActivity(ssdbc, in.MatchId, session.Userid, text)
+	text := "❤️转发了这组拼图"
+	addMatchActivity(ssdbc, newMatch.Id, session.Userid, text)
+
+	//
+	go fanout(ssdbc, newMatch)
 
 	//out
 	lwutil.WriteResponse(w, in)
@@ -3134,10 +3210,10 @@ func apiMatchPrivateUnlike(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_decode_body")
 
 	//check match exist
-	match := getMatch(ssdbc, in.MatchId)
-	if match.OwnerId == session.Userid {
-		lwutil.SendError("err_owner", "")
-	}
+	// match := getMatch(ssdbc, in.MatchId)
+	// if match.OwnerId == session.Userid {
+	// 	lwutil.SendError("err_owner", "")
+	// }
 
 	//match play
 	play, err := getMatchPlay(ssdbc, in.MatchId, session.Userid)
@@ -3152,7 +3228,7 @@ func apiMatchPrivateUnlike(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckError(err, "err_ssdb_qdel")
 
 	//match play
-	play.Like = false
+	play.PrivateLike = false
 	saveMatchPlay(ssdbc, in.MatchId, session.Userid, play)
 
 	lwutil.WriteResponse(w, in)

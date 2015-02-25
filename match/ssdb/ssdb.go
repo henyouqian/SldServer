@@ -1155,7 +1155,7 @@ func (c *Client) QDel(qkey string, value string, limit int, fromBack bool) error
 		}
 
 		if len(pushValues) > 0 {
-			cmds := make([]interface{}, 2, len(pushValues))
+			cmds := make([]interface{}, 2, len(pushValues)+2)
 			cmds[0] = pushApi
 			cmds[1] = qkey
 			cmds = append(cmds, pushValues...)
