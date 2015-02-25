@@ -490,7 +490,6 @@ func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
 		for i := 0; i < num; i++ {
 			cmds = append(cmds, resp[i*2])
 		}
-		glog.Info(cmds)
 		resp, err = ssdbc.Do(cmds...)
 		lwutil.CheckSsdbError(resp, err)
 	}
