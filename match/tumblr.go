@@ -704,9 +704,9 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 		// lwutil.CheckSsdbError(resp, err)
 	}
 
-	//Z_OPEN_MATCH
-	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
-	lwutil.CheckSsdbError(resp, err)
+	// //Z_OPEN_MATCH
+	// resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	// lwutil.CheckSsdbError(resp, err)
 
 	//Z_LIKE_MATCH
 	key := makeZLikeMatchKey(userId)
@@ -952,9 +952,9 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 		// lwutil.CheckSsdbError(resp, err)
 	}
 
-	//Z_OPEN_MATCH
-	resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
-	lwutil.CheckSsdbError(resp, err)
+	// //Z_OPEN_MATCH
+	// resp, err = ssdbc.Do("zset", Z_OPEN_MATCH, matchId, endTimeUnix)
+	// lwutil.CheckSsdbError(resp, err)
 
 	//Z_LIKE_MATCH
 	key = makeZLikeMatchKey(userId)
