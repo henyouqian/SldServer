@@ -76,6 +76,7 @@ type Match struct {
 	Deleted              bool
 	RepostId             int64
 	RepostTime           int64
+	RepostTimeStr        string
 	RepostUserId         int64
 }
 
@@ -365,6 +366,68 @@ func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
 	return rErr
 }
 
+func fanoutDel(ssdbc *ssdb.Client, match *Match) (rErr error) {
+	myUserId := match.OwnerId
+	if match.RepostUserId > 0 {
+		myUserId = match.RepostUserId
+	}
+
+	key := makeZPlayerActiveFanKey(myUserId)
+	limit := 100
+
+	startId := ""
+	startScore := ""
+
+	addMe := true
+
+	matchId := match.Id
+	if match.RepostId > 0 {
+		matchId = match.RepostId
+	}
+
+	for true {
+		cmds := make([][]interface{}, 0, limit+1)
+		if addMe {
+			addMe = false
+			key := makeZTimelineMatchKey(myUserId)
+			cmds = append(cmds, []interface{}{"zdel", key, matchId})
+		}
+
+		resp, err := ssdbc.Do("zrscan", key, startId, startScore, "", limit)
+		lwutil.CheckSsdbError(resp, err)
+		resp = resp[1:]
+
+		num := len(resp) / 2
+
+		for i := 0; i < num; i++ {
+			userId, _ := strconv.ParseInt(resp[i*2], 10, 64)
+			key := makeZTimelineMatchKey(userId)
+			cmds = append(cmds, []interface{}{"zdel", key, matchId})
+			if i == num-1 {
+				startId = resp[i*2]
+				startScore = resp[i*2+1]
+			}
+		}
+		if len(cmds) == 0 {
+			break
+		}
+
+		_, err = ssdbc.Batch(cmds)
+		if err != nil && rErr == nil {
+			rErr = err
+		}
+
+		if num < limit {
+			break
+		}
+	}
+	if rErr != nil {
+		glog.Errorf("fanoutDel error:%v", rErr)
+	}
+
+	return rErr
+}
+
 func init() {
 	//check reward
 	sum := float32(0)
@@ -612,17 +675,19 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	err = ssdbc.QDel(key, matchIdStr, Q_MATCH_DEL_LIMIT, true)
 	lwutil.CheckError(err, "err_ssdb_qdel")
 
-	//timeline
-	userId := match.OwnerId
-	if match.RepostUserId > 0 {
-		userId = match.RepostUserId
-	}
-	key = makeZTimelineMatchKey(userId)
-	resp, err = ssdbc.Do("zdel", key, in.MatchId)
-	lwutil.CheckSsdbError(resp, err)
+	// //timeline
+	// userId := match.OwnerId
+	// if match.RepostUserId > 0 {
+	// 	userId = match.RepostUserId
+	// }
+	// key = makeZTimelineMatchKey(userId)
+	// resp, err = ssdbc.Do("zdel", key, in.MatchId)
+	// lwutil.CheckSsdbError(resp, err)
 
 	match.Deleted = true
 	saveMatch(ssdbc, match)
+
+	go fanoutDel(ssdbc, match)
 
 	//out
 	lwutil.WriteResponse(w, in)
@@ -3021,6 +3086,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	newMatch := match
 	newMatch.RepostId = GenSerial(ssdbc, MATCH_SERIAL)
 	newMatch.RepostTime = nowUnix
+	newMatch.RepostTimeStr = now.Format("2006-01-02T15:04:05")
 	newMatch.RepostUserId = session.Userid
 	saveMatch(ssdbc, newMatch)
 
