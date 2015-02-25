@@ -325,7 +325,6 @@ func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
 			if match.RepostUserId > 0 {
 				myUserId = match.RepostUserId
 			}
-			glog.Info(myUserId, ",", matchId)
 			key := makeZTimelineMatchKey(myUserId)
 			cmds = append(cmds, []interface{}{"zset", key, matchId, nowUnix})
 		}
