@@ -303,7 +303,12 @@ func saveMatchPlay(ssdbc *ssdb.Client, matchId int64, userId int64, play *MatchP
 	lwutil.CheckSsdbError(resp, err)
 }
 
-func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
+func fanout(match *Match) (rErr error) {
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
 	myUserId := match.OwnerId
 	if match.RepostUserId > 0 {
 		myUserId = match.RepostUserId
@@ -366,7 +371,12 @@ func fanout(ssdbc *ssdb.Client, match *Match) (rErr error) {
 	return rErr
 }
 
-func fanoutDel(ssdbc *ssdb.Client, match *Match) (rErr error) {
+func fanoutDel(match *Match) (rErr error) {
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
 	myUserId := match.OwnerId
 	if match.RepostUserId > 0 {
 		myUserId = match.RepostUserId
@@ -607,7 +617,7 @@ func apiMatchNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//fanout
-	go fanout(ssdbc, &match)
+	go fanout(&match)
 
 	//out
 	lwutil.WriteResponse(w, match)
@@ -687,7 +697,7 @@ func apiMatchDel(w http.ResponseWriter, r *http.Request) {
 	match.Deleted = true
 	saveMatch(ssdbc, match)
 
-	go fanoutDel(ssdbc, match)
+	go fanoutDel(match)
 
 	//out
 	lwutil.WriteResponse(w, in)
@@ -3122,7 +3132,7 @@ func apiMatchLike(w http.ResponseWriter, r *http.Request) {
 	addMatchActivity(ssdbc, newMatch.Id, session.Userid, text)
 
 	//
-	go fanout(ssdbc, newMatch)
+	go fanout(newMatch)
 
 	//out
 	lwutil.WriteResponse(w, in)

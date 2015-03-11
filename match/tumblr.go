@@ -803,7 +803,7 @@ func apiTumblrPublish(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//fanout
-	go fanout(ssdbc, &match)
+	go fanout(&match)
 
 	//out
 	lwutil.WriteResponse(w, match)
@@ -1037,7 +1037,7 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//fanout
-	go fanout(ssdbc, match)
+	go fanout(match)
 
 	//out
 	lwutil.WriteResponse(w, match)
