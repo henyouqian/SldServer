@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	// "math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +28,8 @@ const (
 	H_TUMBLR_ACCONT            = "H_TUMBLR_ACCONT"            //key:H_TUMBLR_ACCONT subkey:blogName value:userId
 	Z_TUMBLR_DELETED_IMAGE     = "Z_TUMBLR_DELETED_IMAGE"     //key:Z_TUMBLR_DELETED_IMAGE/blogName subkey:imageKey score:time
 	Z_TUMBLR_UPLOADED_IMAGE    = "Z_TUMBLR_UPLOADED_IMAGE"    //key:Z_TUMBLR_UPLOADED_IMAGE/blogName/p|l subkey:imageKey score:time
-	Z_TUMBLR_PUBLISH_QUEUE     = "Z_TUMBLR_PUBLISH_QUEUE"     //key:Z_TUMBLR_PUBLISH_QUEUE/userId subkey:matchId score:addTime
+	Z_TUMBLR_USER_PUBLISH      = "Z_TUMBLR_USER_PUBLISH"      //key:Z_TUMBLR_USER_PUBLISH/userId subkey:matchId score:addTime
+	Z_TUMBLR_AUTO_PUBLISH      = "Z_TUMBLR_AUTO_PUBLISH"      //key:Z_TUMBLR_AUTO_PUBLISH subkey:matchId score:addTime
 )
 
 type TumblrBlog struct {
@@ -83,8 +85,8 @@ func makeZTumblrDeletedImageKey(blogName string) string {
 	return fmt.Sprintf("%s/%s", Z_TUMBLR_DELETED_IMAGE, blogName)
 }
 
-func makeZTumblrPublishQueueKey(userId int64) string {
-	return fmt.Sprintf("%s/%d", Z_TUMBLR_PUBLISH_QUEUE, userId)
+func makeZTumblrUserPublishKey(userId int64) string {
+	return fmt.Sprintf("%s/%d", Z_TUMBLR_USER_PUBLISH, userId)
 }
 
 func checkTumblrSecret(secret string) bool {
@@ -377,6 +379,35 @@ func apiTumblrListBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ssdbc.TableGetRows(H_TUMBLR_BLOG, keys, &out.Blogs)
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiTumblrGetBlog(w http.ResponseWriter, r *http.Request) {
+	var err error
+	lwutil.CheckMathod(r, "POST")
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//in
+	var in struct {
+		BlogName string
+	}
+	err = lwutil.DecodeRequestBody(r, &in)
+	lwutil.CheckError(err, "err_decode_body")
+
+	var blog TumblrBlog
+	ssdbc.TableGetRow(H_TUMBLR_BLOG, in.BlogName, &blog)
+
+	//out
+	out := struct {
+		Blog *TumblrBlog
+	}{
+		&blog,
+	}
 
 	lwutil.WriteResponse(w, out)
 }
@@ -850,8 +881,13 @@ func apiTumblrPublishQueue(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckSsdbError(resp, err)
 
 	//add to publish queue
-	key := makeZTumblrPublishQueueKey(userId)
-	resp, err = ssdbc.Do("zset", key, matchId, lwutil.GetRedisTimeUnix())
+	now := lwutil.GetRedisTimeUnix()
+	key := makeZTumblrUserPublishKey(userId)
+	resp, err = ssdbc.Do("zset", key, matchId, now)
+	lwutil.CheckSsdbError(resp, err)
+
+	//add to auto publish zset
+	resp, err = ssdbc.Do("zset", Z_TUMBLR_AUTO_PUBLISH, matchId, now)
 	lwutil.CheckSsdbError(resp, err)
 
 	//delete from list
@@ -916,7 +952,7 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 	userId := match.OwnerId
 
 	//check publish queue
-	key := makeZTumblrPublishQueueKey(userId)
+	key := makeZTumblrUserPublishKey(userId)
 	resp, err := ssdbc.Do("zexists", key, matchId)
 	lwutil.CheckSsdbError(resp, err)
 	if !ssdbCheckExists(resp) {
@@ -996,6 +1032,10 @@ func apiTumblrPublishFromQueue(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("zdel", queueKey, matchId)
 	lwutil.CheckSsdbError(resp, err)
 
+	//del from auto zset
+	resp, err = ssdbc.Do("zdel", Z_TUMBLR_AUTO_PUBLISH, matchId)
+	lwutil.CheckSsdbError(resp, err)
+
 	//fanout
 	go fanout(ssdbc, match)
 
@@ -1046,6 +1086,11 @@ func apiTumblrListPublishQueue(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
 
+	//session
+	session, err := findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+	checkAdmin(session)
+
 	//ssdb
 	ssdbc, err := ssdbPool.Get()
 	lwutil.CheckError(err, "")
@@ -1057,20 +1102,15 @@ func apiTumblrListPublishQueue(w http.ResponseWriter, r *http.Request) {
 		Key    string
 		Score  string
 		Limit  int
-		Secret string
 	}
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
-
-	if !checkTumblrSecret(in.Secret) {
-		lwutil.SendError("err_secret", "")
-	}
 
 	if in.Limit <= 0 || in.Limit > 30 {
 		in.Limit = 30
 	}
 
-	key := makeZTumblrPublishQueueKey(in.UserId)
+	key := makeZTumblrUserPublishKey(in.UserId)
 	resp, lastKey, lastScore, err := ssdbc.ZScan(key, H_MATCH, in.Key, in.Score, in.Limit, false)
 	lwutil.CheckError(err, "err_zscan")
 
@@ -1098,10 +1138,38 @@ func apiTumblrListPublishQueue(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func tumblrAutoPublish() {
+	// for true {
+	// 	now := lwutil.GetRedisTime()
+	// 	hour := now.Hour()
+	// 	if hour >= 2 && hour <= 8 {
+	// 		time.Sleep(10 * time.Minute)
+	// 		continue
+	// 	}
+
+	// 	//
+	// 	resp, err := ssdbc.Do("zkeys", Z_TUMBLR_AUTO_PUBLISH, "", "", "", 100)
+	// 	lwutil.CheckSsdbError(resp, err)
+	// 	resp = resp[1:]
+
+	// 	if len(resp) > 0 {
+	// 		key := resp[rand.Intn(len(resp))]
+	// 	}
+
+	// 	//del
+	// 	resp, err = ssdbc.Do("zdel", Z_TUMBLR_AUTO_PUBLISH, matchId)
+	// 	lwutil.CheckSsdbError(resp, err)
+
+	// 	sleepMinute := 30 + rand.Intn(30)
+	// 	time.Sleep(sleepMinute * time.Minute)
+	// }
+}
+
 func regTumblr() {
 	http.Handle("/tumblr/addBlog", lwutil.ReqHandler(apiTumblrAddBlog))
 	http.Handle("/tumblr/delBlog", lwutil.ReqHandler(apiTumblrDelBlog))
 	http.Handle("/tumblr/listBlog", lwutil.ReqHandler(apiTumblrListBlog))
+	http.Handle("/tumblr/getBlog", lwutil.ReqHandler(apiTumblrGetBlog))
 	http.Handle("/tumblr/addImages", lwutil.ReqHandler(apiTumblrAddImages))
 	http.Handle("/tumblr/delImage", lwutil.ReqHandler(apiTumblrDelImage))
 	http.Handle("/tumblr/listImage", lwutil.ReqHandler(apiTumblrListImage))

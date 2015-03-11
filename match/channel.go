@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./ssdb"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
@@ -80,8 +81,8 @@ func apiChannelList(w http.ResponseWriter, r *http.Request) {
 	defer ssdbc.Close()
 
 	//session
-	// _, err = findSession(w, r, nil)
-	// lwutil.CheckError(err, "err_auth")
+	_, err = findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
 
 	//get
 	resp, err := ssdbc.Do("get", K_CHANNEL_LIST)
@@ -116,6 +117,67 @@ func apiChannelList(w http.ResponseWriter, r *http.Request) {
 		for i := 0; i < num; i++ {
 			out.ThumbMap[resp[i*2]] = resp[i*2+1]
 		}
+	}
+
+	lwutil.WriteResponse(w, out)
+}
+
+func apiChannelListDetail(w http.ResponseWriter, r *http.Request) {
+	lwutil.CheckMathod(r, "POST")
+	var err error
+
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
+	//session
+	_, err = findSession(w, r, nil)
+	lwutil.CheckError(err, "err_auth")
+
+	//get
+	resp, err := ssdbc.Do("get", K_CHANNEL_LIST)
+	lwutil.CheckSsdbError(resp, err)
+
+	var channels []Channel
+	err = json.Unmarshal([]byte(resp[1]), &channels)
+
+	//ChannelDetail
+
+	type ChannelDetail struct {
+		ChannelName string
+		Players     []*PlayerInfoLite
+	}
+
+	//
+	channelDetails := make([]ChannelDetail, 0, 10)
+
+	for _, channel := range channels {
+		var channelDetail ChannelDetail
+		channelName := channel[0]
+		channelDetail.ChannelName = channelName
+		channelDetail.Players = make([]*PlayerInfoLite, 0, 10)
+
+		key := makeZChannelUserKey(channelName)
+		resp, _, _, err := ssdbc.ZScan(key, H_PLAYER_INFO_LITE, "", "", 100, false)
+		lwutil.CheckError(err, "err_ssdb")
+
+		//out
+		num := len(resp) / 2
+		for i := 0; i < num; i++ {
+			var player PlayerInfoLite
+			err := json.Unmarshal([]byte(resp[i*2+1]), &player)
+			lwutil.CheckError(err, "err_json")
+			channelDetail.Players = append(channelDetail.Players, &player)
+		}
+		channelDetails = append(channelDetails, channelDetail)
+	}
+
+	//out
+	out := struct {
+		ChannelDetails []ChannelDetail
+	}{
+		channelDetails,
 	}
 
 	lwutil.WriteResponse(w, out)
@@ -165,8 +227,16 @@ func apiChannelAddUser(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hset", key, in.ChannelName, 1)
 	lwutil.CheckSsdbError(resp, err)
 
+	//
+	channels := listUserChannel(ssdbc, in.UserId)
+
 	//out
-	lwutil.WriteResponse(w, in)
+	out := struct {
+		Channels []string
+	}{
+		channels,
+	}
+	lwutil.WriteResponse(w, out)
 }
 
 func apiChannelDelUser(w http.ResponseWriter, r *http.Request) {
@@ -202,8 +272,16 @@ func apiChannelDelUser(w http.ResponseWriter, r *http.Request) {
 	resp, err = ssdbc.Do("hdel", key, in.ChannelName)
 	lwutil.CheckSsdbError(resp, err)
 
+	//
+	channels := listUserChannel(ssdbc, in.UserId)
+
 	//out
-	lwutil.WriteResponse(w, in)
+	out := struct {
+		Channels []string
+	}{
+		channels,
+	}
+	lwutil.WriteResponse(w, out)
 }
 
 func apiChannelListUser(w http.ResponseWriter, r *http.Request) {
@@ -408,6 +486,20 @@ func apiChannelListMatch(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func listUserChannel(ssdbc *ssdb.Client, userId int64) []string {
+	key := makeHUserChannelKey(userId)
+	resp, err := ssdbc.Do("hgetall", key)
+	lwutil.CheckSsdbError(resp, err)
+	resp = resp[1:]
+
+	num := len(resp) / 2
+	channels := make([]string, 0, num)
+	for i := 0; i < num; i++ {
+		channels = append(channels, resp[2*i])
+	}
+	return channels
+}
+
 func apiChannelListUserChannel(w http.ResponseWriter, r *http.Request) {
 	lwutil.CheckMathod(r, "POST")
 	var err error
@@ -428,21 +520,13 @@ func apiChannelListUserChannel(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	key := makeHUserChannelKey(in.UserId)
-	resp, err := ssdbc.Do("hgetall", key)
-	lwutil.CheckSsdbError(resp, err)
-	resp = resp[1:]
-
-	num := len(resp) / 2
+	channels := listUserChannel(ssdbc, in.UserId)
 
 	//out
 	out := struct {
 		Channels []string
 	}{
-		make([]string, 0, num),
-	}
-	for i := 0; i < num; i++ {
-		out.Channels = append(out.Channels, resp[2*i])
+		channels,
 	}
 	lwutil.WriteResponse(w, out)
 }
@@ -450,6 +534,7 @@ func apiChannelListUserChannel(w http.ResponseWriter, r *http.Request) {
 func regChannel() {
 	http.Handle("/channel/set", lwutil.ReqHandler(apiChannelSet))
 	http.Handle("/channel/list", lwutil.ReqHandler(apiChannelList))
+	http.Handle("/channel/listDetail", lwutil.ReqHandler(apiChannelListDetail))
 	http.Handle("/channel/addUser", lwutil.ReqHandler(apiChannelAddUser))
 	http.Handle("/channel/delUser", lwutil.ReqHandler(apiChannelDelUser))
 	http.Handle("/channel/listUser", lwutil.ReqHandler(apiChannelListUser))

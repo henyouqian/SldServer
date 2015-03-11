@@ -398,7 +398,12 @@ func isFollowed(ssdbc *ssdb.Client, fanId int64, followId int64) (bool, error) {
 	return false, nil
 }
 
-func followAddTimeLine(ssdbc *ssdb.Client, fanId int64, followId int64) {
+func followAddTimeLine(fanId int64, followId int64) {
+	//ssdb
+	ssdbc, err := ssdbPool.Get()
+	lwutil.CheckError(err, "")
+	defer ssdbc.Close()
+
 	playerMatchKey := makeZPlayerMatchKey(followId)
 	startId := ""
 	startScore := ""
@@ -1228,6 +1233,62 @@ func apiPlayerFollowList(w http.ResponseWriter, r *http.Request) {
 	lwutil.WriteResponse(w, out)
 }
 
+func doFollow(ssdbc *ssdb.Client, from, to int64) (followNum, fanNum int) {
+	//self check
+	if from == to {
+		lwutil.SendError("err_self", "self follow")
+	}
+
+	//exist userid
+	if !checkPlayerExist(ssdbc, to) {
+		lwutil.SendError("err_user", "user not exist")
+	}
+
+	//check follow already
+	followed, err := isFollowed(ssdbc, from, to)
+	lwutil.CheckError(err, "err_follow")
+	if followed {
+		lwutil.SendError("err_followed", "fallowed already")
+	}
+
+	//
+	score := lwutil.GetRedisTimeUnix()
+
+	followKey := makeZPlayerFollowKey(from)
+	resp, err := ssdbc.Do("zset", followKey, to, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	fanKey := makeZPlayerFanKey(to)
+	resp, err = ssdbc.Do("zset", fanKey, from, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	activeFanKey := makeZPlayerActiveFanKey(to)
+	resp, err = ssdbc.Do("zset", activeFanKey, from, score)
+	lwutil.CheckSsdbError(resp, err)
+
+	//update nums
+	resp, err = ssdbc.Do("zsize", followKey)
+	lwutil.CheckSsdbError(resp, err)
+	followNum, err = strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	resp, err = ssdbc.Do("zsize", fanKey)
+	lwutil.CheckSsdbError(resp, err)
+	fanNum, err = strconv.Atoi(resp[1])
+	lwutil.CheckError(err, "err_strconv")
+
+	//update num
+	key := makePlayerInfoKey(from)
+	ssdbc.HSet(key, PLAYER_FOLLOW_NUM, followNum)
+	key = makePlayerInfoKey(to)
+	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
+
+	//timeline
+	go followAddTimeLine(from, to)
+
+	return
+}
+
 func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	lwutil.CheckMathod(r, "POST")
@@ -1248,61 +1309,11 @@ func apiPlayerFollow(w http.ResponseWriter, r *http.Request) {
 	err = lwutil.DecodeRequestBody(r, &in)
 	lwutil.CheckError(err, "err_decode_body")
 
-	//self check
-	if in.UserId == session.Userid {
-		lwutil.SendError("err_self", "self follow")
-	}
-
-	//exist userid
-	if !checkPlayerExist(ssdbc, in.UserId) {
-		lwutil.SendError("err_user", "user not exist")
-	}
-
-	//check follow already
-	followed, err := isFollowed(ssdbc, session.Userid, in.UserId)
-	lwutil.CheckError(err, "err_follow")
-	if followed {
-		lwutil.SendError("err_followed", "fallowed already")
-	}
-
-	//
-	score := lwutil.GetRedisTimeUnix()
-
-	followKey := makeZPlayerFollowKey(session.Userid)
-	resp, err := ssdbc.Do("zset", followKey, in.UserId, score)
-	lwutil.CheckSsdbError(resp, err)
-
-	fanKey := makeZPlayerFanKey(in.UserId)
-	resp, err = ssdbc.Do("zset", fanKey, session.Userid, score)
-	lwutil.CheckSsdbError(resp, err)
-
-	activeFanKey := makeZPlayerActiveFanKey(in.UserId)
-	resp, err = ssdbc.Do("zset", activeFanKey, session.Userid, score)
-	lwutil.CheckSsdbError(resp, err)
+	followNum, fanNum := doFollow(ssdbc, session.Userid, in.UserId)
 
 	//getPlayerInfoLite
 	playerInfoLite, err := getPlayerInfoLite(ssdbc, in.UserId, nil)
 	lwutil.CheckError(err, "err_player_info_lite")
-
-	//update nums
-	resp, err = ssdbc.Do("zsize", followKey)
-	lwutil.CheckSsdbError(resp, err)
-	followNum, err := strconv.Atoi(resp[1])
-	lwutil.CheckError(err, "err_strconv")
-
-	resp, err = ssdbc.Do("zsize", fanKey)
-	lwutil.CheckSsdbError(resp, err)
-	fanNum, err := strconv.Atoi(resp[1])
-	lwutil.CheckError(err, "err_strconv")
-
-	//update num
-	key := makePlayerInfoKey(session.Userid)
-	ssdbc.HSet(key, PLAYER_FOLLOW_NUM, followNum)
-	key = makePlayerInfoKey(in.UserId)
-	ssdbc.HSet(key, PLAYER_FAN_NUM, fanNum)
-
-	//timeline
-	go followAddTimeLine(ssdbc, session.Userid, in.UserId)
 
 	//out
 	out := struct {

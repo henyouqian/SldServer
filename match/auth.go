@@ -749,6 +749,10 @@ func apiAuthRegisterTmp(w http.ResponseWriter, r *http.Request) {
 
 	userToken := newSession(w, userId, "", 0, authDb)
 
+	doFollow(matchDb, userId, 128)
+	doFollow(matchDb, userId, 136)
+	doFollow(matchDb, userId, 138)
+
 	// out
 	out := struct {
 		Token  string

@@ -539,6 +539,10 @@ function Controller($scope, $http) {
 					"name": "listUser",
 					"method": "POST",
 					"data": {"ChannelName":""}
+				},{
+					"name": "listDetail",
+					"method": "POST",
+					"data": ""
 				}
 			]
 		}

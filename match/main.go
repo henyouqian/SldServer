@@ -36,15 +36,16 @@ func html5(w http.ResponseWriter, r *http.Request) {
 // }
 
 func main() {
-	var confFile string
-	flag.StringVar(&confFile, "conf", "", "config file")
+	// var confFile string
+	// flag.StringVar(&confFile, "conf", "", "config file")
 	flag.Parse()
 
-	if len(confFile) == 0 {
-		glog.Errorln("need -conf")
-		return
-	}
+	// if len(confFile) == 0 {
+	// 	glog.Errorln("need -conf")
+	// 	return
+	// }
 
+	confFile := "conf.json"
 	initConf(confFile)
 	initDb()
 	// initEvent()
